@@ -259,18 +259,22 @@ void app_main(void)
     }
 
     ESP_ERROR_CHECK( ret );
+    ESP_LOGI(TAG, "SETTINGS_Init");
     SETTINGS_Init();
 
     m_u8WiFiChannel = (uint8_t)NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WiFiChannel);
 
+    ESP_LOGI(TAG, "HARDWAREGPIO_Init");
     HARDWAREGPIO_Init();
 
+    ESP_LOGI(TAG, "wifi_init");
     wifi_init();
     espnow_init();
 
     // |WIFI_PROTOCOL_LR
     ESP_ERROR_CHECK( esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N) );
 
+    ESP_LOGI(TAG, "WEBSERVER_Init");
     WEBSERVER_Init();
 
     bool bSanityOn = false;
@@ -278,10 +282,10 @@ void app_main(void)
 
     while (true)
     {
-
         if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(250))
         {
             ttSanityTicks = xTaskGetTickCount();
+            HARDWAREGPIO_SetSanityLED(bSanityOn);
             bSanityOn = !bSanityOn;
         }
 

@@ -179,7 +179,7 @@ static esp_err_t file_post_handler(httpd_req_t *req)
     }
     else if (strcmp(req->uri, ACTION_POST_DOORTEST) == 0)
     {
-        
+
     }
     else
     {

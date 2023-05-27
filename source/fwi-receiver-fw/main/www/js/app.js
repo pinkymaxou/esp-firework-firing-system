@@ -1,7 +1,7 @@
 
 var currentApp = new Vue({
   el: '#app',
-  data: 
+  data:
   {
     sysinfos: [],
 	setting_entries: []
@@ -18,43 +18,43 @@ var currentApp = new Vue({
 	idBtnUpload_Click(event)
 	{
 		console.log("idBtnUpload_Click");
-		
+
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', '/ota/upload', true);
-	
+
 		let firmwareFile = document.getElementById("idFile").files[0];
-	
+
 		// Listen to the upload progress.
-		xhr.upload.onprogress = function(e) 
+		xhr.upload.onprogress = function(e)
 		{
 			console.log("upload in onprogress", e);
 		};
-		
+
 		xhr.upload.loadstart = function(e)
 		{
-			console.log("upload started", e);	
+			console.log("upload started", e);
 		};
-	
+
 		xhr.upload.loadend = function(e)
 		{
-			console.log("upload ended", e);	
+			console.log("upload ended", e);
 		};
-	
+
 		xhr.upload.load  = function(e)
 		{
-			console.log("upload succeeded!", e);	
+			console.log("upload succeeded!", e);
 		};
-	
+
 		xhr.upload.error = function(e)
 		{
-			console.log("upload error", e);	
+			console.log("upload error", e);
 		};
-	
+
 		xhr.upload.abort = function(e)
 		{
-			console.log("upload aborted", e);	
+			console.log("upload aborted", e);
 		};
-		
+
 		xhr.send(firmwareFile);
 	}
   }

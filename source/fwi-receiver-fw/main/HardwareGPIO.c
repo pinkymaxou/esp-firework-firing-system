@@ -1,52 +1,52 @@
 #include "HardwareGPIO.h"
 #include "HWConfig.h"
 #include "driver/gpio.h"
-#include "driver/ledc.h"
 #include "esp_log.h"
 #include "Settings.h"
+#include "led_strip.h"
 
 #define TAG "HardwareGPIO"
 
+static led_strip_handle_t led_strip;
+
 void HARDWAREGPIO_Init()
 {
+    gpio_set_direction(HWCONFIG_SANITY_PIN, GPIO_MODE_OUTPUT);
+
     // Relay pin
-    gpio_set_direction(HWCONFIG_OUTRELAY_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_OUTRELAY_PIN, false);
-    
+    // gpio_set_direction(HWCONFIG_OUTRELAY_PIN, GPIO_MODE_OUTPUT);
+    // gpio_set_level(HWCONFIG_OUTRELAY_PIN, false);
+
     // Sanity pin
-    gpio_set_direction(HWCONFIG_OUTSANITY_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_OUTSANITY_PIN, false);
+    // gpio_set_direction(HWCONFIG_OUTSANITY_PIN, GPIO_MODE_OUTPUT);
+    /// gpio_set_level(HWCONFIG_OUTSANITY_PIN, false);
 
-    ledc_timer_config_t ledc_timer = {
-        .duty_resolution = LEDC_TIMER_12_BIT, // resolution of PWM duty
-        .freq_hz = 5000,                      // frequency of PWM signal
-        .speed_mode = LEDC_LOW_SPEED_MODE,           // timer mode
-        .timer_num = LEDC_TIMER_0,            // timer index
-        .clk_cfg = LEDC_AUTO_CLK,              // Auto select the source clock
+    /* LED strip initialization with the GPIO and pixels number*/
+    led_strip_config_t strip_config = {
+        .strip_gpio_num = HWCONFIG_SANITY_PIN,
+        .max_leds = 1, // at least one LED on board
     };
-
-    // Set configuration of timer0 for high speed channels
-    ledc_timer_config(&ledc_timer);
-    
-    ledc_channel_config_t ledc_channel[1] = {
-        {
-            .channel    = LEDC_CHANNEL_0,
-            .duty       = 0,
-            .gpio_num   = HWCONFIG_OUTSANITY_PIN,
-            .speed_mode = LEDC_LOW_SPEED_MODE,
-            .hpoint     = 0,
-            .timer_sel  = LEDC_TIMER_0,
-            .flags.output_invert = 0
-        }
+    led_strip_rmt_config_t rmt_config = {
+        .resolution_hz = 10 * 1000 * 1000, // 10MHz
     };
-
-    const int ch = 0;
-    ledc_channel_config(&ledc_channel[ch]);    
+    ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
+    /* Set all LED off to clear all pixels */
+    led_strip_clear(led_strip);
 }
 
-void HARDWAREGPIO_SetSanityLED(float fltPercent)
+void HARDWAREGPIO_SetSanityLED(bool isEnabled)
 {
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 4095 * fltPercent));
-    // Update duty to apply the new value
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+    /* If the addressable LED is enabled */
+    if (isEnabled)
+    {
+        /* Set the LED pixel using RGB from 0 (0%) to 255 (100%) for each color */
+        led_strip_set_pixel(led_strip, 0, 255, 255, 255);
+        /* Refresh the strip to send data */
+        led_strip_refresh(led_strip);
+    }
+    else
+    {
+        /* Set all LED off to clear all pixels */
+        led_strip_clear(led_strip);
+    }
 }

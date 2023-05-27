@@ -3,6 +3,8 @@
 
 #include "driver/gpio.h"
 
+#define HWCONFIG_SANITY_PIN GPIO_NUM_27
+
 #define HWCONFIG_OUTRELAY_PIN GPIO_NUM_10
 #define HWCONFIG_OUTSANITY_PIN GPIO_NUM_8
 

@@ -7,6 +7,6 @@
 
 void HARDWAREGPIO_Init();
 
-void HARDWAREGPIO_SetSanityLED(float fltPercent);
+void HARDWAREGPIO_SetSanityLED(bool isEnabled);
 
 #endif
