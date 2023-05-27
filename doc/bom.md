@@ -3,7 +3,7 @@
 
 | Item | Qty | URL |
 |---|---|---|
-| 16 channels relay (ground driven) | 2 | https://www.amazon.ca/gp/product/B0057OC66U/ |
+| 16 channels relay (ground driven) | 3 | https://www.amazon.ca/gp/product/B0057OC66U/ |
 | ESP32-S3 | 1 | https://www.aliexpress.com/item/1005005225767039.html |
 | WS2812B Leds | 60 | https://www.aliexpress.com/item/32560280169.html
 | OLED 128x64 | 2 | https://www.aliexpress.com/item/1005004146596540.html |
@@ -19,4 +19,12 @@
 
 | Item | Qty | URL |
 |---|---|---|
-| Nichrome ~36 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html
+| Nichrome ~36 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
+| Matches | N/A | | Buy them at dollarstore
+
+# Alternative igniter
+
+| Item | Qty | URL |
+|---|---|---|
+| Safety Igniter Wire Remote Electric Match | 50 | https://www.aliexpress.com/item/1005004480226553.html |
+
