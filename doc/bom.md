@@ -13,6 +13,7 @@
 | P-Channel MOSFET FQP47P06 | 3 |  |
 | Relay SRD-05VDC-SL-C | 1 | https://www.aliexpress.com/item/1005004546660648.html |
 | Encoder | 1 | https://www.aliexpress.com/item/1005004494417579.html |
+| 12V indicator with USB | 1 | https://www.aliexpress.com/item/1005004641986809.html |
 
 # Electric matches
 
