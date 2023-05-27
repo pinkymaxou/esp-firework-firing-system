@@ -10,32 +10,10 @@
     </head>
     <body onload="AppLoaded()">
 	<div id="app">
-        <!-- Setting / Entries -->
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <td><b>Key</b></td>
-                        <td><b>Default</b></td>
-                        <td><b>Min</b></td>
-                        <td><b>Max</b></td>
-                        <td><b>Value</b></td>
-                        <td><b>Desc</b></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="entry in setting_entries">
-                        <td>{{ entry.key }}</td>
-                        <td>{{ entry.info.default }}</td>
-                        <td>{{ entry.info.min }}</td>
-                        <td>{{ entry.info.max }}</td>
-                        <td><b>{{ entry.value }}</b></td>
-                        <td>{{ entry.info.desc }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
+        <button id="idBtnReboot" class="button-27" @click="idBtnReboot_Click">Reboot</button>
+        <button id="idBtnCheckIgnition" class="button-27" @click="idBtnCheckIgnition_Click">Check Ignition</button>
+        <button id="idBtnDisarm" class="button-27" @click="idBtnDisarm_Click">Disarm</button>
+        <br>
         <!-- System infos -->
         <div>
             <table>
@@ -53,23 +31,10 @@
                 </tbody>
             </table>
         </div>
-        <br>
-        <button id="idBtnReboot" class="button-27" @click="idBtnReboot_Click">Reboot</button>	
-        <button id="idBtnDoorTest" class="button-27" @click="idBtnDoorTest_Click">Door test</button>	
-        <br>
-        <!-- OTA -->
-        <div>
-            <table>
-                <tr>
-                    <td>File</td>
-                    <td><input type="file" id="idFile"></td>
-                </tr>
-            </table>
-            <button id="idBtnUpload" class="button-27" @click="idBtnUpload_Click">Upload</button>	
-        </div>
     </div>
     <!-- JS -->
     <script type="text/javascript" src="js/vue.min.js"></script>
+    <script type="text/javascript" src="js/common-app.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
-    </body>  
+    </body>
 </html>

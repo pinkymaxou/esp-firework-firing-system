@@ -1,4 +1,7 @@
 index.html
+settings.html
 css/content.css
 js/app.js
+js/common-app.js
+js/settings-app.js
 js/vue.min.js
