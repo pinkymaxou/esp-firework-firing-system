@@ -8,6 +8,8 @@ typedef enum
     MAINAPP_ECMD_Disarm,
     MAINAPP_ECMD_Arm,
     MAINAPP_ECMD_Fire,
+    
+    MAINAPP_ECMD_CheckConnections,
 } MAINAPP_ECMD;
 
 typedef union
@@ -35,5 +37,13 @@ typedef struct MainApp
 void MAINAPP_Init();
 
 void MAINAPP_Run();
+
+void MAINAPP_ExecArm();
+
+void MAINAPP_ExecDisarm();
+
+void MAINAPP_ExecFire(uint32_t u32OutputIndex);
+
+void MAINAPP_ExecCheckConnections();
 
 #endif

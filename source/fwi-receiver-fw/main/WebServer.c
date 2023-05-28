@@ -15,6 +15,8 @@
 #include "Settings.h"
 #include "main.h"
 #include "HardwareGPIO.h"
+#include "MainApp.h"
+#include "HWConfig.h"
 
 #define TAG "webserver"
 
@@ -31,7 +33,11 @@
 #define API_GETSTATUSJSON_URI "/api/getstatus"
 
 #define ACTION_POST_REBOOT "/action/reboot"
-#define ACTION_POST_DOORTEST "/action/doortest"
+
+#define ACTION_POST_ARMFIRINGSYSTEM "/action/armfiringsystem"
+#define ACTION_POST_DISARMFIRINGSYSTEM "/action/disarmfiringsystem"
+#define ACTION_POST_FIRESYSTEM "/action/firesystem"
+#define ACTION_POST_CHECKCONNECTIONS "/action/checkconnections"
 
 static esp_err_t api_get_handler(httpd_req_t *req);
 static esp_err_t api_post_handler(httpd_req_t *req);
@@ -177,25 +183,62 @@ static esp_err_t file_post_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "file_post_handler, url: %s", req->uri);
 
-    if (strcmp(req->uri, ACTION_POST_REBOOT) == 0)
-    {
-        esp_restart();
-    }
-    else if (strcmp(req->uri, ACTION_POST_DOORTEST) == 0)
-    {
+    cJSON* root = NULL;
 
-    }
-    else
+    int n = 0;
+    while(1)
     {
-        goto ERROR;
+        int reqN = httpd_req_recv(req, (char*)m_u8Buffers + n, HTTPSERVER_BUFFERSIZE - n - 1);
+        if (reqN <= 0)
+        {
+            ESP_LOGI(TAG, "api_post_handler, test: %d, reqN: %d", (int)n, (int)reqN);
+            break;
+        }
+        n += reqN;
     }
+    m_u8Buffers[n] = '\0';
+
+    ESP_LOGI(TAG, "Receiving content: %s", m_u8Buffers);
+
+    if (strcmp(req->uri, ACTION_POST_REBOOT) == 0)
+        esp_restart();
+    else if (strcmp(req->uri, ACTION_POST_ARMFIRINGSYSTEM) == 0)
+        MAINAPP_ExecArm();
+    else if (strcmp(req->uri, ACTION_POST_DISARMFIRINGSYSTEM ) == 0)
+        MAINAPP_ExecDisarm();
+    else if (strcmp(req->uri, ACTION_POST_FIRESYSTEM) == 0)
+    {
+        // Decode JSON
+        root = cJSON_Parse((const char*)m_u8Buffers);
+        if (root == NULL || !cJSON_IsObject(root))
+        {
+            ESP_LOGE(TAG, "No a JSON object");
+            goto ERROR;
+        }
+        cJSON* cJsonIndex = cJSON_GetObjectItem(root, "index");
+        if (cJsonIndex == NULL || !cJSON_IsNumber(cJsonIndex))
+        {
+            ESP_LOGE(TAG, "Index parameter is missing");
+            goto ERROR;
+        }
+
+        MAINAPP_ExecFire(cJsonIndex->valueint);
+    }
+    else if (strcmp(req->uri, ACTION_POST_CHECKCONNECTIONS) == 0)
+        MAINAPP_ExecCheckConnections();
+    else
+        goto ERROR;
 
     httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
+    if (root != NULL)
+        cJSON_Delete(root);
     return ESP_OK;
     ERROR:
     ESP_LOGE(TAG, "Invalid request");
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Bad request");
+    if (root != NULL)
+        cJSON_Delete(root);
     return ESP_FAIL;
 }
 
@@ -525,15 +568,15 @@ static char* GetStatusJSON()
     static int a = 0;
     cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++a));
     //cJSON_AddItemToObject(pStatusEntry, "text", cJSON_CreateString("aaa"));
-    cJSON* pSlots = cJSON_AddArrayToObject(pStatusEntry, "slots");
+    cJSON* pOutputs = cJSON_AddArrayToObject(pStatusEntry, "outputs");
 
     // All ignitor slots status
-    for(int i = 0; i < 48; i++)
+    for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
         cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber(0));
-        cJSON_AddItemToArray(pSlots, pEntryJSON10);
+        cJSON_AddItemToArray(pOutputs, pEntryJSON10);
     }
 
     cJSON_AddItemToObject(pRoot, "status", pStatusEntry);

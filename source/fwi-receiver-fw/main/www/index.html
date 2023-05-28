@@ -13,13 +13,14 @@
         <div class="navbar">
             <button id="idBtnCheckIgnition" class="button-action1" @click="idBtnCheckIgnition_Click">Check</button>
             <button id="idBtnDisarm" class="button-action1" @click="idBtnDisarm_Click">Disarm</button>
+            <button id="idBtnArm" class="button-action1" @click="idBtnArm_Click">Arm</button>
             <!--<button id="idBtnReboot" class="button-action1" @click="idBtnReboot_Click">Reboot</button>-->
             <p style="color: white">TEST</p>
         </div>
 
         <div class="slotContainer">
-            <div v-for="slot in status.slots" class="slotButtonDiv">
-                <button>{{ slot.ix+1 }}</button>
+            <div v-for="output in status.outputs" class="slotButtonDiv">
+                <button @click="idBtnFire_Click(output.ix)">{{ output.ix+1 }}</button>
             </div>
         </div>
     </div>
