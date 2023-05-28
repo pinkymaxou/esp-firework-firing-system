@@ -140,7 +140,7 @@ void MAINAPP_Run()
         // Update LEDs
         for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
             UpdateLED(i);
-            
+
         HARDWAREGPIO_RefreshLEDStrip();
         vTaskDelay(pdMS_TO_TICKS(1));
     }
