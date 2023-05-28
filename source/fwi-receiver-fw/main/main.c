@@ -21,6 +21,7 @@
 #include "FWConfig.h"
 #include "WebServer.h"
 #include "Settings.h"
+#include "MainApp.h"
 #include "main.h"
 
 #define TAG "main"
@@ -258,39 +259,26 @@ void app_main(void)
         ret = nvs_flash_init();
     }
 
+    ESP_LOGI(TAG, "HARDWAREGPIO_Init");
+    HARDWAREGPIO_Init();
+
     ESP_ERROR_CHECK( ret );
     ESP_LOGI(TAG, "SETTINGS_Init");
     SETTINGS_Init();
 
     m_u8WiFiChannel = (uint8_t)NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WiFiChannel);
 
-    ESP_LOGI(TAG, "HARDWAREGPIO_Init");
-    HARDWAREGPIO_Init();
-
     ESP_LOGI(TAG, "wifi_init");
     wifi_init();
     espnow_init();
 
-    // |WIFI_PROTOCOL_LR
-    ESP_ERROR_CHECK( esp_wifi_set_protocol(ESP_IF_WIFI_AP, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N) );
-
     ESP_LOGI(TAG, "WEBSERVER_Init");
     WEBSERVER_Init();
 
-    bool bSanityOn = false;
-    TickType_t ttSanityTicks = 0;
+    MAINAPP_Init();
 
-    while (true)
-    {
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(250))
-        {
-            ttSanityTicks = xTaskGetTickCount();
-            HARDWAREGPIO_SetSanityLED(bSanityOn);
-            bSanityOn = !bSanityOn;
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
+    // Lock forever
+    MAINAPP_Run();
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)

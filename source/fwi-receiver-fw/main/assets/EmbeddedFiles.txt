@@ -1,6 +1,9 @@
 index.html
 settings.html
 css/content.css
+font/Orbitron-Bold.woff
+font/Orbitron-Regular.woff
+font/Squared.ttf
 js/app.js
 js/common-app.js
 js/settings-app.js

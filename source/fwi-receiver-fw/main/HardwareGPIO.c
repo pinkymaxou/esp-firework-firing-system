@@ -9,6 +9,24 @@
 
 static led_strip_handle_t led_strip;
 
+#if HWCONFIG_TESTMODE == 0
+static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
+{
+    HWCONFIG_RELAY_BUS_1_PIN, HWCONFIG_RELAY_BUS_2_PIN, HWCONFIG_RELAY_BUS_3_PIN, HWCONFIG_RELAY_BUS_4_PIN,
+    HWCONFIG_RELAY_BUS_5_PIN, HWCONFIG_RELAY_BUS_6_PIN, HWCONFIG_RELAY_BUS_7_PIN, HWCONFIG_RELAY_BUS_8_PIN,
+
+    HWCONFIG_RELAY_BUS_9_PIN, HWCONFIG_RELAY_BUS_10_PIN, HWCONFIG_RELAY_BUS_11_PIN, HWCONFIG_RELAY_BUS_12_PIN,
+    HWCONFIG_RELAY_BUS_13_PIN, HWCONFIG_RELAY_BUS_14_PIN, HWCONFIG_RELAY_BUS_15_PIN, HWCONFIG_RELAY_BUS_16_PIN
+};
+
+static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
+{
+    HWCONFIG_RELAY_MOSA1,
+    HWCONFIG_RELAY_MOSA2,
+    HWCONFIG_RELAY_MOSA3
+};
+#endif
+
 void HARDWAREGPIO_Init()
 {
     // Sanity LEDs
@@ -17,49 +35,25 @@ void HARDWAREGPIO_Init()
 
     #if HWCONFIG_TESTMODE == 0
     // Initialize relay BUS
-    gpio_set_direction(HWCONFIG_RELAY_BUS_1_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_1_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_2_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_2_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_3_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_3_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_4_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_4_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_5_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_5_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_6_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_6_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_7_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_7_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_8_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_8_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_9_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_9_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_10_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_10_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_11_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_11_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_12_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_12_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_13_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_13_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_14_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_14_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_15_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_15_PIN, true);
-    gpio_set_direction(HWCONFIG_RELAY_BUS_16_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_BUS_16_PIN, true);
+    for(int i = 0; i < RELAYBUS_COUNT; i++)
+    {
+        const gpio_num_t gpio = m_busPins[i];
+        gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
+        gpio_set_level(gpio, true);
+    }
 
-    gpio_set_direction(HWCONFIG_RELAY_MOSA1, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_MOSA1, true);
-    gpio_set_direction(HWCONFIG_RELAY_MOSA2, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_MOSA2, true);
-    gpio_set_direction(HWCONFIG_RELAY_MOSA3, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_RELAY_MOSA3, true);
+    for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
+    {
+        const gpio_num_t gpio = m_busAreaPins[i];
+        gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
+        gpio_set_level(gpio, true);
+    }
 
     // Relay pin
     gpio_set_direction(HWCONFIG_MASTERPWRRELAY_EN, GPIO_MODE_OUTPUT);
     gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, false);
+
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
 
     gpio_set_direction(HWCONFIG_MASTERPWRSENSE_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
@@ -73,8 +67,10 @@ void HARDWAREGPIO_Init()
     gpio_pullup_en(HWCONFIG_ENCODERB_IN);
     gpio_set_direction(HWCONFIG_ENCODERSW, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_ENCODERSW);
+
+    HARDWAREGPIO_ClearRelayBus();
     #endif
-    
+
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = HWCONFIG_SANITY_PIN,
@@ -90,6 +86,8 @@ void HARDWAREGPIO_Init()
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled)
 {
+    gpio_set_level(HWCONFIG_SANITY2_PIN, !isEnabled);
+
     /* If the addressable LED is enabled */
     if (isEnabled)
     {
@@ -103,4 +101,53 @@ void HARDWAREGPIO_SetSanityLED(bool isEnabled)
         /* Set all LED off to clear all pixels */
         led_strip_clear(led_strip);
     }
+}
+
+void HARDWAREGPIO_ClearRelayBus()
+{
+    #if HWCONFIG_TESTMODE == 0
+    // Stop all relay boards
+    for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
+        gpio_set_level(m_busAreaPins[i], false);
+
+    // Clear the bus
+    for(int i = 0; i < HWCONFIG_OUTPUTBUS_COUNT; i++)
+        gpio_set_level(m_busPins[i], true);
+    #endif
+    // Mechanical relay, give them some time to be sure they are turned off.
+    vTaskDelay(pdMS_TO_TICKS(25));
+}
+
+void HARDWAREGPIO_WriteSingleRelay(uint32_t u32RelayIndex, bool bValue)
+{
+    #if HWCONFIG_TESTMODE == 0
+    HARDWAREGPIO_ClearRelayBus();
+    if (HWCONFIG_OUTPUT_COUNT >= 48)
+        return;
+
+    // Activate the right area
+    const uint32_t u32AreaIndex = u32RelayIndex/HWCONFIG_OUTPUTBUS_COUNT;
+    const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
+    gpio_set_level(gpioArea, true);
+
+    gpio_set_level(m_busPins[u32RelayIndex], !bValue);
+    #endif
+}
+
+void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
+{
+    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
+    // Mechanical relay, give it some time to turn off.
+    if (!bValue)
+        vTaskDelay(pdMS_TO_TICKS(250));
+}
+
+bool HARDWAREGPIO_ReadMasterPowerSense()
+{
+    return !gpio_get_level(HWCONFIG_MASTERPWRSENSE_IN);
+}
+
+bool HARDWAREGPIO_ReadConnectionSense()
+{
+    return !gpio_get_level(HWCONFIG_CONNSENSE_IN);
 }
