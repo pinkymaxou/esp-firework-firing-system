@@ -46,9 +46,28 @@
             </table>
             <button id="idBtnUpload" class="button-27" @click="idBtnUpload_Click">Upload</button>	
         </div>
+        <br>
+        <!-- System infos -->
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <td><b>Name</b></td>
+                        <td><b>Value</b></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sysinfo in sysinfos">
+                        <td>{{ sysinfo.name }}</td>
+                        <td style="overflow-wrap: anywhere;"><b>{{ sysinfo.value }}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     <!-- JS -->
     <script type="text/javascript" src="js/vue.min.js"></script>
-    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/common-app.js"></script>
+    <script type="text/javascript" src="js/settings-app.js"></script>
     </body>
 </html>

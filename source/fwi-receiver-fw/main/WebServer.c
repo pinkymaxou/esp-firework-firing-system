@@ -28,6 +28,8 @@
 
 #define API_GETSYSINFOJSON_URI "/api/getsysinfo"
 
+#define API_GETSTATUSJSON_URI "/api/getstatus"
+
 #define ACTION_POST_REBOOT "/action/reboot"
 #define ACTION_POST_DOORTEST "/action/doortest"
 
@@ -42,7 +44,9 @@ static esp_err_t file_otauploadpost_handler(httpd_req_t *req);
 
 static const EF_SFile* GetFile(const char* strFilename);
 
-static const char* GetSysInfo();
+static char* GetSysInfo();
+static char* GetStatusJSON();
+
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len);
 static const char* GetESPChipId(esp_chip_model_t eChipid);
 
@@ -212,6 +216,16 @@ static esp_err_t api_get_handler(httpd_req_t *req)
     else if (strcmp(req->uri, API_GETSYSINFOJSON_URI) == 0)
     {
         pExportJSON = GetSysInfo();
+
+        if (pExportJSON == NULL || httpd_resp_send_chunk(req, pExportJSON, strlen(pExportJSON)) != ESP_OK)
+        {
+            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Unable to send data");
+            goto END;
+        }
+    }
+    else if (strcmp(req->uri, API_GETSTATUSJSON_URI) == 0)
+    {
+        pExportJSON = GetStatusJSON();
 
         if (pExportJSON == NULL || httpd_resp_send_chunk(req, pExportJSON, strlen(pExportJSON)) != ESP_OK)
         {
@@ -391,7 +405,7 @@ static const EF_SFile* GetFile(const char* strFilename)
     return NULL;
 }
 
-static const char* GetSysInfo()
+static char* GetSysInfo()
 {
     cJSON* pRoot = NULL;
 
@@ -493,6 +507,38 @@ static const char* GetSysInfo()
     cJSON_AddItemToArray(pEntries, pEntryJSON10);
 
     const char* pStr =  cJSON_PrintUnformatted(pRoot);
+    cJSON_Delete(pRoot);
+    return pStr;
+    ERROR:
+    cJSON_Delete(pRoot);
+    return NULL;
+}
+
+static char* GetStatusJSON()
+{
+    cJSON* pRoot = NULL;
+    pRoot = cJSON_CreateObject();
+    if (pRoot == NULL)
+        goto ERROR;
+
+    cJSON* pStatusEntry = cJSON_CreateObject();
+    static int a = 0;
+    cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++a));
+    //cJSON_AddItemToObject(pStatusEntry, "text", cJSON_CreateString("aaa"));
+    cJSON* pSlots = cJSON_AddArrayToObject(pStatusEntry, "slots");
+
+    // All ignitor slots status
+    for(int i = 0; i < 48; i++)
+    {
+        cJSON* pEntryJSON10 = cJSON_CreateObject();
+        cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
+        cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber(0));
+        cJSON_AddItemToArray(pSlots, pEntryJSON10);
+    }
+
+    cJSON_AddItemToObject(pRoot, "status", pStatusEntry);
+
+    char* pStr =  cJSON_PrintUnformatted(pRoot);
     cJSON_Delete(pRoot);
     return pStr;
     ERROR:

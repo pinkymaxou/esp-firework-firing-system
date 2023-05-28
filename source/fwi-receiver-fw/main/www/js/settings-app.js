@@ -54,6 +54,13 @@ var currentApp = new Vue({
 
 function AppLoaded()
 {
+	fetch('./api/getsysinfo')
+		.then((response) => response.json())
+		.then((data) =>
+		{
+			currentApp.sysinfos = data.infos;
+		});
+        
 	fetch('./api/getsettingsjson')
 		.then((response) => response.json())
 		.then((data) =>

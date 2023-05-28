@@ -10,26 +10,16 @@
     </head>
     <body onload="AppLoaded()">
 	<div id="app">
+        {{ status.req }}
+
         <button id="idBtnReboot" class="button-27" @click="idBtnReboot_Click">Reboot</button>
         <button id="idBtnCheckIgnition" class="button-27" @click="idBtnCheckIgnition_Click">Check Ignition</button>
         <button id="idBtnDisarm" class="button-27" @click="idBtnDisarm_Click">Disarm</button>
-        <br>
-        <!-- System infos -->
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <td><b>Name</b></td>
-                        <td><b>Value</b></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="sysinfo in sysinfos">
-                        <td>{{ sysinfo.name }}</td>
-                        <td><b>{{ sysinfo.value }}</b></td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <div class="slotContainer">
+            <div v-for="slot in status.slots" class="slotButtonDiv">
+                <button>{{ slot.ix+1 }}</button>
+            </div>
         </div>
     </div>
     <!-- JS -->
