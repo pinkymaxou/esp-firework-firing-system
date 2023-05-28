@@ -69,7 +69,11 @@ body {
     }
   }
 
-  .button-action1 {
+.navbar {
+    background-color: aqua;
+}
+
+.button-action1 {
     background-color: #112637;
     /* border: white; */
     color: white;
@@ -81,4 +85,4 @@ body {
     font-weight: bold;
     border-color: white;
     text-transform: uppercase;
-  }
+}
