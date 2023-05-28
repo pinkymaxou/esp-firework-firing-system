@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" type="text/css" href="css/content.css">
+        <title>Heat grip control</title>
+    </head>
+    <body onload="AppLoaded()">
+	<div id="app">
+        <div class="navbar">
+            <button id="idBtnCheckIgnition" class="button-action1" @click="idBtnCheckIgnition_Click">Check</button>
+            <button id="idBtnDisarm" class="button-action1" @click="idBtnDisarm_Click">Disarm</button>
+            <!--<button id="idBtnReboot" class="button-action1" @click="idBtnReboot_Click">Reboot</button>-->
+            <p style="color: white">TEST</p>
+        </div>
+
+        <div class="slotContainer">
+            <div v-for="slot in status.slots" class="slotButtonDiv">
+                <button>{{ slot.ix+1 }}</button>
+            </div>
+        </div>
+    </div>
+    <!-- JS -->
+    <script type="text/javascript" src="js/vue.min.js"></script>
+    <script type="text/javascript" src="js/common-app.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    </body>
+</html>

@@ -1,0 +1,88 @@
+@font-face {
+    font-family: 'orbitron'; /*a name to be used later*/
+    src: url('../font/Orbitron-Regular.woff'); /*URL to font*/
+  }
+
+@font-face {
+    font-family: 'orbitron'; /*a name to be used later*/
+    src: url('../font/Orbitron-Bold.woff'); /*URL to font*/
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'squared'; /*a name to be used later*/
+    src: url('../font/Squared.ttf'); /*URL to font*/
+    font-weight: bold;
+}
+
+* {
+    font-family: 'orbitron';
+}
+
+body {
+    background-color: black;
+}
+
+.slotContainer {
+    font-size: large;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+
+.slotButtonDiv {
+    padding: 2.5px;
+
+    flex-grow: 1;
+    flex: 1 1 0px;
+
+    display: inline-block;
+
+    align-self: flex-start;
+}
+
+.slotButtonDiv button {
+    background-color: lightgray;
+    font-family: 'squared';
+    font-weight: bold;
+    font-size: xxx-large;
+    width: -webkit-fill-available;
+    border-radius: 10px;
+    height: 4rem;
+    border-color: darkgray;
+    border-width: 2.5px;
+    animation: glowing-red 1000ms infinite;
+}
+
+@keyframes glowing-red {
+    0% {
+        background-color: red;
+        box-shadow: 0 0 3px red;
+    }
+    50% {
+        background-color: darkred;
+        box-shadow: 0 0 10px darkred;
+    }
+    100% {
+        background-color: red;
+        box-shadow: 0 0 3px red;
+    }
+  }
+
+.navbar {
+    background-color: aqua;
+}
+
+.button-action1 {
+    background-color: #112637;
+    /* border: white; */
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    border-color: white;
+    text-transform: uppercase;
+}

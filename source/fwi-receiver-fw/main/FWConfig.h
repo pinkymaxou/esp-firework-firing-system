@@ -1,0 +1,8 @@
+
+#ifndef FWCONFIG_H_
+#define FWCONFIG_H_
+
+// Wi-Fi
+#define FWCONFIG_STAAP_WIFI_SSID "ESP-IGNITER-%02X%02X%02X"
+
+#endif
