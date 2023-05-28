@@ -20,4 +20,8 @@ bool HARDWAREGPIO_ReadMasterPowerSense();
 
 bool HARDWAREGPIO_ReadConnectionSense();
 
+void HARDWAREGPIO_RefreshLEDStrip();
+
+void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b);
+
 #endif

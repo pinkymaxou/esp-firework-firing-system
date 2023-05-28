@@ -44,6 +44,8 @@ static void ArmSystem();
 static void DisarmSystem();
 static void Fire(uint32_t u32OutputIndex);
 
+static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
+
 void MAINAPP_Init()
 {
     m_xSemaphoreHandle = xSemaphoreCreateMutexStatic(&m_xSemaphoreCreateMutex);
@@ -134,6 +136,12 @@ void MAINAPP_Run()
             bSanityOn = !bSanityOn;
         }
 
+        /* Refresh the strip to send data */
+        // Update LEDs
+        for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+            UpdateLED(i);
+
+        HARDWAREGPIO_RefreshLEDStrip();
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
@@ -227,12 +235,13 @@ static void Fire(uint32_t u32OutputIndex)
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     pSRelay->isEN = true;
+    UpdateLED(u32OutputIndex, true);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
     pSRelay->isEN = false;
-
     pSRelay->isFired = true;
+    UpdateLED(u32OutputIndex, true);
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -268,4 +277,20 @@ void MAINAPP_ExecFire(uint32_t u32OutputIndex)
     const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Fire, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
+}
+
+static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
+{
+    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+    if (pSRelay->isEN)
+        HARDWAREGPIO_SetOutputRelayStatusColor(i, 0, 200, 0);
+    else if (pSRelay->isFired) // White for fired
+        HARDWAREGPIO_SetOutputRelayStatusColor(i, 100, 100, 0);
+    else if (pSRelay->isConnected) // YELLOW for connected
+        HARDWAREGPIO_SetOutputRelayStatusColor(i, 200, 200, 0);
+    else // minimal white illuminiation
+        HARDWAREGPIO_SetOutputRelayStatusColor(i, 10, 10, 10);
+
+    if (bForceRefresh)
+        HARDWAREGPIO_RefreshLEDStrip();
 }
