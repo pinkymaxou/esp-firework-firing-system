@@ -11,16 +11,70 @@ static led_strip_handle_t led_strip;
 
 void HARDWAREGPIO_Init()
 {
+    // Sanity LEDs
     gpio_set_direction(HWCONFIG_SANITY_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(HWCONFIG_SANITY2_PIN, GPIO_MODE_OUTPUT);
+
+    #if HWCONFIG_TESTMODE == 0
+    // Initialize relay BUS
+    gpio_set_direction(HWCONFIG_RELAY_BUS_1_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_1_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_2_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_2_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_3_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_3_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_4_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_4_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_5_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_5_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_6_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_6_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_7_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_7_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_8_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_8_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_9_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_9_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_10_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_10_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_11_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_11_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_12_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_12_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_13_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_13_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_14_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_14_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_15_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_15_PIN, true);
+    gpio_set_direction(HWCONFIG_RELAY_BUS_16_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_BUS_16_PIN, true);
+
+    gpio_set_direction(HWCONFIG_RELAY_MOSA1, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_MOSA1, true);
+    gpio_set_direction(HWCONFIG_RELAY_MOSA2, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_MOSA2, true);
+    gpio_set_direction(HWCONFIG_RELAY_MOSA3, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_RELAY_MOSA3, true);
 
     // Relay pin
-    // gpio_set_direction(HWCONFIG_OUTRELAY_PIN, GPIO_MODE_OUTPUT);
-    // gpio_set_level(HWCONFIG_OUTRELAY_PIN, false);
+    gpio_set_direction(HWCONFIG_MASTERPWRRELAY_EN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, false);
 
-    // Sanity pin
-    // gpio_set_direction(HWCONFIG_OUTSANITY_PIN, GPIO_MODE_OUTPUT);
-    /// gpio_set_level(HWCONFIG_OUTSANITY_PIN, false);
+    gpio_set_direction(HWCONFIG_MASTERPWRSENSE_IN, GPIO_MODE_INPUT);
+    gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
+    gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
+    gpio_pullup_en(HWCONFIG_CONNSENSE_IN);
 
+    // User input
+    gpio_set_direction(HWCONFIG_ENCODERA_IN, GPIO_MODE_INPUT);
+    gpio_pullup_en(HWCONFIG_ENCODERA_IN);
+    gpio_set_direction(HWCONFIG_ENCODERB_IN, GPIO_MODE_INPUT);
+    gpio_pullup_en(HWCONFIG_ENCODERB_IN);
+    gpio_set_direction(HWCONFIG_ENCODERSW, GPIO_MODE_INPUT);
+    gpio_pullup_en(HWCONFIG_ENCODERSW);
+    #endif
+    
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = HWCONFIG_SANITY_PIN,
