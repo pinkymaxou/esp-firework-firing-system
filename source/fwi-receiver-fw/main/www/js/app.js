@@ -26,7 +26,7 @@ var currentApp = new Vue({
 	},
 	idBtnFire_Click(ix)
 	{
-		SendAction("/action/firesystem");
+		SendAction("/action/firesystem", { index: ix });
 	}
   }
 })

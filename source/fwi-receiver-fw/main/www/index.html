@@ -19,8 +19,8 @@
         </div>
 
         <div class="slotContainer">
-            <div v-for="slot in status.slots" class="slotButtonDiv">
-                <button @click="idBtnFire_Click(slot.ix)">{{ slot.ix+1 }}</button>
+            <div v-for="output in status.outputs" class="slotButtonDiv">
+                <button @click="idBtnFire_Click(output.ix)">{{ output.ix+1 }}</button>
             </div>
         </div>
     </div>

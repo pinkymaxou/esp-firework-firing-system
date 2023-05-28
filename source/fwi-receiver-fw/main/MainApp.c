@@ -93,7 +93,7 @@ void MAINAPP_Run()
                     DisarmSystem();
                     break;
                 case MAINAPP_ECMD_Fire:
-                    ESP_LOGI(TAG, "Fire command issued");
+                    ESP_LOGI(TAG, "Fire command issued for output index: %d", (int)sCmd.uArg.sFire.u32OutputIndex);
                     Fire(sCmd.uArg.sFire.u32OutputIndex);
 
                     // Reset armed timeout ..
@@ -199,7 +199,7 @@ static void DisarmSystem()
 
 static void Fire(uint32_t u32OutputIndex)
 {
-    if (HWCONFIG_OUTPUT_COUNT >= 48)
+    if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
         return;
@@ -214,6 +214,7 @@ static void Fire(uint32_t u32OutputIndex)
     if (!bIsReady)
     {
         // TODO: Report the error;
+        ESP_LOGE(TAG, "Cannot fire, not ready !");
         return;
     }
 
@@ -232,7 +233,7 @@ static void Fire(uint32_t u32OutputIndex)
     pSRelay->isEN = false;
 
     pSRelay->isFired = true;
-    
+
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 }
