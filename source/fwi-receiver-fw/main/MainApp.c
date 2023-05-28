@@ -81,6 +81,9 @@ void MAINAPP_Run()
         {
             switch (sCmd.eCmd)
             {
+                case MAINAPP_ECMD_CheckConnections:
+                    CheckConnections();
+                    break;
                 case MAINAPP_ECMD_Arm:
                     ESP_LOGI(TAG, "Arm command issued");
                     ArmSystem();
@@ -92,6 +95,10 @@ void MAINAPP_Run()
                 case MAINAPP_ECMD_Fire:
                     ESP_LOGI(TAG, "Fire command issued");
                     Fire(sCmd.uArg.sFire.u32OutputIndex);
+
+                    // Reset armed timeout ..
+                    if (m_sState.bIsArmed)
+                        m_sState.ttArmedTicks = xTaskGetTickCount();
                     break;
                 default:
                     break;
@@ -104,7 +111,7 @@ void MAINAPP_Run()
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
 
             // Automatic disarm after 15 minutes
-            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(s32AutodisarmTimeoutMin*1000);
+            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(s32AutodisarmTimeoutMin*60*1000);
             const bool bIsNoMasterPower = !HARDWAREGPIO_ReadMasterPowerSense();
 
             if (bIsTimeout)
@@ -168,6 +175,7 @@ static void ArmSystem()
         return;
     }
 
+    // Check every connected outputs
     CheckConnections();
 
     // Reset fired counter
@@ -179,6 +187,7 @@ static void ArmSystem()
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(true);
+    m_sState.ttArmedTicks = xTaskGetTickCount();
     m_sState.bIsArmed = true;
     ESP_LOGI(TAG, "System is now armed and dangereous!");
     return;
@@ -243,10 +252,18 @@ void MAINAPP_ExecDisarm()
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
+void MAINAPP_ExecCheckConnections()
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_CheckConnections };
+    m_sCmd = sCmd;
+    xSemaphoreGive(m_xSemaphoreHandle);
+}
+
 void MAINAPP_ExecFire(uint32_t u32OutputIndex)
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Arm, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Fire, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }

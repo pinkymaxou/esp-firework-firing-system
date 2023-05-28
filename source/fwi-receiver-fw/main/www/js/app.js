@@ -12,21 +12,21 @@ var currentApp = new Vue({
   el: '#app',
   data: currentData,
   methods: {
-	idBtnReboot_Click(event)
-	{
-		SendAction("/action/reboot");
-	},
 	idBtnCheckIgnition_Click(event)
 	{
-		SendAction("/action/checkignition");
-	},
-	idBtnDoorTest_Click(event)
-	{
-		SendAction("/action/doortest");
+		SendAction("/action/checkconnections");
 	},
 	idBtnDisarm_Click(event)
 	{
-		SendAction("/action/disarm");
+		SendAction("/action/disarmfiringsystem");
+	},
+	idBtnArm_Click(event)
+	{
+		SendAction("/action/armfiringsystem");
+	},
+	idBtnFire_Click(ix)
+	{
+		SendAction("/action/firesystem");
 	}
   }
 })

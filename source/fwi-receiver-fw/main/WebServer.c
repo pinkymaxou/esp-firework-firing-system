@@ -15,6 +15,7 @@
 #include "Settings.h"
 #include "main.h"
 #include "HardwareGPIO.h"
+#include "MainApp.h"
 
 #define TAG "webserver"
 
@@ -31,7 +32,11 @@
 #define API_GETSTATUSJSON_URI "/api/getstatus"
 
 #define ACTION_POST_REBOOT "/action/reboot"
-#define ACTION_POST_DOORTEST "/action/doortest"
+
+#define ACTION_POST_ARMFIRINGSYSTEM "/action/armfiringsystem"
+#define ACTION_POST_DISARMFIRINGSYSTEM "/action/disarmfiringsystem"
+#define ACTION_POST_FIRESYSTEM "/action/firesystem"
+#define ACTION_POST_CHECKCONNECTIONS "/action/checkconnections"
 
 static esp_err_t api_get_handler(httpd_req_t *req);
 static esp_err_t api_post_handler(httpd_req_t *req);
@@ -181,9 +186,21 @@ static esp_err_t file_post_handler(httpd_req_t *req)
     {
         esp_restart();
     }
-    else if (strcmp(req->uri, ACTION_POST_DOORTEST) == 0)
+    else if (strcmp(req->uri, ACTION_POST_ARMFIRINGSYSTEM) == 0)
     {
-
+        MAINAPP_ExecArm();
+    }
+    else if (strcmp(req->uri, ACTION_POST_DISARMFIRINGSYSTEM ) == 0)
+    {
+        MAINAPP_ExecDisarm();
+    }
+    else if (strcmp(req->uri, ACTION_POST_FIRESYSTEM) == 0)
+    {
+        MAINAPP_ExecFire(0);
+    }
+    else if (strcmp(req->uri, ACTION_POST_CHECKCONNECTIONS) == 0)
+    {
+        MAINAPP_ExecCheckConnections();
     }
     else
     {
