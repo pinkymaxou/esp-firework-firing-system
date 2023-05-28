@@ -153,7 +153,7 @@ static void CheckConnections()
         pSRelay->isConnected = false;
 
         // Activate the relay ...
-        HARDWAREGPIO_WriteSingleRelay(i, true);
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         const bool bConnSense = HARDWAREGPIO_ReadConnectionSense();
         vTaskDelay(pdMS_TO_TICKS(25));  // Give it some time to detect
         pSRelay->isConnected = bConnSense;
@@ -163,8 +163,6 @@ static void CheckConnections()
 static void ArmSystem()
 {
     m_sState.bIsArmed = false;
-    // Master power relay shouln'd be active during check
-    HARDWAREGPIO_WriteMasterPowerRelay(false);
 
     // Ensure power is availble
     if (!HARDWAREGPIO_ReadMasterPowerSense())
@@ -185,8 +183,6 @@ static void ArmSystem()
         pSRelay->isFired = false;
     }
 
-    // Master power relay shouln'd be active during check
-    HARDWAREGPIO_WriteMasterPowerRelay(true);
     m_sState.ttArmedTicks = xTaskGetTickCount();
     m_sState.bIsArmed = true;
     ESP_LOGI(TAG, "System is now armed and dangereous!");
@@ -198,8 +194,6 @@ static void DisarmSystem()
     if (m_sState.bIsArmed)
         ESP_LOGI(TAG, "Disarming system");
 
-    // Master power relay shouln'd be active during check
-    HARDWAREGPIO_WriteMasterPowerRelay(false);
     m_sState.bIsArmed = false;
 }
 
@@ -223,6 +217,10 @@ static void Fire(uint32_t u32OutputIndex)
         return;
     }
 
+    // If it's armed and ready, enable the master relay
+    if (m_sState.bIsArmed)
+        HARDWAREGPIO_WriteMasterPowerRelay(true);
+
     SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
@@ -234,6 +232,9 @@ static void Fire(uint32_t u32OutputIndex)
     pSRelay->isEN = false;
 
     pSRelay->isFired = true;
+    
+    // Master power relay shouln'd be active during check
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
 }
 
 void MAINAPP_ExecArm()
