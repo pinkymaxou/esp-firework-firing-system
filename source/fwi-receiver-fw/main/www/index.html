@@ -10,11 +10,11 @@
     </head>
     <body onload="AppLoaded()">
 	<div id="app">
-        {{ status.req }}
-
-        <button id="idBtnReboot" class="button-27" @click="idBtnReboot_Click">Reboot</button>
-        <button id="idBtnCheckIgnition" class="button-27" @click="idBtnCheckIgnition_Click">Check Ignition</button>
-        <button id="idBtnDisarm" class="button-27" @click="idBtnDisarm_Click">Disarm</button>
+        <div>
+            <button id="idBtnCheckIgnition" class="button-action1" @click="idBtnCheckIgnition_Click">Check</button>
+            <button id="idBtnDisarm" class="button-action1" @click="idBtnDisarm_Click">Disarm</button>
+            <!--<button id="idBtnReboot" class="button-action1" @click="idBtnReboot_Click">Reboot</button>-->
+        </div>
 
         <div class="slotContainer">
             <div v-for="slot in status.slots" class="slotButtonDiv">
