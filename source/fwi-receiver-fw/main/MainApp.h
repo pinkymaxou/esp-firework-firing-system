@@ -36,4 +36,10 @@ void MAINAPP_Init();
 
 void MAINAPP_Run();
 
+void MAINAPP_ExecArm();
+
+void MAINAPP_ExecDisarm();
+
+void MAINAPP_ExecFire(uint32_t u32OutputIndex);
+
 #endif

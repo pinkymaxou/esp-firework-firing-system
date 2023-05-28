@@ -25,15 +25,19 @@ typedef struct
 {
     bool bIsArmed;
     TickType_t ttArmedTicks;
-
-    // Input commands
-    MAINAPP_SCmd sCmd;
 } SState;
 
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false }
 
 static SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0, .sCmd = { .eCmd = MAINAPP_ECMD_None } };
+static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
+
+// Input commands
+static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
+
+// Semaphore
+static StaticSemaphore_t m_xSemaphoreCreateMutex;
+static SemaphoreHandle_t m_xSemaphoreHandle;
 
 static void CheckConnections();
 static void ArmSystem();
@@ -42,6 +46,9 @@ static void Fire(uint32_t u32OutputIndex);
 
 void MAINAPP_Init()
 {
+    m_xSemaphoreHandle = xSemaphoreCreateMutexStatic(&m_xSemaphoreCreateMutex);
+    configASSERT( m_xSemaphoreHandle );
+
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
         SRelay* pSRelay = &m_sOutputs[i];
@@ -64,24 +71,31 @@ void MAINAPP_Run()
 
     while (true)
     {
+        xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+        MAINAPP_SCmd sCmd = m_sCmd;
+        m_sCmd.eCmd = MAINAPP_ECMD_None;
+        xSemaphoreGive(m_xSemaphoreHandle);
+
         // Command from another thread
-        if (m_sState.sCmd.eCmd != MAINAPP_ECMD_None)
+        if (sCmd.eCmd != MAINAPP_ECMD_None)
         {
-            switch (m_sState.sCmd.eCmd)
+            switch (sCmd.eCmd)
             {
                 case MAINAPP_ECMD_Arm:
+                    ESP_LOGI(TAG, "Arm command issued");
                     ArmSystem();
                     break;
                 case MAINAPP_ECMD_Disarm:
+                    ESP_LOGI(TAG, "Disarm command issued");
                     DisarmSystem();
                     break;
                 case MAINAPP_ECMD_Fire:
-                    Fire(m_sState.sCmd.uArg.sFire.u32OutputIndex);
+                    ESP_LOGI(TAG, "Fire command issued");
+                    Fire(sCmd.uArg.sFire.u32OutputIndex);
                     break;
                 default:
                     break;
             }
-            m_sState.sCmd.eCmd = MAINAPP_ECMD_None;
         }
 
         // Check for disarming condition
@@ -211,4 +225,28 @@ static void Fire(uint32_t u32OutputIndex)
     pSRelay->isEN = false;
 
     pSRelay->isFired = true;
+}
+
+void MAINAPP_ExecArm()
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Arm };
+    m_sCmd = sCmd;
+    xSemaphoreGive(m_xSemaphoreHandle);
+}
+
+void MAINAPP_ExecDisarm()
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Disarm };
+    m_sCmd = sCmd;
+    xSemaphoreGive(m_xSemaphoreHandle);
+}
+
+void MAINAPP_ExecFire(uint32_t u32OutputIndex)
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Arm, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
+    m_sCmd = sCmd;
+    xSemaphoreGive(m_xSemaphoreHandle);
 }
