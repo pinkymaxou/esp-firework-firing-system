@@ -118,7 +118,7 @@ void HARDWAREGPIO_ClearRelayBus()
     vTaskDelay(pdMS_TO_TICKS(25));
 }
 
-void HARDWAREGPIO_WriteSingleRelay(uint32_t u32RelayIndex, bool bValue)
+void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
     #if HWCONFIG_TESTMODE == 0
     HARDWAREGPIO_ClearRelayBus();
@@ -126,11 +126,11 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32RelayIndex, bool bValue)
         return;
 
     // Activate the right area
-    const uint32_t u32AreaIndex = u32RelayIndex/HWCONFIG_OUTPUTBUS_COUNT;
+    const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
     gpio_set_level(gpioArea, true);
 
-    gpio_set_level(m_busPins[u32RelayIndex], !bValue);
+    gpio_set_level(m_busPins[u32OutputIndex], !bValue);
     #endif
 }
 

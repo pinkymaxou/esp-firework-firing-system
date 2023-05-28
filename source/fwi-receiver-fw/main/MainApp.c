@@ -7,6 +7,7 @@
 #include "MainApp.h"
 #include "HWConfig.h"
 #include "HardwareGPIO.h"
+#include "Settings.h"
 
 #define TAG "MainApp"
 
@@ -24,16 +25,20 @@ typedef struct
 {
     bool bIsArmed;
     TickType_t ttArmedTicks;
+
+    // Input commands
+    MAINAPP_SCmd sCmd;
 } SState;
 
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false }
 
 static SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
+static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0, .sCmd = { .eCmd = MAINAPP_ECMD_None } };
 
 static void CheckConnections();
 static void ArmSystem();
 static void DisarmSystem();
+static void Fire(uint32_t u32OutputIndex);
 
 void MAINAPP_Init()
 {
@@ -55,15 +60,37 @@ void MAINAPP_Run()
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
 
+    int32_t s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+
     while (true)
     {
+        // Command from another thread
+        if (m_sState.sCmd.eCmd != MAINAPP_ECMD_None)
+        {
+            switch (m_sState.sCmd.eCmd)
+            {
+                case MAINAPP_ECMD_Arm:
+                    ArmSystem();
+                    break;
+                case MAINAPP_ECMD_Disarm:
+                    DisarmSystem();
+                    break;
+                case MAINAPP_ECMD_Fire:
+                    Fire(m_sState.sCmd.uArg.sFire.u32OutputIndex);
+                    break;
+                default:
+                    break;
+            }
+            m_sState.sCmd.eCmd = MAINAPP_ECMD_None;
+        }
+
         // Check for disarming condition
         if (m_sState.bIsArmed)
         {
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
 
             // Automatic disarm after 15 minutes
-            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(3*300*1000);
+            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(s32AutodisarmTimeoutMin*1000);
             const bool bIsNoMasterPower = !HARDWAREGPIO_ReadMasterPowerSense();
 
             if (bIsTimeout)
@@ -151,4 +178,37 @@ static void DisarmSystem()
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     m_sState.bIsArmed = false;
+}
+
+static void Fire(uint32_t u32OutputIndex)
+{
+    if (HWCONFIG_OUTPUT_COUNT >= 48)
+    {
+        ESP_LOGE(TAG, "Output index is invalid !");
+        return;
+    }
+
+    // If it's in dry-run mode, power shouldn't be present
+    // if it's armed, power should be present.
+    const bool bIsReady =
+        (m_sState.bIsArmed && HARDWAREGPIO_ReadMasterPowerSense()) ||
+        (!m_sState.bIsArmed && !HARDWAREGPIO_ReadMasterPowerSense());
+
+    if (!bIsReady)
+    {
+        // TODO: Report the error;
+        return;
+    }
+
+    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+
+    ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
+    int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
+    pSRelay->isEN = true;
+    HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
+    vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
+    HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
+    pSRelay->isEN = false;
+
+    pSRelay->isFired = true;
 }

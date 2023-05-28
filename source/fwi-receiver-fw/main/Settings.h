@@ -14,6 +14,9 @@ typedef enum
     SETTINGS_EENTRY_WSTASSID,
     SETTINGS_EENTRY_WSTAPass,
 
+    SETTINGS_EENTRY_AutoDisarmTimeout,
+    SETTINGS_EENTRY_FiringHoldTimeMS,
+
     SETTINGS_EENTRY_Count
 } SETTINGS_EENTRY;
 

@@ -12,7 +12,7 @@ void HARDWAREGPIO_SetSanityLED(bool isEnabled);
 
 void HARDWAREGPIO_ClearRelayBus();
 
-void HARDWAREGPIO_WriteSingleRelay(uint32_t u32RelayIndex, bool bValue);
+void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue);
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue);
 
