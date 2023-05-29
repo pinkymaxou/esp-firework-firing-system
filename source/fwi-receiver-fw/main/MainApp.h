@@ -39,6 +39,7 @@ typedef enum
 
     MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout = 11,
     MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff = 12,
+    MAINAPP_EGENERALSTATE_Disarmed = 13,
 } MAINAPP_EGENERALSTATE;
 
 typedef union
