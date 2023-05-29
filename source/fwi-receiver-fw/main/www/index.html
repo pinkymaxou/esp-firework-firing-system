@@ -11,10 +11,10 @@
     <body onload="AppLoaded()">
 	<div id="app">
         <div class="navbar">
-            <button id="idBtnCheckIgnition" class="button-action1" @click="idBtnCheckIgnition_Click">Check</button>
+            <button id="idBtnCheckIgnition" class="button-action1" :disabled="!is_connected" @click="idBtnCheckIgnition_Click">Check</button>
             <button id="idBtnDisarm" class="button-action1" :disabled="!is_connected || !status.is_armed" @click="idBtnDisarm_Click">Disarm</button>
             <button id="idBtnArm" class="button-action1" :disabled="!is_connected || status.is_armed" @click="idBtnArm_Click">Arm</button>
-            <p style="color: white; margin: 5px;">{{ translateGeneralState(status.general_state) }}</p>
+            <p style="color: white; margin: 5px; text-transform: uppercase;">{{ translateGeneralState(status.general_state) }} [<b>{{ status.req }}</b>]</p>
         </div>
 
         <div class="slotContainer">

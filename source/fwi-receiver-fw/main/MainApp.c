@@ -76,6 +76,12 @@ void MAINAPP_Run()
             switch (sCmd.eCmd)
             {
                 case MAINAPP_ECMD_CheckConnections:
+                    // Cannot check connection while armed
+                    if (m_sState.bIsArmed)
+                    {
+                        ESP_LOGI(TAG, "Forcing disarm");
+                        DisarmSystem();
+                    }
                     CheckConnections();
                     break;
                 case MAINAPP_ECMD_Arm:
