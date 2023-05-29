@@ -50,7 +50,6 @@ async function timerHandler() {
 		})
 		.then((data) =>
 		{
-		  //console.log("data: ", data);
 		  currentData.status = data.status;
 		  currentData.is_connected = true;
 		  setTimeout(timerHandler, 500);

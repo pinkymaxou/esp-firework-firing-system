@@ -302,3 +302,8 @@ MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
         return MAINAPP_EOUTPUTSTATE_Connected;
     return MAINAPP_EOUTPUTSTATE_Idle;
 }
+
+bool MAINAPP_IsArmed()
+{
+    return m_sState.bIsArmed;
+}

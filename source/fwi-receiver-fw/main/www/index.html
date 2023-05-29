@@ -12,15 +12,16 @@
 	<div id="app">
         <div class="navbar">
             <button id="idBtnCheckIgnition" class="button-action1" @click="idBtnCheckIgnition_Click">Check</button>
-            <button id="idBtnDisarm" class="button-action1" @click="idBtnDisarm_Click">Disarm</button>
-            <button id="idBtnArm" class="button-action1" @click="idBtnArm_Click">Arm</button>
-            <!--<button id="idBtnReboot" class="button-action1" @click="idBtnReboot_Click">Reboot</button>-->
+            <button id="idBtnDisarm" class="button-action1" :disabled="!is_connected || !status.is_armed" @click="idBtnDisarm_Click">Disarm</button>
+            <button id="idBtnArm" class="button-action1" :disabled="!is_connected || status.is_armed" @click="idBtnArm_Click">Arm</button>
             <p style="color: white; margin: 5px;">TEST</p>
         </div>
 
         <div class="slotContainer">
             <div v-for="output in status.outputs" class="slotButtonDiv">
-                <button :class="{ 'button-idle': (output.s == EOutputState.Idle), 'button-enabled': (output.s == EOutputState.Enabled), 'button-fired': (output.s == EOutputState.Fired), 'button-connected': (output.s == EOutputState.Connected && !is_armed), 'button-connected-armed': (output.s == EOutputState.Connected && is_armed) }" @click="idBtnFire_Click(output.ix)">{{ output.ix+1 }}</button>
+                <button :class="{ 'button-idle': (output.s == EOutputState.Idle), 'button-enabled': (output.s == EOutputState.Enabled), 'button-fired': (output.s == EOutputState.Fired), 'button-connected': (output.s == EOutputState.Connected && !status.is_armed), 'button-connected-armed': (output.s == EOutputState.Connected && status.is_armed) }" 
+                    @click="idBtnFire_Click(output.ix)" :disabled="!is_connected">{{ output.ix+1 }}
+                </button>
             </div>
         </div>
     </div>
