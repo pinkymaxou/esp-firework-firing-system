@@ -153,10 +153,18 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
 {
+    #if HWCONFIG_TESTMODE == 0
     return gpio_get_level(HWCONFIG_MASTERPWRSENSE_IN) == false;
+    #else
+    return true;
+    #endif
 }
 
 bool HARDWAREGPIO_ReadConnectionSense()
 {
+    #if HWCONFIG_TESTMODE == 0
     return gpio_get_level(HWCONFIG_CONNSENSE_IN) == false;
+    #else
+    return true;
+    #endif
 }

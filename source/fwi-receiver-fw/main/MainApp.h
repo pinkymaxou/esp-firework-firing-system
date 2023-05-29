@@ -90,6 +90,8 @@ MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex);
 
 MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay);
 
+MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState();
+
 bool MAINAPP_IsArmed();
 
 #endif

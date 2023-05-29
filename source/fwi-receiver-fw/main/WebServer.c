@@ -568,6 +568,7 @@ static char* GetStatusJSON()
     static int reqIndex = 0;
     cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++reqIndex));
     cJSON_AddItemToObject(pStatusEntry, "is_armed", cJSON_CreateBool(MAINAPP_IsArmed()));
+    cJSON_AddItemToObject(pStatusEntry, "general_state", cJSON_CreateNumber((int)MAINAPP_GetGeneralState()));
     cJSON* pOutputs = cJSON_AddArrayToObject(pStatusEntry, "outputs");
 
     // All ignitor slots status

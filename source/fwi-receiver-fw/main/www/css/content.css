@@ -106,3 +106,10 @@ body {
     border-color: white;
     text-transform: uppercase;
 }
+
+.button-action1 button:disabled,
+.button-action1 button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+}

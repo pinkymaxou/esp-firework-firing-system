@@ -114,7 +114,7 @@ void MAINAPP_Run()
                 DisarmSystem();
                 m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
             }
-            else if (!bIsNoMasterPower)
+            else if (bIsNoMasterPower)
             {
                 ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
                 DisarmSystem();
@@ -321,4 +321,9 @@ MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
 bool MAINAPP_IsArmed()
 {
     return m_sState.bIsArmed;
+}
+
+MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
+{
+    return m_sState.eGeneralState;
 }
