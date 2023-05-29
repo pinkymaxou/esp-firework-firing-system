@@ -13,23 +13,13 @@
 
 typedef struct
 {
-    uint32_t u32Index;
-    // Status
-    bool isConnected;
-    bool isFired;
-
-    bool isEN;
-} SRelay;
-
-typedef struct
-{
     bool bIsArmed;
     TickType_t ttArmedTicks;
 } SState;
 
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false }
 
-static SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
+static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
 
 // Input commands
@@ -53,7 +43,7 @@ void MAINAPP_Init()
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->u32Index = i;
         pSRelay->isConnected = false;
         pSRelay->isFired = false;
@@ -139,7 +129,7 @@ void MAINAPP_Run()
         /* Refresh the strip to send data */
         // Update LEDs
         for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-            UpdateLED(i);
+            UpdateLED(i, false);
 
         HARDWAREGPIO_RefreshLEDStrip();
         vTaskDelay(pdMS_TO_TICKS(1));
@@ -157,7 +147,7 @@ static void CheckConnections()
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->isConnected = false;
 
         // Activate the relay ...
@@ -187,7 +177,7 @@ static void ArmSystem()
     // Reset fired counter
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->isFired = false;
     }
 
@@ -230,7 +220,7 @@ static void Fire(uint32_t u32OutputIndex)
     if (m_sState.bIsArmed)
         HARDWAREGPIO_WriteMasterPowerRelay(true);
 
-    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
@@ -281,16 +271,34 @@ void MAINAPP_ExecFire(uint32_t u32OutputIndex)
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
-    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
-    if (pSRelay->isEN)
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 0, 200, 0);
-    else if (pSRelay->isFired) // White for fired
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 100, 100, 0);
-    else if (pSRelay->isConnected) // YELLOW for connected
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 200, 200, 0);
+    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+
+    MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(pSRelay);
+    if (eOutputState == MAINAPP_EOUTPUTSTATE_Enabled)
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
+    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Fired) // White for fired
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 100, 100, 0);
+    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Connected) // YELLOW for connected
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 200, 200, 0);
     else // minimal white illuminiation
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 10, 10, 10);
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 10, 10, 10);
 
     if (bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
+}
+
+MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)
+{
+    return m_sOutputs[u32OutputIndex];
+}
+
+MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
+{
+    if (pSRelay->isEN)
+        return MAINAPP_EOUTPUTSTATE_Enabled;
+    if (pSRelay->isFired) // White for fired
+        return MAINAPP_EOUTPUTSTATE_Fired;
+    if (pSRelay->isConnected) // YELLOW for connected
+        return MAINAPP_EOUTPUTSTATE_Connected;
+    return MAINAPP_EOUTPUTSTATE_Idle;
 }

@@ -42,7 +42,6 @@ body {
 }
 
 .slotButtonDiv button {
-    background-color: lightgray;
     font-family: 'squared';
     font-weight: bold;
     font-size: xxx-large;
@@ -51,6 +50,23 @@ body {
     height: 4rem;
     border-color: darkgray;
     border-width: 2.5px;
+}
+
+.button-idle {
+    background-color: white;
+}
+.button-enabled  {
+    background-color: lime;
+}
+.button-fired {
+    background-color: lightgray;
+}
+
+.button-connected {
+    background-color: yellow;
+}
+
+.button-connected-armed {
     animation: glowing-red 1000ms infinite;
 }
 

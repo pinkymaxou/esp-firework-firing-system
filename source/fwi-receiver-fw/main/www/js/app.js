@@ -4,7 +4,8 @@ let currentData =
 
 	status: {
 		req: 0,
-		slots: []
+		is_armed: false,
+		outputs: []
 	},
 };
 

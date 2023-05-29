@@ -1,3 +1,10 @@
+const EOutputState = {
+	Idle: 0,
+	Enabled: 1,
+	Fired: 2,
+	Connected: 3
+};
+
 
 function SendAction(actionURL, data)
 {

@@ -573,9 +573,13 @@ static char* GetStatusJSON()
     // All ignitor slots status
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
+        MAINAPP_SRelay sRelay = MAINAPP_GetRelayState(i);
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
-        cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber(0));
+
+        const MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
+
+        cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber((int)eOutputState));
         cJSON_AddItemToArray(pOutputs, pEntryJSON10);
     }
 
