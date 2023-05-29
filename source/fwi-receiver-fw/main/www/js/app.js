@@ -5,6 +5,7 @@ let currentData =
 	status: {
 		req: 0,
 		is_armed: false,
+		general_state: 0,
 		outputs: []
 	},
 };
@@ -13,6 +14,9 @@ var currentApp = new Vue({
   el: '#app',
   data: currentData,
   methods: {
+	translateGeneralState(value) {
+		return 'IDLE';
+	},
 	idBtnCheckIgnition_Click(event)
 	{
 		SendAction("/action/checkconnections");

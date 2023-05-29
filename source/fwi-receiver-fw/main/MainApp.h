@@ -20,6 +20,27 @@ typedef enum
     MAINAPP_EOUTPUTSTATE_Connected = 3,
 } MAINAPP_EOUTPUTSTATE;
 
+typedef enum
+{
+    MAINAPP_EGENERALSTATE_Idle = 0,
+    
+    MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError = 1,
+    MAINAPP_EGENERALSTATE_FiringUnknownError = 2,
+    MAINAPP_EGENERALSTATE_Firing = 3,
+    MAINAPP_EGENERALSTATE_FiringOK = 4,
+
+    MAINAPP_EGENERALSTATE_ArmingSystem = 5,
+    MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError = 6,
+    MAINAPP_EGENERALSTATE_ArmingSystemOK = 7,
+    
+    MAINAPP_EGENERALSTATE_CheckingConnection = 8,
+    MAINAPP_EGENERALSTATE_CheckingConnectionOK = 9,
+    MAINAPP_EGENERALSTATE_CheckingConnectionError = 10,
+
+    MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout = 11,
+    MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff = 12,
+} MAINAPP_EGENERALSTATE;
+
 typedef union
 {
     struct

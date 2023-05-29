@@ -15,9 +15,11 @@ typedef struct
 {
     bool bIsArmed;
     TickType_t ttArmedTicks;
+
+    MAINAPP_EGENERALSTATE eGeneralState;
 } SState;
 
-#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false }
+#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
@@ -110,11 +112,13 @@ void MAINAPP_Run()
             {
                 ESP_LOGI(TAG, "Automatic disarming, timeout");
                 DisarmSystem();
+                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
             }
             else if (!bIsNoMasterPower)
             {
                 ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
                 DisarmSystem();
+                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
             }
         }
 
@@ -138,6 +142,8 @@ void MAINAPP_Run()
 
 static void CheckConnections()
 {
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -156,10 +162,12 @@ static void CheckConnections()
         vTaskDelay(pdMS_TO_TICKS(25));  // Give it some time to detect
         pSRelay->isConnected = bConnSense;
     }
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
 }
 
 static void ArmSystem()
 {
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystem;
     m_sState.bIsArmed = false;
 
     // Ensure power is availble
@@ -167,7 +175,7 @@ static void ArmSystem()
     {
         // Master power is not active
         ESP_LOGE(TAG, "Unable to arm the system, no power!");
-        // TODO: Display the error somewhere ...
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError;
         return;
     }
 
@@ -184,6 +192,7 @@ static void ArmSystem()
     m_sState.ttArmedTicks = xTaskGetTickCount();
     m_sState.bIsArmed = true;
     ESP_LOGI(TAG, "System is now armed and dangereous!");
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemOK;
     return;
 }
 
@@ -191,15 +200,19 @@ static void DisarmSystem()
 {
     if (m_sState.bIsArmed)
         ESP_LOGI(TAG, "Disarming system");
-
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Disarmed;
     m_sState.bIsArmed = false;
 }
 
 static void Fire(uint32_t u32OutputIndex)
 {
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
+
     if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
         return;
     }
 
@@ -211,8 +224,8 @@ static void Fire(uint32_t u32OutputIndex)
 
     if (!bIsReady)
     {
-        // TODO: Report the error;
         ESP_LOGE(TAG, "Cannot fire, not ready !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
         return;
     }
 
@@ -235,6 +248,8 @@ static void Fire(uint32_t u32OutputIndex)
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
 }
 
 void MAINAPP_ExecArm()

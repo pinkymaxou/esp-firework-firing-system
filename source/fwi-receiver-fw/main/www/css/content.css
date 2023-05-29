@@ -20,7 +20,7 @@
 }
 
 body {
-    background-color: black;
+    background-color: #112637;
 }
 
 .slotContainer {
@@ -86,7 +86,11 @@ body {
   }
 
 .navbar {
-    background-color: aqua;
+    border-radius: 5px;
+}
+
+.navbar p {
+    font-weight: bolder;
 }
 
 .button-action1 {
