@@ -8,9 +8,39 @@ typedef enum
     MAINAPP_ECMD_Disarm,
     MAINAPP_ECMD_Arm,
     MAINAPP_ECMD_Fire,
-    
+
     MAINAPP_ECMD_CheckConnections,
 } MAINAPP_ECMD;
+
+typedef enum
+{
+    MAINAPP_EOUTPUTSTATE_Idle = 0,
+    MAINAPP_EOUTPUTSTATE_Enabled = 1,
+    MAINAPP_EOUTPUTSTATE_Fired = 2,
+    MAINAPP_EOUTPUTSTATE_Connected = 3,
+} MAINAPP_EOUTPUTSTATE;
+
+typedef enum
+{
+    MAINAPP_EGENERALSTATE_Idle = 0,
+    
+    MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError = 1,
+    MAINAPP_EGENERALSTATE_FiringUnknownError = 2,
+    MAINAPP_EGENERALSTATE_Firing = 3,
+    MAINAPP_EGENERALSTATE_FiringOK = 4,
+
+    MAINAPP_EGENERALSTATE_ArmingSystem = 5,
+    MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError = 6,
+    MAINAPP_EGENERALSTATE_ArmingSystemOK = 7,
+    
+    MAINAPP_EGENERALSTATE_CheckingConnection = 8,
+    MAINAPP_EGENERALSTATE_CheckingConnectionOK = 9,
+    MAINAPP_EGENERALSTATE_CheckingConnectionError = 10,
+
+    MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout = 11,
+    MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff = 12,
+    MAINAPP_EGENERALSTATE_Disarmed = 13,
+} MAINAPP_EGENERALSTATE;
 
 typedef union
 {
@@ -34,6 +64,16 @@ typedef struct MainApp
     MAINAPP_UArg uArg;
 } MAINAPP_SCmd;
 
+typedef struct
+{
+    uint32_t u32Index;
+    // Status
+    bool isConnected;
+    bool isFired;
+
+    bool isEN;
+} MAINAPP_SRelay;
+
 void MAINAPP_Init();
 
 void MAINAPP_Run();
@@ -45,5 +85,13 @@ void MAINAPP_ExecDisarm();
 void MAINAPP_ExecFire(uint32_t u32OutputIndex);
 
 void MAINAPP_ExecCheckConnections();
+
+MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex);
+
+MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay);
+
+MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState();
+
+bool MAINAPP_IsArmed();
 
 #endif

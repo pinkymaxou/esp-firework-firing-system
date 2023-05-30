@@ -13,23 +13,15 @@
 
 typedef struct
 {
-    uint32_t u32Index;
-    // Status
-    bool isConnected;
-    bool isFired;
-
-    bool isEN;
-} SRelay;
-
-typedef struct
-{
     bool bIsArmed;
     TickType_t ttArmedTicks;
+
+    MAINAPP_EGENERALSTATE eGeneralState;
 } SState;
 
-#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false }
+#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
-static SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
+static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
 
 // Input commands
@@ -53,7 +45,7 @@ void MAINAPP_Init()
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->u32Index = i;
         pSRelay->isConnected = false;
         pSRelay->isFired = false;
@@ -84,6 +76,12 @@ void MAINAPP_Run()
             switch (sCmd.eCmd)
             {
                 case MAINAPP_ECMD_CheckConnections:
+                    // Cannot check connection while armed
+                    if (m_sState.bIsArmed)
+                    {
+                        ESP_LOGI(TAG, "Forcing disarm");
+                        DisarmSystem();
+                    }
                     CheckConnections();
                     break;
                 case MAINAPP_ECMD_Arm:
@@ -120,11 +118,13 @@ void MAINAPP_Run()
             {
                 ESP_LOGI(TAG, "Automatic disarming, timeout");
                 DisarmSystem();
+                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
             }
-            else if (!bIsNoMasterPower)
+            else if (bIsNoMasterPower)
             {
                 ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
                 DisarmSystem();
+                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
             }
         }
 
@@ -148,6 +148,8 @@ void MAINAPP_Run()
 
 static void CheckConnections()
 {
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -157,7 +159,7 @@ static void CheckConnections()
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->isConnected = false;
 
         // Activate the relay ...
@@ -166,10 +168,12 @@ static void CheckConnections()
         vTaskDelay(pdMS_TO_TICKS(25));  // Give it some time to detect
         pSRelay->isConnected = bConnSense;
     }
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
 }
 
 static void ArmSystem()
 {
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystem;
     m_sState.bIsArmed = false;
 
     // Ensure power is availble
@@ -177,7 +181,7 @@ static void ArmSystem()
     {
         // Master power is not active
         ESP_LOGE(TAG, "Unable to arm the system, no power!");
-        // TODO: Display the error somewhere ...
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError;
         return;
     }
 
@@ -187,13 +191,14 @@ static void ArmSystem()
     // Reset fired counter
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        SRelay* pSRelay = &m_sOutputs[i];
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->isFired = false;
     }
 
     m_sState.ttArmedTicks = xTaskGetTickCount();
     m_sState.bIsArmed = true;
     ESP_LOGI(TAG, "System is now armed and dangereous!");
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemOK;
     return;
 }
 
@@ -201,15 +206,19 @@ static void DisarmSystem()
 {
     if (m_sState.bIsArmed)
         ESP_LOGI(TAG, "Disarming system");
-
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Disarmed;
     m_sState.bIsArmed = false;
 }
 
 static void Fire(uint32_t u32OutputIndex)
 {
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
+
     if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
         return;
     }
 
@@ -221,8 +230,8 @@ static void Fire(uint32_t u32OutputIndex)
 
     if (!bIsReady)
     {
-        // TODO: Report the error;
         ESP_LOGE(TAG, "Cannot fire, not ready !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
         return;
     }
 
@@ -230,7 +239,7 @@ static void Fire(uint32_t u32OutputIndex)
     if (m_sState.bIsArmed)
         HARDWAREGPIO_WriteMasterPowerRelay(true);
 
-    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
@@ -245,6 +254,8 @@ static void Fire(uint32_t u32OutputIndex)
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
 }
 
 void MAINAPP_ExecArm()
@@ -281,16 +292,44 @@ void MAINAPP_ExecFire(uint32_t u32OutputIndex)
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
-    SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
-    if (pSRelay->isEN)
+    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+
+    MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(pSRelay);
+    if (eOutputState == MAINAPP_EOUTPUTSTATE_Enabled)
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
-    else if (pSRelay->isFired) // White for fired
+    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Fired) // White for fired
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 100, 100, 0);
-    else if (pSRelay->isConnected) // YELLOW for connected
+    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Connected) // YELLOW for connected
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 200, 200, 0);
     else // minimal white illuminiation
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 10, 10, 10);
 
     if (bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
+}
+
+MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)
+{
+    return m_sOutputs[u32OutputIndex];
+}
+
+MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
+{
+    if (pSRelay->isEN)
+        return MAINAPP_EOUTPUTSTATE_Enabled;
+    if (pSRelay->isFired) // White for fired
+        return MAINAPP_EOUTPUTSTATE_Fired;
+    if (pSRelay->isConnected) // YELLOW for connected
+        return MAINAPP_EOUTPUTSTATE_Connected;
+    return MAINAPP_EOUTPUTSTATE_Idle;
+}
+
+bool MAINAPP_IsArmed()
+{
+    return m_sState.bIsArmed;
+}
+
+MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
+{
+    return m_sState.eGeneralState;
 }

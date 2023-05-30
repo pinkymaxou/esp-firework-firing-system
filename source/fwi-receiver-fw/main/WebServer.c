@@ -565,17 +565,22 @@ static char* GetStatusJSON()
         goto ERROR;
 
     cJSON* pStatusEntry = cJSON_CreateObject();
-    static int a = 0;
-    cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++a));
-    //cJSON_AddItemToObject(pStatusEntry, "text", cJSON_CreateString("aaa"));
+    static int reqIndex = 0;
+    cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++reqIndex));
+    cJSON_AddItemToObject(pStatusEntry, "is_armed", cJSON_CreateBool(MAINAPP_IsArmed()));
+    cJSON_AddItemToObject(pStatusEntry, "general_state", cJSON_CreateNumber((int)MAINAPP_GetGeneralState()));
     cJSON* pOutputs = cJSON_AddArrayToObject(pStatusEntry, "outputs");
 
     // All ignitor slots status
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
+        MAINAPP_SRelay sRelay = MAINAPP_GetRelayState(i);
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
-        cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber(0));
+
+        const MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
+
+        cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber((int)eOutputState));
         cJSON_AddItemToArray(pOutputs, pEntryJSON10);
     }
 
