@@ -139,7 +139,7 @@ void MAINAPP_Run()
         /* Refresh the strip to send data */
         // Update LEDs
         for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-            UpdateLED(i);
+            UpdateLED(i, false);
 
         HARDWAREGPIO_RefreshLEDStrip();
         vTaskDelay(pdMS_TO_TICKS(1));
@@ -283,13 +283,13 @@ static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
     SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
     if (pSRelay->isEN)
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 0, 200, 0);
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
     else if (pSRelay->isFired) // White for fired
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 100, 100, 0);
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 100, 100, 0);
     else if (pSRelay->isConnected) // YELLOW for connected
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 200, 200, 0);
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 200, 200, 0);
     else // minimal white illuminiation
-        HARDWAREGPIO_SetOutputRelayStatusColor(i, 10, 10, 10);
+        HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 10, 10, 10);
 
     if (bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
