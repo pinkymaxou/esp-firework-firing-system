@@ -18,7 +18,7 @@
         </div>
 
         <div class="slotContainer">
-            <div v-for="output in status.outputs" class="slotButtonDiv">
+            <div v-for="output in status.outputs" track-by="ix" class="slotButtonDiv">
                 <button :class="{ 'button-idle': (output.s == EOutputState.Idle), 'button-enabled': (output.s == EOutputState.Enabled), 'button-fired': (output.s == EOutputState.Fired), 'button-connected': (output.s == EOutputState.Connected && !status.is_armed), 'button-connected-armed': (output.s == EOutputState.Connected && status.is_armed) }" 
                     @click="idBtnFire_Click(output.ix)" :disabled="!is_connected">{{ output.ix+1 }}
                 </button>
