@@ -20,7 +20,7 @@
 }
 
 body {
-    background-color: black;
+    background-color: #112637;
 }
 
 .slotContainer {
@@ -42,7 +42,6 @@ body {
 }
 
 .slotButtonDiv button {
-    background-color: lightgray;
     font-family: 'squared';
     font-weight: bold;
     font-size: xxx-large;
@@ -51,6 +50,23 @@ body {
     height: 4rem;
     border-color: darkgray;
     border-width: 2.5px;
+}
+
+.button-idle {
+    background-color: white;
+}
+.button-enabled  {
+    background-color: lime;
+}
+.button-fired {
+    background-color: lightgray;
+}
+
+.button-connected {
+    background-color: yellow;
+}
+
+.button-connected-armed {
     animation: glowing-red 1000ms infinite;
 }
 
@@ -70,7 +86,11 @@ body {
   }
 
 .navbar {
-    background-color: aqua;
+    border-radius: 5px;
+}
+
+.navbar p {
+    font-weight: bolder;
 }
 
 .button-action1 {
@@ -85,4 +105,11 @@ body {
     font-weight: bold;
     border-color: white;
     text-transform: uppercase;
+}
+
+.button-action1:disabled,
+.button-action1[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
 }
