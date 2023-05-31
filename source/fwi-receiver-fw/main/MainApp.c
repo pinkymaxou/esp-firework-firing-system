@@ -8,6 +8,12 @@
 #include "HWConfig.h"
 #include "HardwareGPIO.h"
 #include "Settings.h"
+#include "esp_mac.h"
+#include "lwip/err.h"
+#include "lwip/sys.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "main.h"
 
 #define TAG "MainApp"
 
@@ -37,6 +43,7 @@ static void DisarmSystem();
 static void Fire(uint32_t u32OutputIndex);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
+static void UpdateOLED();
 
 void MAINAPP_Init()
 {
@@ -54,12 +61,16 @@ void MAINAPP_Init()
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     HARDWAREGPIO_ClearRelayBus();
+
+    UpdateOLED();
 }
 
 void MAINAPP_Run()
 {
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
+    TickType_t ttUpdateOLEDTick = 0;
+    TickType_t ttUpdateLEDTick = 0;
 
     int32_t s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
 
@@ -136,12 +147,26 @@ void MAINAPP_Run()
             bSanityOn = !bSanityOn;
         }
 
-        /* Refresh the strip to send data */
         // Update LEDs
-        for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-            UpdateLED(i, false);
+        if ( (xTaskGetTickCount() - ttUpdateLEDTick) > pdMS_TO_TICKS(20) )
+        {
+            ttUpdateLEDTick = xTaskGetTickCount();
 
-        HARDWAREGPIO_RefreshLEDStrip();
+            /* Refresh the strip to send data */
+            // Update LEDs
+            for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+                UpdateLED(i, false);
+
+            HARDWAREGPIO_RefreshLEDStrip();
+        }
+
+        // Update LEDs
+        if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(250) )
+        {
+            UpdateOLED();
+            ttUpdateOLEDTick = xTaskGetTickCount();
+        }
+
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
@@ -332,4 +357,37 @@ bool MAINAPP_IsArmed()
 MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 {
     return m_sState.eGeneralState;
+}
+
+static void UpdateOLED()
+{
+    #ifdef HWCONFIG_OLED_ISPRESENT
+    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    char szText[128+1] = {0,};
+
+    if (m_sState.bIsArmed)
+    {
+        sprintf(szText, "Lache ton jouet\net cours, ca va te\npeter dans face");
+    }
+    else
+    {
+        char szSoftAPSSID[32] = {0,};
+
+        esp_netif_ip_info_t wifiIpSta = {0};
+        MAIN_GetWiFiSTAIP(&wifiIpSta);
+
+        esp_netif_ip_info_t wifiIpAP = {0};
+        MAIN_GetWiFiSoftAPIP(&wifiIpAP);
+
+        MAIN_GetWifiAPSSID(szSoftAPSSID);
+        sprintf(szText, "%s\n"IPSTR"\n"IPSTR,
+            szSoftAPSSID,
+            IP2STR(&wifiIpAP.ip),
+            IP2STR(&wifiIpSta.ip));
+    }
+
+    SSD1306_ClearDisplay(pss1306Handle);
+    SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));
+    SSD1306_UpdateDisplay(pss1306Handle);
+    #endif
 }

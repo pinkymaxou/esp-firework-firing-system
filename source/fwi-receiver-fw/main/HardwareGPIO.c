@@ -8,6 +8,7 @@
 #define TAG "HardwareGPIO"
 
 static led_strip_handle_t led_strip;
+static SSD1306_handle m_ssd1306;
 
 #if HWCONFIG_TESTMODE == 0
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
@@ -82,6 +83,29 @@ void HARDWAREGPIO_Init()
     ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
+
+    
+	const int i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
+    i2c_config_t conf = {0};
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = HWCONFIG_I2C_SDA;
+    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.scl_io_num = HWCONFIG_I2C_SCL;
+    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+    conf.master.clk_speed = HWCONFIG_I2C_MASTER_FREQ_HZ;
+    i2c_param_config(i2c_master_port, &conf);
+
+	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
+
+    #ifdef HWCONFIG_OLED_ISPRESENT
+    static SSD1306_config cfgSSD1306 = SSD1306_CONFIG_DEFAULT_128x64;
+	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
+    SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
+    SSD1306_ClearDisplay(&m_ssd1306);
+    const char* szBooting = "Booting ...";
+    SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting, strlen(szBooting));
+    SSD1306_UpdateDisplay(&m_ssd1306);
+    #endif
 }
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled)
@@ -168,3 +192,10 @@ bool HARDWAREGPIO_ReadConnectionSense()
     return true;
     #endif
 }
+
+#ifdef HWCONFIG_OLED_ISPRESENT
+SSD1306_handle* GPIO_GetSSD1306Handle()
+{
+    return &m_ssd1306;
+}
+#endif
