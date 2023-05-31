@@ -5,6 +5,7 @@
         "freemono5pt7b.h": "c",
         "tiny3x3a2pt7b.h": "c",
         "freeserif9pt7b.h": "c",
-        "freemono7pt7b.h": "c"
+        "freemono7pt7b.h": "c",
+        "websocket.h": "c"
     }
 }
