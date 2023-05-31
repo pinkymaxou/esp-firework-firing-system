@@ -77,7 +77,10 @@ function AppLoaded()
 async function timerHandler() {
 
 	// Get system informations
-	await fetch('/api/getstatus')
+	await fetch('/api/getstatus',
+	{
+		keepalive: true
+	})
 		.then((response) => {
 			if (!response.ok) {
 				throw new Error('Unable to get status');
@@ -88,7 +91,7 @@ async function timerHandler() {
 		{
 		  currentData.status = data.status;
 		  currentData.is_connected = true;
-		  setTimeout(timerHandler, 500);
+		  setTimeout(timerHandler, 250);
 		})
 		.catch((ex) =>
 		{

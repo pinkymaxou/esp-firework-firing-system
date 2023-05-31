@@ -174,7 +174,7 @@ static esp_err_t file_get_handler(httpd_req_t *req)
         u32Index += n;
     }
 
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -229,7 +229,7 @@ static esp_err_t file_post_handler(httpd_req_t *req)
     else
         goto ERROR;
 
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
     if (root != NULL)
         cJSON_Delete(root);
@@ -285,7 +285,7 @@ static esp_err_t api_get_handler(httpd_req_t *req)
     if (pExportJSON != NULL)
         free(pExportJSON);
 
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -309,7 +309,7 @@ static esp_err_t api_post_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "api_post_handler, url: %s", req->uri);
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Unknown request");
     }
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -391,10 +391,10 @@ static esp_err_t file_otauploadpost_handler(httpd_req_t *req)
 
     esp_restart();
 
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     return ESP_OK;
 ERROR:
-    httpd_resp_set_hdr(req, "Connection", "close");
+    //httpd_resp_set_hdr(req, "Connection", "close");
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Invalid image");
     return ESP_FAIL;
 }

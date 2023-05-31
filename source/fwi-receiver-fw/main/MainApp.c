@@ -260,25 +260,27 @@ static void Fire(uint32_t u32OutputIndex)
         return;
     }
 
+    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+
+    pSRelay->isEN = true;
+
     // If it's armed and ready, enable the master relay
     if (m_sState.bIsArmed)
         HARDWAREGPIO_WriteMasterPowerRelay(true);
 
-    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
-
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    pSRelay->isEN = true;
     UpdateLED(u32OutputIndex, true);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
-    pSRelay->isEN = false;
-    pSRelay->isFired = true;
     UpdateLED(u32OutputIndex, true);
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    pSRelay->isEN = false;
+    pSRelay->isFired = true;
 
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
 }
