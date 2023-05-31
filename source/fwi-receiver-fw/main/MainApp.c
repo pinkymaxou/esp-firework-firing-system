@@ -61,7 +61,7 @@ void MAINAPP_Init()
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     HARDWAREGPIO_ClearRelayBus();
-    
+
     UpdateOLED();
 }
 
@@ -365,19 +365,26 @@ static void UpdateOLED()
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     char szText[128+1] = {0,};
 
-    char szSoftAPSSID[31] = {0,};
+    if (m_sState.bIsArmed)
+    {
+        sprintf(szText, "Lache ton jouet\net cours, ca va te\npeter dans face");
+    }
+    else
+    {
+        char szSoftAPSSID[32] = {0,};
 
-    esp_netif_ip_info_t wifiIpSta = {0};
-    MAIN_GetWiFiSTAIP(&wifiIpSta);
+        esp_netif_ip_info_t wifiIpSta = {0};
+        MAIN_GetWiFiSTAIP(&wifiIpSta);
 
-    esp_netif_ip_info_t wifiIpAP = {0};
-    MAIN_GetWiFiSoftAPIP(&wifiIpAP);
+        esp_netif_ip_info_t wifiIpAP = {0};
+        MAIN_GetWiFiSoftAPIP(&wifiIpAP);
 
-    MAIN_GetWifiAPSSID(szSoftAPSSID);
-    sprintf(szText, "%s\n"IPSTR"\n"IPSTR,
-        szSoftAPSSID,
-        IP2STR(&wifiIpAP.ip),
-        IP2STR(&wifiIpSta.ip));
+        MAIN_GetWifiAPSSID(szSoftAPSSID);
+        sprintf(szText, "%s\n"IPSTR"\n"IPSTR,
+            szSoftAPSSID,
+            IP2STR(&wifiIpAP.ip),
+            IP2STR(&wifiIpSta.ip));
+    }
 
     SSD1306_ClearDisplay(pss1306Handle);
     SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));

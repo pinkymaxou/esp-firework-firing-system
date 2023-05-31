@@ -2,7 +2,6 @@
 // Fonts
 #include "fonts/FreeMono12pt7b.h"
 #include "fonts/FreeMono9pt7b.h"
-#include "fonts/FreeMono5pt7b.h"
 #include "fonts/Tiny3x3a2pt7b.h"
 #include "fonts/FreeSerif9pt7b.h"
 #include "fonts/Picopixel.h"
@@ -78,10 +77,9 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
 
     // https://rop.nl/truetype2gfx/
     //pHandle->font = &Tiny3x3a2pt7b;
-    pHandle->font = &FreeMono9pt7b;
+    //pHandle->font = &FreeMono7pt7b;
     //pHandle->font = &Picopixel;
-    //pHandle->font = &FreeSerif9pt7b;
-    //pHandle->font = &FreeSerif9pt7b;
+    pHandle->font = &FreeSerif9pt7b;
     // Find the baseline
     pHandle->baselineY = 0;
 

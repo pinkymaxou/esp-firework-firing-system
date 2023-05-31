@@ -137,36 +137,32 @@ static void wifi_init()
                                                         NULL,
                                                         NULL));
 
-    wifi_config_t wifi_configAP = {
-        .ap = {
-            .ssid = {0},
-            .ssid_len = 0,
-            .channel = m_u8WiFiChannel,
-            .max_connection = 5,
-        },
-    };
+    memset(m_WifiConfigAP.ap.ssid, 0, sizeof(m_WifiConfigAP.ap.ssid));
+    m_WifiConfigAP.ap.ssid_len = 0;
+    m_WifiConfigAP.ap.channel = m_u8WiFiChannel;
+    m_WifiConfigAP.ap.max_connection = 5;
 
     uint8_t macAddr[6];
     esp_read_mac(macAddr, ESP_MAC_WIFI_SOFTAP);
 
-    sprintf((char*)wifi_configAP.ap.ssid, FWCONFIG_STAAP_WIFI_SSID, macAddr[3], macAddr[4], macAddr[5]);
-    int n = strlen((const char*)wifi_configAP.ap.ssid);
-    wifi_configAP.ap.ssid_len = n;
+    sprintf((char*)m_WifiConfigAP.ap.ssid, FWCONFIG_STAAP_WIFI_SSID, macAddr[3], macAddr[4], macAddr[5]);
+    int n = strlen((const char*)m_WifiConfigAP.ap.ssid);
+    m_WifiConfigAP.ap.ssid_len = n;
 
     size_t staPassLength = 64;
-    NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WAPPass, (char*)wifi_configAP.ap.password, &staPassLength);
+    NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WAPPass, (char*)m_WifiConfigAP.ap.password, &staPassLength);
 
-    if (strlen((const char*)wifi_configAP.ap.password) == 0)
+    if (strlen((const char*)m_WifiConfigAP.ap.password) == 0)
     {
-        wifi_configAP.ap.authmode = WIFI_AUTH_OPEN;
+        m_WifiConfigAP.ap.authmode = WIFI_AUTH_OPEN;
     }
     else {
-        wifi_configAP.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+        m_WifiConfigAP.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
     }
 
-    ESP_LOGI(TAG, "SoftAP: %s", wifi_configAP.ap.ssid);
+    ESP_LOGI(TAG, "SoftAP: %s", m_WifiConfigAP.ap.ssid);
 
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_configAP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &m_WifiConfigAP));
 
     if (isWiFiSTA)
     {
@@ -206,8 +202,6 @@ static void wifi_init()
 
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_configSTA) );
     }
-
-    memset(&m_WifiConfigAP, &wifi_configAP, sizeof(wifi_config_t));
 
     ESP_ERROR_CHECK( esp_wifi_start());
 }
@@ -253,9 +247,9 @@ void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip)
     esp_netif_get_ip_info(m_pWifiSoftAP, ip);
 }
 
-void MAIN_GetWifiAPSSID(char szSoftAPSSID[31])
+void MAIN_GetWifiAPSSID(char szSoftAPSSID[32])
 {
-    memcpy(szSoftAPSSID, m_WifiConfigAP.ap.ssid, sizeof(m_WifiConfigAP.ap.ssid));
+    strncpy(szSoftAPSSID, (char*)m_WifiConfigAP.ap.ssid, 32);
 }
 
 void app_main(void)
