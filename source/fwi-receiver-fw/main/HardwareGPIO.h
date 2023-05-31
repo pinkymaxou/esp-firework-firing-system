@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/i2c.h"
+#include "SSD1306.h"
 
 void HARDWAREGPIO_Init();
 
@@ -23,5 +25,7 @@ bool HARDWAREGPIO_ReadConnectionSense();
 void HARDWAREGPIO_RefreshLEDStrip();
 
 void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b);
+
+SSD1306_handle* GPIO_GetSSD1306Handle();
 
 #endif

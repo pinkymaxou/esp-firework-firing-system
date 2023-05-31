@@ -28,6 +28,7 @@
 
 static esp_netif_t* m_pWifiSoftAP;
 static esp_netif_t* m_pWifiSTA;
+static wifi_config_t m_WifiConfigAP = {0};
 
 static uint8_t m_u8WiFiChannel = 1;
 
@@ -206,6 +207,8 @@ static void wifi_init()
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_configSTA) );
     }
 
+    memset(&m_WifiConfigAP, &wifi_configAP, sizeof(wifi_config_t));
+
     ESP_ERROR_CHECK( esp_wifi_start());
 }
 
@@ -250,6 +253,11 @@ void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip)
     esp_netif_get_ip_info(m_pWifiSoftAP, ip);
 }
 
+void MAIN_GetWifiAPSSID(char szSoftAPSSID[31])
+{
+    memcpy(szSoftAPSSID, m_WifiConfigAP.ap.ssid, sizeof(m_WifiConfigAP.ap.ssid));
+}
+
 void app_main(void)
 {
     // Initialize NVS
@@ -279,6 +287,8 @@ void app_main(void)
 
     // Lock forever
     MAINAPP_Run();
+
+
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)

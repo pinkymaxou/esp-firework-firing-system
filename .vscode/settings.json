@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "hardwaregpio.h": "c"
+        "hardwaregpio.h": "c",
+        "freemono9pt7b.h": "c",
+        "freemono5pt7b.h": "c",
+        "tiny3x3a2pt7b.h": "c",
+        "freeserif9pt7b.h": "c"
     }
 }

@@ -157,7 +157,7 @@ NVSJSON_ESETRET NVSJSON_SetValueString(NVSJSON_SHandle* pHandle, uint16_t u16Ent
     return NVSJSON_ESETRET_OK;
 }
 
-const char* NVSJSON_ExportJSON(NVSJSON_SHandle* pHandle)
+char* NVSJSON_ExportJSON(NVSJSON_SHandle* pHandle)
 {
     cJSON* pRoot = cJSON_CreateObject();
     if (pRoot == NULL)

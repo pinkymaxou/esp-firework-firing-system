@@ -21,6 +21,11 @@
 
 body {
     background-color: #112637;
+    color: white;
+}
+
+a {
+    color: white;
 }
 
 .slotContainer {
