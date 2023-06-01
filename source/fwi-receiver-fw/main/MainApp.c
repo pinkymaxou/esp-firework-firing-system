@@ -30,6 +30,8 @@ typedef struct
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
 
+static int32_t m_s32AutodisarmTimeoutMin = 0;
+
 // Input commands
 static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
 
@@ -70,9 +72,8 @@ void MAINAPP_Run()
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
     TickType_t ttUpdateOLEDTick = 0;
-    TickType_t ttUpdateLEDTick = 0;
 
-    int32_t s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+    m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
 
     while (true)
     {
@@ -122,7 +123,7 @@ void MAINAPP_Run()
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
 
             // Automatic disarm after 15 minutes
-            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(s32AutodisarmTimeoutMin*60*1000);
+            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(m_s32AutodisarmTimeoutMin*60*1000);
             const bool bIsNoMasterPower = !HARDWAREGPIO_ReadMasterPowerSense();
 
             if (bIsTimeout)
@@ -148,17 +149,12 @@ void MAINAPP_Run()
         }
 
         // Update LEDs
-        if ( (xTaskGetTickCount() - ttUpdateLEDTick) > pdMS_TO_TICKS(20) )
-        {
-            ttUpdateLEDTick = xTaskGetTickCount();
+        /* Refresh the strip to send data */
+        // Update LEDs
+        for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+            UpdateLED(i, false);
 
-            /* Refresh the strip to send data */
-            // Update LEDs
-            for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-                UpdateLED(i, false);
-
-            HARDWAREGPIO_RefreshLEDStrip();
-        }
+        HARDWAREGPIO_RefreshLEDStrip();
 
         // Update LEDs
         if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(250) )
@@ -369,7 +365,17 @@ static void UpdateOLED()
 
     if (m_sState.bIsArmed)
     {
-        sprintf(szText, "Lache ton jouet\net cours, ca va te\npeter dans face");
+        const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
+        int min = 0;
+        int sec = 0;
+        if (s32DiffS >= 0)
+        {
+            min = (int)(s32DiffS / 60);
+            sec = (int)(s32DiffS % 60);
+        }
+        sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
+            /*0*/min,
+            /*1*/sec);
     }
     else
     {
