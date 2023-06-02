@@ -359,7 +359,7 @@ MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 
 static void UpdateOLED()
 {
-    #ifdef HWCONFIG_OLED_ISPRESENT
+    #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     char szText[128+1] = {0,};
 

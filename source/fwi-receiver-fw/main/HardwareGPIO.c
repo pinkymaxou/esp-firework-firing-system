@@ -8,9 +8,10 @@
 #define TAG "HardwareGPIO"
 
 static led_strip_handle_t led_strip;
+#if HWCONFIG_OLED_ISPRESENT != 0
 static SSD1306_handle m_ssd1306;
+#endif
 
-#if HWCONFIG_TESTMODE == 0
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
 {
     HWCONFIG_RELAY_BUS_1_PIN, HWCONFIG_RELAY_BUS_2_PIN, HWCONFIG_RELAY_BUS_3_PIN, HWCONFIG_RELAY_BUS_4_PIN,
@@ -26,7 +27,6 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
     HWCONFIG_RELAY_MOSA2,
     HWCONFIG_RELAY_MOSA3
 };
-#endif
 
 void HARDWAREGPIO_Init()
 {
@@ -34,9 +34,8 @@ void HARDWAREGPIO_Init()
     gpio_set_direction(HWCONFIG_SANITY_PIN, GPIO_MODE_OUTPUT);
     gpio_set_direction(HWCONFIG_SANITY2_PIN, GPIO_MODE_OUTPUT);
 
-    #if HWCONFIG_TESTMODE == 0
     // Initialize relay BUS
-    for(int i = 0; i < RELAYBUS_COUNT; i++)
+    for(int i = 0; i < HWCONFIG_OUTPUTBUS_COUNT; i++)
     {
         const gpio_num_t gpio = m_busPins[i];
         gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
@@ -70,7 +69,6 @@ void HARDWAREGPIO_Init()
     gpio_pullup_en(HWCONFIG_ENCODERSW);
 
     HARDWAREGPIO_ClearRelayBus();
-    #endif
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
@@ -84,7 +82,6 @@ void HARDWAREGPIO_Init()
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
 
-    
 	const int i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
     i2c_config_t conf = {0};
     conf.mode = I2C_MODE_MASTER;
@@ -97,7 +94,7 @@ void HARDWAREGPIO_Init()
 
 	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
 
-    #ifdef HWCONFIG_OLED_ISPRESENT
+    #if HWCONFIG_OLED_ISPRESENT != 0
     static SSD1306_config cfgSSD1306 = SSD1306_CONFIG_DEFAULT_128x64;
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
     SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
@@ -138,7 +135,6 @@ void HARDWAREGPIO_RefreshLEDStrip()
 
 void HARDWAREGPIO_ClearRelayBus()
 {
-    #if HWCONFIG_TESTMODE == 0
     // Stop all relay boards
     for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
         gpio_set_level(m_busAreaPins[i], false);
@@ -146,14 +142,13 @@ void HARDWAREGPIO_ClearRelayBus()
     // Clear the bus
     for(int i = 0; i < HWCONFIG_OUTPUTBUS_COUNT; i++)
         gpio_set_level(m_busPins[i], true);
-    #endif
+
     // Mechanical relay, give them some time to be sure they are turned off.
     vTaskDelay(pdMS_TO_TICKS(25));
 }
 
 void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
-    #if HWCONFIG_TESTMODE == 0
     HARDWAREGPIO_ClearRelayBus();
     if (HWCONFIG_OUTPUT_COUNT >= 48)
         return;
@@ -164,7 +159,6 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
     gpio_set_level(gpioArea, true);
 
     gpio_set_level(m_busPins[u32OutputIndex], !bValue);
-    #endif
 }
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
@@ -177,23 +171,15 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
 {
-    #if HWCONFIG_TESTMODE == 0
     return gpio_get_level(HWCONFIG_MASTERPWRSENSE_IN) == false;
-    #else
-    return true;
-    #endif
 }
 
 bool HARDWAREGPIO_ReadConnectionSense()
 {
-    #if HWCONFIG_TESTMODE == 0
     return gpio_get_level(HWCONFIG_CONNSENSE_IN) == false;
-    #else
-    return true;
-    #endif
 }
 
-#ifdef HWCONFIG_OLED_ISPRESENT
+#if HWCONFIG_OLED_ISPRESENT != 0
 SSD1306_handle* GPIO_GetSSD1306Handle()
 {
     return &m_ssd1306;
