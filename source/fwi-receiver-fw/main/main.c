@@ -19,7 +19,7 @@
 #include "lwip/ip4_addr.h"
 #include "HWConfig.h"
 #include "FWConfig.h"
-#include "WebServer.h"
+#include "webserver/WebServer.h"
 #include "Settings.h"
 #include "MainApp.h"
 #include "main.h"

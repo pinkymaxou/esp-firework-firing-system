@@ -1,4 +1,5 @@
 #include "webserver.h"
+#include "WSWebSocket.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_app_format.h"
@@ -104,6 +105,15 @@ static const httpd_uri_t m_sHttpOTAUploadPost = {
      * context to demonstrate it's usage */
     .user_ctx  = ""
 };
+
+static const httpd_uri_t m_sHttpWebServer = {
+        .uri        = "/ws",
+        .method     = HTTP_GET,
+        .handler    = WSWEBSOCKET_Handler,
+        .user_ctx   = NULL,
+        .is_websocket = true
+};
+
 void WEBSERVER_Init()
 {
     httpd_handle_t server = NULL;
@@ -117,6 +127,7 @@ void WEBSERVER_Init()
     if (httpd_start(&server, &config) == ESP_OK) {
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
+        httpd_register_uri_handler(server, &m_sHttpWebServer);
         httpd_register_uri_handler(server, &m_sHttpActionPost);
         httpd_register_uri_handler(server, &m_sHttpGetAPI);
         httpd_register_uri_handler(server, &m_sHttpPostAPI);
