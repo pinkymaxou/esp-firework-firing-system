@@ -151,8 +151,24 @@ void MAINAPP_Run()
         // Update LEDs
         /* Refresh the strip to send data */
         // Update LEDs
-        for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-            UpdateLED(i, false);
+        if ( (xTaskGetTickCount() - ttUpdateLEDTick) > pdMS_TO_TICKS(20) )
+        {
+            ttUpdateLEDTick = xTaskGetTickCount();
+
+            /* Refresh the strip to send data */
+            // Update LEDs
+            for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+                UpdateLED(i, false);
+
+            HARDWAREGPIO_RefreshLEDStrip();
+        }
+
+        // Update LEDs
+        if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(250) )
+        {
+            UpdateOLED();
+            ttUpdateOLEDTick = xTaskGetTickCount();
+        }
 
         HARDWAREGPIO_RefreshLEDStrip();
 
