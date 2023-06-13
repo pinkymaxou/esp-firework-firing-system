@@ -273,7 +273,7 @@
           "W~345 -720 335 -720~#008800~1~0~none~gge35394~0",
           "O~215~-640~gge35397~M 211 -644 L 219 -636 M 219 -644 L 211 -636~#33cc33~0",
           "F~part_netLabel_netPort~345~-325~0~gge35412~~0^^345~-325^^SANITY-LED~#0000FF~260.89~-319.44~0~~1~Times New Roman~8pt~flag_gge289^^PL~345 -325 340 -320 325 -320 325 -330 340 -330 345 -325~#0000FF~1~0~transparent~gge35424~0",
-          "LIB~440~-330~package`HDR-M-2.54_1X2`BOM_Supplier Part`C124375`BOM_Supplier`LCSC`BOM_Manufacturer``BOM_Manufacturer Part``Contributor`LCEDA_Lib`spicePre`J`spiceSymbolName`HDR-M-2.54_1x2`~~0~ggeabea6a5a905fec1b~70aa5812f21f4991bf427395d51849f4~a9aa2b14f188405792fa87ac344499a4~0~~yes~yes~~1586865108~#@$T~N~434.078125~-305~0~#000080~Arial~~~~~comment~HDR-M-2.54_1x2~1~start~gge35427~0~#@$T~P~434.078125~-296.171875~0~#000080~Arial~~~~~comment~SANITY-LED~1~start~gge35433~0~#@$R~435~-345~2~2~20~30~#880000~1~0~none~gge35439~0~#@$P~show~0~1~425~-325~180~gge35442~0^^425~-325^^M 425 -325 h 10~#000000^^1~437~-322~0~GND~start~~~#000000^^0~435~-326~0~1~end~~~#000000^^0~432~-325^^0~M 435 -328 L 438 -325 L 435 -322#@$P~show~0~2~425~-335~180~gge35463~0^^425~-335^^M 425 -335 h 10~#000000^^1~437~-332~0~LED~start~~~#000000^^0~435~-336~0~2~end~~~#000000^^0~432~-335^^0~M 435 -338 L 438 -335 L 435 -332",
+          "LIB~440~-330~package`HDR-M-2.54_1X2`BOM_Supplier Part`C124375`BOM_Supplier`LCSC`BOM_Manufacturer``BOM_Manufacturer Part``Contributor`LCEDA_Lib`spicePre`J`spiceSymbolName`HDR-M-2.54_1x2`~~0~ggeabea6a5a905fec1b~70aa5812f21f4991bf427395d51849f4~a9aa2b14f188405792fa87ac344499a4~0~~yes~yes~~1586865108~#@$T~N~434.078125~-305~0~#000080~Arial~~~~~comment~HDR-M-2.54_1x2~1~start~gge35427~0~#@$T~P~434.078125~-296.171875~0~#000080~Arial~~~~~comment~SANITY-LED~1~start~gge35433~0~#@$R~435~-345~2~2~20~30~#880000~1~0~none~gge35439~0~#@$P~show~0~1~425~-325~180~gge35442~0^^425~-325^^M 425 -325 h 10~#000000^^1~437~-322~0~GND~start~~~#000000^^0~435~-326~0~1~end~~~#000000^^0~432~-325^^0~M 435 -328 L 438 -325 L 435 -322#@$P~show~0~2~425~-335~180~gge35463~0^^425~-335^^M 425 -335 h 10~#000000^^1~437~-332~0~+3.3V~start~~~#000000^^0~435~-336~0~2~end~~~#000000^^0~432~-335^^0~M 435 -338 L 438 -335 L 435 -332",
           "F~part_netLabel_netPort~345~-630~180~gge35565~~0^^345~-630^^SANITY-LED~#0000FF~366.85~-628.14~0~~1~Times New Roman~8pt~flag_gge292^^PL~345 -630 350 -635 365 -635 365 -625 350 -625 345 -630~#0000FF~1~0~transparent~gge35577~0",
           "W~335 -630 345 -630~#008800~1~0~none~gge35580~0",
           "LIB~365~-325~package`R_AXIAL-0.3`nameAlias`Value(Ω)`BOM_Supplier Part``BOM_Supplier``Contributor`LCEDA_Lib`spicePre`R`spiceSymbolName`R_AXIAL-0.3_US`BOM_Manufacturer Part``~~0~gge5dc833f96838cc12~3eb1249f3ebb4284ae221b0379016582~a1a68e8402b9461199345d2cae776c3f~0~~yes~yes~~1586862029~#@$T~N~359.03125~-333~0~#000080~Arial~~~~~comment~50~1~start~gge35643~0~#@$T~P~337.4375~-341.6640625~0~#000080~Arial~~~~~comment~SANITY-RES~1~start~gge35649~0~#@$PL~380 -325 377 -320~#A00000~1~0~none~gge35655~0#@$PL~372 -330 367 -320~#A00000~1~0~none~gge35658~0#@$PL~377 -320 372 -330~#A00000~1~0~none~gge35661~0#@$P~show~0~2~385~-325~0~gge35664~0^^385~-325^^M 385 -325 h -5~#800^^0~376~-325~0~2~end~~~#800^^0~384~-329~0~2~start~~~#800^^0~383~-325^^0~M 380 -328 L 377 -325 L 380 -322#@$PL~358 -320 353 -330~#A00000~1~0~none~gge35685~0#@$PL~367 -320 363 -330~#A00000~1~0~none~gge35688~0#@$PL~363 -330 358 -320~#A00000~1~0~none~gge35691~0#@$PL~353 -330 350 -325~#A00000~1~0~none~gge35694~0#@$P~show~0~1~345~-325~180~gge35697~0^^345~-325^^M 345 -325 h 5~#800^^0~354~-325~0~1~start~~~#800^^0~346~-329~0~1~end~~~#800^^0~347~-325^^0~M 350 -322 L 353 -325 L 350 -328",
@@ -362,9 +362,9 @@
         ],
         "BBox": {
           "x": 0,
-          "y": -806.7,
-          "width": 1156.9,
-          "height": 807.1
+          "y": -806.5,
+          "width": 1156.8,
+          "height": 807
         },
         "colors": {}
       }
