@@ -31,7 +31,7 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
 void HARDWAREGPIO_Init()
 {
     // Sanity LEDs
-    gpio_set_direction(HWCONFIG_SANITY_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(HWCONFIG_STATUSLED_PIN, GPIO_MODE_OUTPUT);
     gpio_set_direction(HWCONFIG_SANITY2_PIN, GPIO_MODE_OUTPUT);
 
     // Initialize relay BUS
@@ -72,7 +72,7 @@ void HARDWAREGPIO_Init()
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
-        .strip_gpio_num = HWCONFIG_SANITY_PIN,
+        .strip_gpio_num = HWCONFIG_STATUSLED_PIN,
         .max_leds = 1+HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
     };
     led_strip_rmt_config_t rmt_config = {
