@@ -65,7 +65,6 @@ void HARDWAREGPIO_Init()
     gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
     gpio_reset_pin(HWCONFIG_CONNSENSE_IN);
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_CONNSENSE_IN);
 
     // User input
     gpio_reset_pin(HWCONFIG_ENCODERA_IN);

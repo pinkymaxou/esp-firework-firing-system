@@ -141,10 +141,11 @@ void MAINAPP_Run()
         }
 
         // Sanity blink ...
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 250))
+        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
         {
             ttSanityTicks = xTaskGetTickCount();
             HARDWAREGPIO_SetSanityLED(bSanityOn);
+
             bSanityOn = !bSanityOn;
         }
 
@@ -186,7 +187,7 @@ static void CheckConnections()
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         const bool bConnSense = HARDWAREGPIO_ReadConnectionSense();
-        vTaskDelay(pdMS_TO_TICKS(25));  // Give it some time to detect
+        vTaskDelay(pdMS_TO_TICKS(100));  // Give it some time to detect
         pSRelay->isConnected = bConnSense;
     }
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
