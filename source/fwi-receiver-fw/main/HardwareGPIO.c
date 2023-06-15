@@ -159,17 +159,17 @@ void HARDWAREGPIO_ClearRelayBus()
 void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
     HARDWAREGPIO_ClearRelayBus();
-    if (HWCONFIG_OUTPUT_COUNT >= 48)
+    if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
         return;
 
     // Activate the right area
     const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
-    gpio_set_level(gpioArea, true);
+    gpio_set_level(gpioArea, bValue);
 
     const uint32_t u32BusPinIndex = u32OutputIndex % HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioRelay = m_busPins[u32BusPinIndex];
-    gpio_set_level(gpioArea, !bValue);
+    gpio_set_level(gpioRelay, !bValue);
 }
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
@@ -177,7 +177,7 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
     gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
     // Mechanical relay, give it some time to turn off.
     if (!bValue)
-        vTaskDelay(pdMS_TO_TICKS(250));
+        vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
