@@ -141,34 +141,19 @@ void MAINAPP_Run()
         }
 
         // Sanity blink ...
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 250))
+        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
         {
             ttSanityTicks = xTaskGetTickCount();
             HARDWAREGPIO_SetSanityLED(bSanityOn);
+
             bSanityOn = !bSanityOn;
         }
 
         // Update LEDs
         /* Refresh the strip to send data */
         // Update LEDs
-        if ( (xTaskGetTickCount() - ttUpdateLEDTick) > pdMS_TO_TICKS(20) )
-        {
-            ttUpdateLEDTick = xTaskGetTickCount();
-
-            /* Refresh the strip to send data */
-            // Update LEDs
-            for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-                UpdateLED(i, false);
-
-            HARDWAREGPIO_RefreshLEDStrip();
-        }
-
-        // Update LEDs
-        if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(250) )
-        {
-            UpdateOLED();
-            ttUpdateOLEDTick = xTaskGetTickCount();
-        }
+        for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+            UpdateLED(i, false);
 
         HARDWAREGPIO_RefreshLEDStrip();
 
@@ -202,7 +187,7 @@ static void CheckConnections()
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         const bool bConnSense = HARDWAREGPIO_ReadConnectionSense();
-        vTaskDelay(pdMS_TO_TICKS(25));  // Give it some time to detect
+        vTaskDelay(pdMS_TO_TICKS(20));  // Give it some time to detect
         pSRelay->isConnected = bConnSense;
     }
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;

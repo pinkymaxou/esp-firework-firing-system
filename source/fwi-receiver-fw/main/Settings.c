@@ -20,7 +20,7 @@ static const NVSJSON_SSettingEntry g_sConfigEntries[SETTINGS_EENTRY_Count] =
     [SETTINGS_EENTRY_WSTAPass]     = NVSJSON_INITSTRING_VAL("WSTA.Pass",    "WiFi password [empty, or > 8 characters]", "", ValidateWifiPassword, NVSJSON_EFLAGS_Secret | NVSJSON_EFLAGS_NeedsReboot),
 
     [SETTINGS_EENTRY_AutoDisarmTimeout] = NVSJSON_INITINT32_RNG("AutoDisarmT", "Automatically disarm after X min of inactivity", 3, 1, 20, NVSJSON_EFLAGS_NeedsReboot),
-    [SETTINGS_EENTRY_FiringHoldTimeMS]  = NVSJSON_INITINT32_RNG("FireHoldMS", "How long to hold power (MS)", 1000, 50, 5000, NVSJSON_EFLAGS_NeedsReboot),
+    [SETTINGS_EENTRY_FiringHoldTimeMS]  = NVSJSON_INITINT32_RNG("FireHoldMS", "How long to hold power (MS)", 1500, 50, 5000, NVSJSON_EFLAGS_NeedsReboot),
 };
 
 void SETTINGS_Init()

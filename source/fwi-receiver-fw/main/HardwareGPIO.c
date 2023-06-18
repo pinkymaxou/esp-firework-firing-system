@@ -31,13 +31,16 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
 void HARDWAREGPIO_Init()
 {
     // Sanity LEDs
-    gpio_set_direction(HWCONFIG_SANITY_PIN, GPIO_MODE_OUTPUT);
+    gpio_reset_pin(HWCONFIG_STATUSLED_PIN);
+    gpio_set_direction(HWCONFIG_STATUSLED_PIN, GPIO_MODE_OUTPUT);
+    gpio_reset_pin(HWCONFIG_SANITY2_PIN);
     gpio_set_direction(HWCONFIG_SANITY2_PIN, GPIO_MODE_OUTPUT);
 
     // Initialize relay BUS
     for(int i = 0; i < HWCONFIG_OUTPUTBUS_COUNT; i++)
     {
         const gpio_num_t gpio = m_busPins[i];
+        gpio_reset_pin(gpio);
         gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
         gpio_set_level(gpio, true);
     }
@@ -45,26 +48,32 @@ void HARDWAREGPIO_Init()
     for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
     {
         const gpio_num_t gpio = m_busAreaPins[i];
+        gpio_reset_pin(gpio);
         gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
-        gpio_set_level(gpio, true);
+        gpio_set_level(gpio, false);
     }
 
     // Relay pin
+    gpio_reset_pin(HWCONFIG_MASTERPWRRELAY_EN);
     gpio_set_direction(HWCONFIG_MASTERPWRRELAY_EN, GPIO_MODE_OUTPUT);
     gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, false);
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
+    gpio_reset_pin(HWCONFIG_MASTERPWRSENSE_IN);
     gpio_set_direction(HWCONFIG_MASTERPWRSENSE_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
+    gpio_reset_pin(HWCONFIG_CONNSENSE_IN);
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_CONNSENSE_IN);
 
     // User input
+    gpio_reset_pin(HWCONFIG_ENCODERA_IN);
     gpio_set_direction(HWCONFIG_ENCODERA_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_ENCODERA_IN);
+    gpio_reset_pin(HWCONFIG_ENCODERB_IN);
     gpio_set_direction(HWCONFIG_ENCODERB_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_ENCODERB_IN);
+    gpio_reset_pin(HWCONFIG_ENCODERSW);
     gpio_set_direction(HWCONFIG_ENCODERSW, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_ENCODERSW);
 
@@ -72,7 +81,7 @@ void HARDWAREGPIO_Init()
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
-        .strip_gpio_num = HWCONFIG_SANITY_PIN,
+        .strip_gpio_num = HWCONFIG_STATUSLED_PIN,
         .max_leds = 1+HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
     };
     led_strip_rmt_config_t rmt_config = {
@@ -150,15 +159,17 @@ void HARDWAREGPIO_ClearRelayBus()
 void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
     HARDWAREGPIO_ClearRelayBus();
-    if (HWCONFIG_OUTPUT_COUNT >= 48)
+    if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
         return;
 
     // Activate the right area
     const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
-    gpio_set_level(gpioArea, true);
+    gpio_set_level(gpioArea, bValue);
 
-    gpio_set_level(m_busPins[u32OutputIndex], !bValue);
+    const uint32_t u32BusPinIndex = u32OutputIndex % HWCONFIG_OUTPUTBUS_COUNT;
+    const gpio_num_t gpioRelay = m_busPins[u32BusPinIndex];
+    gpio_set_level(gpioRelay, !bValue);
 }
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
@@ -166,7 +177,7 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
     gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
     // Mechanical relay, give it some time to turn off.
     if (!bValue)
-        vTaskDelay(pdMS_TO_TICKS(250));
+        vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
