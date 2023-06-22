@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "driver/i2c.h"
 #include "SSD1306.h"
+#include "HWConfig.h"
 
 void HARDWAREGPIO_Init();
 
