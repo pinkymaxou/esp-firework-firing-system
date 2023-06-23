@@ -1,5 +1,4 @@
 #include "HardwareGPIO.h"
-#include "HWConfig.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "Settings.h"
@@ -14,11 +13,23 @@ static SSD1306_handle m_ssd1306;
 
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
 {
-    HWCONFIG_RELAY_BUS_1_PIN, HWCONFIG_RELAY_BUS_2_PIN, HWCONFIG_RELAY_BUS_3_PIN, HWCONFIG_RELAY_BUS_4_PIN,
-    HWCONFIG_RELAY_BUS_5_PIN, HWCONFIG_RELAY_BUS_6_PIN, HWCONFIG_RELAY_BUS_7_PIN, HWCONFIG_RELAY_BUS_8_PIN,
+    /* 0*/HWCONFIG_RELAY_BUS_1_PIN,
+    /* 1*/HWCONFIG_RELAY_BUS_2_PIN,
+    /* 2*/HWCONFIG_RELAY_BUS_3_PIN,
+    /* 3*/HWCONFIG_RELAY_BUS_4_PIN,
+    /* 4*/HWCONFIG_RELAY_BUS_5_PIN,
+    /* 5*/HWCONFIG_RELAY_BUS_6_PIN,
+    /* 6*/HWCONFIG_RELAY_BUS_7_PIN,
+    /* 7*/HWCONFIG_RELAY_BUS_8_PIN,
 
-    HWCONFIG_RELAY_BUS_9_PIN, HWCONFIG_RELAY_BUS_10_PIN, HWCONFIG_RELAY_BUS_11_PIN, HWCONFIG_RELAY_BUS_12_PIN,
-    HWCONFIG_RELAY_BUS_13_PIN, HWCONFIG_RELAY_BUS_14_PIN, HWCONFIG_RELAY_BUS_15_PIN, HWCONFIG_RELAY_BUS_16_PIN
+    /* 8*/HWCONFIG_RELAY_BUS_9_PIN,
+    /* 9*/HWCONFIG_RELAY_BUS_10_PIN,
+    /*10*/HWCONFIG_RELAY_BUS_11_PIN,
+    /*11*/HWCONFIG_RELAY_BUS_12_PIN,
+    /*12*/HWCONFIG_RELAY_BUS_13_PIN,
+    /*13*/HWCONFIG_RELAY_BUS_14_PIN,
+    /*14*/HWCONFIG_RELAY_BUS_15_PIN,
+    /*15*/HWCONFIG_RELAY_BUS_16_PIN
 };
 
 static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
@@ -41,8 +52,8 @@ void HARDWAREGPIO_Init()
     {
         const gpio_num_t gpio = m_busPins[i];
         gpio_reset_pin(gpio);
-        gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
-        gpio_set_level(gpio, true);
+        gpio_set_direction(gpio, GPIO_MODE_INPUT);
+        gpio_set_pull_mode(gpio, GPIO_FLOATING);
     }
 
     for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
@@ -150,7 +161,11 @@ void HARDWAREGPIO_ClearRelayBus()
 
     // Clear the bus
     for(int i = 0; i < HWCONFIG_OUTPUTBUS_COUNT; i++)
-        gpio_set_level(m_busPins[i], true);
+    {
+        const gpio_num_t gpioRelay = m_busPins[i];
+        gpio_set_direction(gpioRelay, GPIO_MODE_INPUT);
+        gpio_set_pull_mode(gpioRelay, GPIO_FLOATING);
+    }
 
     // Mechanical relay, give them some time to be sure they are turned off.
     vTaskDelay(pdMS_TO_TICKS(25));
@@ -158,9 +173,10 @@ void HARDWAREGPIO_ClearRelayBus()
 
 void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
-    HARDWAREGPIO_ClearRelayBus();
     if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
         return;
+
+    HARDWAREGPIO_ClearRelayBus();
 
     // Activate the right area
     const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
@@ -169,15 +185,24 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 
     const uint32_t u32BusPinIndex = u32OutputIndex % HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioRelay = m_busPins[u32BusPinIndex];
-    gpio_set_level(gpioRelay, !bValue);
+
+    if (bValue)
+    {
+        gpio_set_direction(gpioRelay, GPIO_MODE_OUTPUT);
+        gpio_set_level(gpioRelay, false);
+    }
+    else
+    {
+        gpio_set_direction(gpioRelay, GPIO_MODE_INPUT);
+        gpio_set_pull_mode(gpioRelay, GPIO_FLOATING);
+    }
 }
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 {
     gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
     // Mechanical relay, give it some time to turn off.
-    if (!bValue)
-        vTaskDelay(pdMS_TO_TICKS(100));
+    vTaskDelay(pdMS_TO_TICKS(100));
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
