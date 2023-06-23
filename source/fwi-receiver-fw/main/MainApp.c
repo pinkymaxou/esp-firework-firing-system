@@ -186,8 +186,9 @@ static void CheckConnections()
 
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
+        vTaskDelay(pdMS_TO_TICKS(40));  // Give it some time to detect
         const bool bConnSense = HARDWAREGPIO_ReadConnectionSense();
-        vTaskDelay(pdMS_TO_TICKS(20));  // Give it some time to detect
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
         pSRelay->isConnected = bConnSense;
     }
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
