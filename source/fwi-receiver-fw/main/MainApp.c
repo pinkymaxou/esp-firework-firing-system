@@ -186,19 +186,19 @@ static void CheckConnections()
 
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
-        const bool bConnSense = false;
+        // Give it some time to release
+        vTaskDelay(pdMS_TO_TICKS(10));
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
         int ticksMax = pdMS_TO_TICKS(40);
         do
         {
-            bConnSense = HARDWAREGPIO_ReadConnectionSense();
+            pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
             vTaskDelay(pdMS_TO_TICKS(1));
-            i--;
-        } while (!bConnSense || ticksMax > 0);
+            ticksMax--;
+        } while (!pSRelay->isConnected && ticksMax > 0);
 
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
-        pSRelay->isConnected = bConnSense;
     }
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
 }
