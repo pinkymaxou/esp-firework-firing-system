@@ -182,6 +182,7 @@ static void CheckConnections()
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+        pSRelay->isFired = false;
         pSRelay->isConnected = false;
 
         // Activate the relay ...
@@ -219,13 +220,6 @@ static void ArmSystem()
 
     // Check every connected outputs
     CheckConnections();
-
-    // Reset fired counter
-    for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
-    {
-        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
-        pSRelay->isFired = false;
-    }
 
     m_sState.ttArmedTicks = xTaskGetTickCount();
     m_sState.bIsArmed = true;
