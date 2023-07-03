@@ -39,6 +39,7 @@ static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
 static StaticSemaphore_t m_xSemaphoreCreateMutex;
 static SemaphoreHandle_t m_xSemaphoreHandle;
 
+// Firing related
 static bool CheckConnections();
 static void Fire(uint32_t u32OutputIndex);
 
@@ -124,7 +125,6 @@ void MAINAPP_Run()
 
             // Automatic disarm after 15 minutes
             const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(m_s32AutodisarmTimeoutMin*60*1000);
-
             if (bIsTimeout)
             {
                 ESP_LOGI(TAG, "Automatic disarming, timeout");
@@ -183,8 +183,6 @@ static bool CheckConnections()
 
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
-        // Give it some time to release
-        vTaskDelay(pdMS_TO_TICKS(10));
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
         int ticksMax = pdMS_TO_TICKS(40);
@@ -226,9 +224,8 @@ static void Fire(uint32_t u32OutputIndex)
 
     pSRelay->isEN = true;
 
-    // If it's armed and ready, enable the master relay
-    if (m_sState.bIsArmed)
-        HARDWAREGPIO_WriteMasterPowerRelay(true);
+    // Enable master power
+    HARDWAREGPIO_WriteMasterPowerRelay(true);
 
     ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);

@@ -281,8 +281,6 @@ void app_main(void)
 
     // Lock forever
     MAINAPP_Run();
-
-
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)
