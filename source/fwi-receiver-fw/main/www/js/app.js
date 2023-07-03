@@ -53,14 +53,6 @@ var currentApp = new Vue({
 	{
 		SendAction("/action/checkconnections");
 	},
-	idBtnDisarm_Click(event)
-	{
-		SendAction("/action/disarmfiringsystem");
-	},
-	idBtnArm_Click(event)
-	{
-		SendAction("/action/armfiringsystem");
-	},
 	idBtnFire_Click(ix)
 	{
 		SendAction("/action/firesystem", { index: ix });

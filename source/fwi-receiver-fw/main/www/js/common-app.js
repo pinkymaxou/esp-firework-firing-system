@@ -11,8 +11,6 @@ const EGeneralState = {
 	FiringUnknownError: 2,
 	Firing: 3,
 	FiringOK: 4,
-	ArmingSystem: 5,
-	ArmingSystemNoPowerError: 6,
 	ArmingSystemOK: 7,
 	CheckingConnection: 8,
 	CheckingConnectionOK: 9,

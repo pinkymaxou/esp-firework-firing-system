@@ -39,9 +39,7 @@ static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
 static StaticSemaphore_t m_xSemaphoreCreateMutex;
 static SemaphoreHandle_t m_xSemaphoreHandle;
 
-static void CheckConnections();
-static void ArmSystem();
-static void DisarmSystem();
+static bool CheckConnections();
 static void Fire(uint32_t u32OutputIndex);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
@@ -89,20 +87,7 @@ void MAINAPP_Run()
             {
                 case MAINAPP_ECMD_CheckConnections:
                     // Cannot check connection while armed
-                    if (m_sState.bIsArmed)
-                    {
-                        ESP_LOGI(TAG, "Forcing disarm");
-                        DisarmSystem();
-                    }
                     CheckConnections();
-                    break;
-                case MAINAPP_ECMD_Arm:
-                    ESP_LOGI(TAG, "Arm command issued");
-                    ArmSystem();
-                    break;
-                case MAINAPP_ECMD_Disarm:
-                    ESP_LOGI(TAG, "Disarm command issued");
-                    DisarmSystem();
                     break;
                 case MAINAPP_ECMD_Fire:
                     ESP_LOGI(TAG, "Fire command issued for output index: %d", (int)sCmd.uArg.sFire.u32OutputIndex);
@@ -118,25 +103,33 @@ void MAINAPP_Run()
         }
 
         // Check for disarming condition
+        const bool bIsMasterSwitchON = HARDWAREGPIO_ReadMasterPowerSense();
+
+        if (!m_sState.bIsArmed && bIsMasterSwitchON)
+        {
+            m_sState.bIsArmed = true;
+            ESP_LOGI(TAG, "Master switch is armed");
+            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Armed;
+        }
+        else if (m_sState.bIsArmed && !bIsMasterSwitchON)
+        {
+            m_sState.bIsArmed = false;
+            ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
+            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
+        }
+
         if (m_sState.bIsArmed)
         {
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
 
             // Automatic disarm after 15 minutes
             const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(m_s32AutodisarmTimeoutMin*60*1000);
-            const bool bIsNoMasterPower = !HARDWAREGPIO_ReadMasterPowerSense();
 
             if (bIsTimeout)
             {
                 ESP_LOGI(TAG, "Automatic disarming, timeout");
-                DisarmSystem();
+                m_sState.bIsArmed = false;
                 m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
-            }
-            else if (bIsNoMasterPower)
-            {
-                ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
-                DisarmSystem();
-                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
             }
         }
 
@@ -168,8 +161,11 @@ void MAINAPP_Run()
     }
 }
 
-static void CheckConnections()
+static bool CheckConnections()
 {
+    if (m_sState.bIsArmed)
+        return false;
+
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
 
     // Master power relay shouln'd be active during check
@@ -202,38 +198,7 @@ static void CheckConnections()
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
     }
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
-}
-
-static void ArmSystem()
-{
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystem;
-    m_sState.bIsArmed = false;
-
-    // Ensure power is availble
-    if (!HARDWAREGPIO_ReadMasterPowerSense())
-    {
-        // Master power is not active
-        ESP_LOGE(TAG, "Unable to arm the system, no power!");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError;
-        return;
-    }
-
-    // Check every connected outputs
-    CheckConnections();
-
-    m_sState.ttArmedTicks = xTaskGetTickCount();
-    m_sState.bIsArmed = true;
-    ESP_LOGI(TAG, "System is now armed and dangereous!");
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_ArmingSystemOK;
-    return;
-}
-
-static void DisarmSystem()
-{
-    if (m_sState.bIsArmed)
-        ESP_LOGI(TAG, "Disarming system");
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Disarmed;
-    m_sState.bIsArmed = false;
+    return true;
 }
 
 static void Fire(uint32_t u32OutputIndex)
@@ -250,11 +215,7 @@ static void Fire(uint32_t u32OutputIndex)
 
     // If it's in dry-run mode, power shouldn't be present
     // if it's armed, power should be present.
-    const bool bIsReady =
-        (m_sState.bIsArmed && HARDWAREGPIO_ReadMasterPowerSense()) ||
-        (!m_sState.bIsArmed && !HARDWAREGPIO_ReadMasterPowerSense());
-
-    if (!bIsReady)
+    if (!m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
         m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
@@ -284,22 +245,6 @@ static void Fire(uint32_t u32OutputIndex)
     pSRelay->isFired = true;
 
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
-}
-
-void MAINAPP_ExecArm()
-{
-    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Arm };
-    m_sCmd = sCmd;
-    xSemaphoreGive(m_xSemaphoreHandle);
-}
-
-void MAINAPP_ExecDisarm()
-{
-    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Disarm };
-    m_sCmd = sCmd;
-    xSemaphoreGive(m_xSemaphoreHandle);
 }
 
 void MAINAPP_ExecCheckConnections()
