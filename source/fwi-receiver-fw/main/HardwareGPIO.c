@@ -1,5 +1,6 @@
 #include "HardwareGPIO.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "esp_log.h"
 #include "Settings.h"
 #include "led_strip.h"
@@ -65,9 +66,9 @@ void HARDWAREGPIO_Init()
     }
 
     // Relay pin
-    gpio_reset_pin(HWCONFIG_MASTERPWRRELAY_EN);
-    gpio_set_direction(HWCONFIG_MASTERPWRRELAY_EN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, false);
+    gpio_reset_pin(HWCONFIG_MASTERPWR_EN);
+    gpio_set_direction(HWCONFIG_MASTERPWR_EN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_MASTERPWR_EN, false);
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -123,6 +124,30 @@ void HARDWAREGPIO_Init()
     SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting, strlen(szBooting));
     SSD1306_UpdateDisplay(&m_ssd1306);
     #endif
+
+    // PWM for master power
+    // Init ramp LED
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .timer_num        = LEDC_TIMER_0,
+        .duty_resolution  = LEDC_TIMER_12_BIT,
+        .freq_hz          = 500,  // Set output frequency at 500 Hz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode     = LEDC_LOW_SPEED_MODE,
+        .channel        = LEDC_CHANNEL_0,
+        .timer_sel      = LEDC_TIMER_0,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = HWCONFIG_MASTERPWR_EN,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 }
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled)
@@ -200,9 +225,15 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 {
-    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
-    // Mechanical relay, give it some time to turn off.
-    vTaskDelay(pdMS_TO_TICKS(100));
+    const float fltPercent= 0.9f;
+    uint32_t u32Value = 0;
+    if (bValue)
+        u32Value = 4095 * fltPercent;
+
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, u32Value));
+    // Update duty to apply the new value
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
