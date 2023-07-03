@@ -178,7 +178,7 @@ static bool StartCheckConnections()
     const BaseType_t xReturned = xTaskCreate(
         CheckConnectionsTask,   /* Function that implements the task. */
         "CheckConnections",     /* Text name for the task. */
-        512,                    /* Stack size in words, not bytes. */
+        2048,                   /* Stack size in words, not bytes. */
         ( void * ) 1,           /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
@@ -255,17 +255,17 @@ static bool StartFire(MAINAPP_SFire sFire)
         ESP_LOGE(TAG, "Already doing a job");
         goto ERROR;
     }
-    ESP_LOGI(TAG, "Fire command issued for output index: %d", (int)sFire.u32OutputIndex);
+    ESP_LOGI(TAG, "Fire command issued for output index: %"PRIu32, sFire.u32OutputIndex);
 
     MAINAPP_SFire* pCopyFire = (MAINAPP_SFire*)malloc(sizeof(MAINAPP_SFire));
     *pCopyFire = sFire;
 
     /* Create the task, storing the handle. */
     const BaseType_t xReturned = xTaskCreate(
-        FireTask,   /* Function that implements the task. */
-        "Fire",     /* Text name for the task. */
-        512,                    /* Stack size in words, not bytes. */
-        ( void * )pCopyFire,           /* Parameter passed into the task. */
+        FireTask,               /* Function that implements the task. */
+        "Fire",                 /* Text name for the task. */
+        2048,                   /* Stack size in words, not bytes. */
+        ( void * )pCopyFire,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
     assert(xReturned == pdPASS);
@@ -276,7 +276,7 @@ static bool StartFire(MAINAPP_SFire sFire)
 
 static bool FireTask(void* pParam)
 {
-    const MAINAPP_SFire* pFireParam = (MAINAPP_SFire*)pParam;
+    const MAINAPP_SFire* pFireParam = (const MAINAPP_SFire*)pParam;
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
     bool bRet = false;
@@ -309,7 +309,7 @@ static bool FireTask(void* pParam)
     // Enable master power
     HARDWAREGPIO_WriteMasterPowerRelay(true);
 
-    ESP_LOGI(TAG, "Firing on output index: %d", (int)u32OutputIndex);
+    ESP_LOGI(TAG, "Firing on output index: %"PRIu32, u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     UpdateLED(u32OutputIndex, true);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
