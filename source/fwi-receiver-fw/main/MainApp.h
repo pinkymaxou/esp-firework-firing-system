@@ -38,6 +38,11 @@ typedef enum
     MAINAPP_EGENERALSTATE_Disarmed = 13,
 } MAINAPP_EGENERALSTATE;
 
+typedef struct
+{
+    uint32_t u32OutputIndex;
+} MAINAPP_SFire;
+
 typedef union
 {
     struct
@@ -48,10 +53,7 @@ typedef union
     {
         uint8_t u8Dummy;
     } sArm;
-    struct
-    {
-        uint32_t u32OutputIndex;
-    } sFire;
+    MAINAPP_SFire sFire;
 } MAINAPP_UArg;
 
 typedef struct MainApp
