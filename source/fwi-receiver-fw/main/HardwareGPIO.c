@@ -94,7 +94,7 @@ void HARDWAREGPIO_Init()
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = HWCONFIG_LEDWS2812B_PIN,
-        .max_leds = 1+HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
+        .max_leds = HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
     };
     led_strip_rmt_config_t rmt_config = {
         .resolution_hz = 10 * 1000 * 1000, // 10MHz
@@ -156,7 +156,7 @@ void HARDWAREGPIO_SetSanityLED(bool isEnabled)
 
 void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
 {
-    led_strip_set_pixel(led_strip, 1+u32OutputIndex, r, g, b);
+    led_strip_set_pixel(led_strip, u32OutputIndex, r, g, b);
 }
 
 void HARDWAREGPIO_RefreshLEDStrip()
@@ -191,7 +191,7 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
     HARDWAREGPIO_ClearRelayBus();
 
     // Activate the right area
-    const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
+    const uint32_t u32AreaIndex = u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
     gpio_set_level(gpioArea, bValue);
 
@@ -212,7 +212,7 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 {
-    const double dPercent= NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
+    const double dPercent = NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
     uint32_t u32Value = 0;
     if (bValue)
         u32Value = 4095 * dPercent;

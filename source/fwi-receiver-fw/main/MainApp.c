@@ -44,10 +44,10 @@ static TaskHandle_t m_xHandle = NULL;
 
 // Firing related
 static bool StartCheckConnections();
-static bool CheckConnectionsTask(void* pParam);
+static void CheckConnectionsTask(void* pParam);
 
 static bool StartFire(MAINAPP_SFire sFire);
-static bool FireTask(void* pParam);
+static void FireTask(void* pParam);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
 static void UpdateOLED();
@@ -174,6 +174,14 @@ static bool StartCheckConnections()
         goto ERROR;
     }
 
+    if (m_sState.bIsArmed)
+    {
+        ESP_LOGE(TAG, "Cannot check connection when the system is armed");
+        goto ERROR;
+    }
+
+    ESP_LOGI(TAG, "Checking connections ...");
+
     /* Create the task, storing the handle. */
     const BaseType_t xReturned = xTaskCreate(
         CheckConnectionsTask,   /* Function that implements the task. */
@@ -189,17 +197,8 @@ static bool StartCheckConnections()
     return false;
 }
 
-static bool CheckConnectionsTask(void* pParam)
+static void CheckConnectionsTask(void* pParam)
 {
-    bool bRet = false;
-    if (m_sState.bIsArmed)
-    {
-        ESP_LOGE(TAG, "Cannot check connection when the system is armed");
-        goto ERROR;
-    }
-
-    ESP_LOGI(TAG, "Checking connections ...");
-
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
 
     // Master power relay shouln'd be active during check
@@ -211,11 +210,8 @@ static bool CheckConnectionsTask(void* pParam)
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        // Shouldn't continue if it get power
-        if (m_sState.bIsArmed)
-            goto ERROR;
-
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+
         pSRelay->isFired = false;
         pSRelay->isConnected = false;
 
@@ -233,19 +229,14 @@ static bool CheckConnectionsTask(void* pParam)
 
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
     }
+
     ESP_LOGI(TAG, "Check connection completed");
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
-    bRet = true;
-    goto END;
-    ERROR:
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
-    bRet = false;
-    END:
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
     vTaskDelete(NULL);
     m_xHandle = NULL;
-    return bRet;
 }
 
 static bool StartFire(MAINAPP_SFire sFire)
@@ -253,8 +244,26 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
         goto ERROR;
     }
+
+    if (sFire.u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
+    {
+        ESP_LOGE(TAG, "Output index is invalid !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
+        goto ERROR;
+    }
+
+    // If it's in dry-run mode, power shouldn't be present
+    // if it's armed, power should be present.
+    if (!m_sState.bIsArmed)
+    {
+        ESP_LOGE(TAG, "Cannot fire, not ready !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        goto ERROR;
+    }
+
     ESP_LOGI(TAG, "Fire command issued for output index: %"PRIu32, sFire.u32OutputIndex);
 
     MAINAPP_SFire* pCopyFire = (MAINAPP_SFire*)malloc(sizeof(MAINAPP_SFire));
@@ -274,31 +283,13 @@ static bool StartFire(MAINAPP_SFire sFire)
     return false;
 }
 
-static bool FireTask(void* pParam)
+static void FireTask(void* pParam)
 {
     const MAINAPP_SFire* pFireParam = (const MAINAPP_SFire*)pParam;
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
-    bool bRet = false;
-
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
-
-    if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
-    {
-        ESP_LOGE(TAG, "Output index is invalid !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
-        goto ERROR;
-    }
-
-    // If it's in dry-run mode, power shouldn't be present
-    // if it's armed, power should be present.
-    if (!m_sState.bIsArmed)
-    {
-        ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
-        goto ERROR;
-    }
 
     ESP_LOGI(TAG, "Firing in progress: %"PRIu32, u32OutputIndex);
 
@@ -322,17 +313,12 @@ static bool FireTask(void* pParam)
 
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
     ESP_LOGI(TAG, "Firing is done");
-    bRet = true;
-    goto END;
-    ERROR:
-    bRet = false;
-    END:
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     free(pFireParam);
+
     vTaskDelete(NULL);
     m_xHandle = NULL;
-    return bRet;
 }
 
 void MAINAPP_ExecCheckConnections()

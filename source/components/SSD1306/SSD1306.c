@@ -24,13 +24,13 @@ static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y);
 void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig)
 {
     pHandle->i2c_port = i2c_port;
-    pHandle->config = *pconfig;
+    pHandle->sConfig = *pconfig;
 
-    pHandle->width = 128;
-    pHandle->height = 64;
+    pHandle->u32Width = 128;
+    pHandle->u32Height = 64;
 
-    pHandle->bufferLen = (pHandle->height * pHandle->width) / 8;
-    pHandle->buffer = malloc(sizeof(uint8_t) * pHandle->bufferLen);
+    pHandle->u32BufferLen = (pHandle->u32Height * pHandle->u32Width) / 8;
+    pHandle->u8Buffer = malloc(sizeof(uint8_t) * pHandle->u32BufferLen);
 
     // Clear screen
     SSD1306_ClearDisplay(pHandle);
@@ -49,7 +49,7 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
     sendCommand1(pHandle, SSD1306_SETDISPLAYCLOCKDIV);
     sendCommand1(pHandle, 0xF0); // Increase speed of the display max ~96Hz
     sendCommand1(pHandle, SSD1306_SETMULTIPLEX);
-    sendCommand1(pHandle, pHandle->height - 1);
+    sendCommand1(pHandle, pHandle->u32Height - 1);
     sendCommand1(pHandle, SSD1306_SETDISPLAYOFFSET);
     sendCommand1(pHandle, 0x00);
 
@@ -81,12 +81,12 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
     //pHandle->font = &Picopixel;
     pHandle->font = &FreeSerif9pt7b;
     // Find the baseline
-    pHandle->baselineY = 0;
+    pHandle->u32BaselineY = 0;
 
     for(int i = 0; i < (pHandle->font->last - pHandle->font->first); i++)
     {
-        if (pHandle->baselineY < pHandle->font->glyph[i].height)
-            pHandle->baselineY = pHandle->font->glyph[i].height;
+        if (pHandle->u32BaselineY < pHandle->font->glyph[i].height)
+            pHandle->u32BaselineY = pHandle->font->glyph[i].height;
     }
     // Sometime to help initialization ..
     vTaskDelay(pdMS_TO_TICKS(10)+1);
@@ -94,15 +94,15 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
 
 void SSD1306_Uninit(SSD1306_handle* pHandle)
 {
-    if (pHandle->buffer != NULL)
+    if (pHandle->u8Buffer != NULL)
     {
-        free(pHandle->buffer);
+        free(pHandle->u8Buffer);
     }
 }
 
 void SSD1306_ClearDisplay(SSD1306_handle* pHandle)
 {
-    memset(pHandle->buffer, 0, pHandle->bufferLen);
+    memset(pHandle->u8Buffer, 0, pHandle->u32BufferLen);
 }
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle)
@@ -111,10 +111,10 @@ void SSD1306_UpdateDisplay(SSD1306_handle* pHandle)
       SSD1306_PAGEADDR,
       0,                      // Page start address
       0xFF,                   // Page end (not really, but works here)
-      SSD1306_COLUMNADDR, 0, pHandle->width - 1}; // Column start address
+      SSD1306_COLUMNADDR, 0, pHandle->u32Width - 1}; // Column start address
 
     sendCommand(pHandle, displayInit, sizeof(displayInit));
-    sendData(pHandle, pHandle->buffer, pHandle->bufferLen);
+    sendData(pHandle, pHandle->u8Buffer, pHandle->u32BufferLen);
 }
 
 void SSD1306_DisplayState(SSD1306_handle* pHandle, bool isActive)
@@ -139,14 +139,14 @@ void SSD1306_SetPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
     if (!IsXYValid(pHandle, x, y))
         return;
-    pHandle->buffer[x + (y >> 3) * pHandle->width] |=  (1 << (y & 7));
+    pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] |=  (1 << (y & 7));
 }
 
 void SSD1306_ClearPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
     if (!IsXYValid(pHandle, x, y))
         return;
-    pHandle->buffer[x + (y >> 3) * pHandle->width] &=  ~(1 << (y & 7));
+    pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] &=  ~(1 << (y & 7));
 }
 
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c)
@@ -155,20 +155,20 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
     if (c < pHandle->font->first || c > pHandle->font->last)
         return 0;
 
-    int index = c - pHandle->font->first;
-    GFXglyph* glyph = pHandle->font->glyph + index;
+    const int index = c - pHandle->font->first;
 
-    uint8_t* pMap = pHandle->font->bitmap + glyph->bitmapOffset;
+    const GFXglyph* glyph = pHandle->font->glyph + index;
 
-    uint8_t bitsize = glyph->width * glyph->height;
-    uint8_t byteCnt = ((bitsize) + 7) / 8;
+    const uint8_t* pMap = pHandle->font->bitmap + glyph->bitmapOffset;
+
+    const uint8_t bitsize = glyph->width * glyph->height;
 
     uint8_t byte = 0;
 
     for(int i = 0; i < bitsize; i++)
     {
-        int x1 = i % glyph->width + x + glyph->xOffset;
-        int y1 = i / glyph->width + y + (pHandle->baselineY + glyph->yOffset);
+        const int x1 = i % glyph->width + x + glyph->xOffset;
+        const int y1 = i / glyph->width + y + (pHandle->u32BaselineY + glyph->yOffset);
 
         if (i % 8 == 0)
             byte = pMap[i / 8];
@@ -187,7 +187,7 @@ void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const c
 
     for(int i = 0; i < len; i++)
     {
-        unsigned char c = (unsigned char)buffer[i];
+        const unsigned char c = (unsigned char)buffer[i];
         if (c == '\r' || c == '\n')
         {
             y1 += pHandle->font->yAdvance;
@@ -203,7 +203,7 @@ void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const c
 
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    return (x < pHandle->width) && (y < pHandle->height);
+    return (x < pHandle->u32Width) && (y < pHandle->u32Height);
 }
 
 static void sendCommand1(SSD1306_handle* pHandle, uint8_t value)
@@ -232,7 +232,7 @@ static void writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* 
 
 	// Write sampling command
 	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_start(cmd));
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (pHandle->config.i2cAddress<<1), true));
+	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (pHandle->sConfig.i2cAddress<<1), true));
     // CO = 0, D/C = 0 (Data = 1, Command = 0)
     ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (uint8_t)controlByte, true));  // Data mode (bit 6)
     for(int i = 0; i < length; i++)
