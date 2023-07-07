@@ -3,17 +3,6 @@
 
 typedef enum
 {
-    MAINAPP_ECMD_None = 0,
-
-    MAINAPP_ECMD_Disarm,
-    MAINAPP_ECMD_Arm,
-    MAINAPP_ECMD_Fire,
-
-    MAINAPP_ECMD_CheckConnections,
-} MAINAPP_ECMD;
-
-typedef enum
-{
     MAINAPP_EOUTPUTSTATE_Idle = 0,
     MAINAPP_EOUTPUTSTATE_Enabled = 1,
     MAINAPP_EOUTPUTSTATE_Fired = 2,
@@ -23,16 +12,14 @@ typedef enum
 typedef enum
 {
     MAINAPP_EGENERALSTATE_Idle = 0,
-    
+
     MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError = 1,
     MAINAPP_EGENERALSTATE_FiringUnknownError = 2,
     MAINAPP_EGENERALSTATE_Firing = 3,
     MAINAPP_EGENERALSTATE_FiringOK = 4,
 
-    MAINAPP_EGENERALSTATE_ArmingSystem = 5,
-    MAINAPP_EGENERALSTATE_ArmingSystemNoPowerError = 6,
-    MAINAPP_EGENERALSTATE_ArmingSystemOK = 7,
-    
+    MAINAPP_EGENERALSTATE_Armed = 7,
+
     MAINAPP_EGENERALSTATE_CheckingConnection = 8,
     MAINAPP_EGENERALSTATE_CheckingConnectionOK = 9,
     MAINAPP_EGENERALSTATE_CheckingConnectionError = 10,
@@ -42,20 +29,21 @@ typedef enum
     MAINAPP_EGENERALSTATE_Disarmed = 13,
 } MAINAPP_EGENERALSTATE;
 
+typedef enum
+{
+    MAINAPP_ECMD_None = 0,
+    MAINAPP_ECMD_Fire,
+    MAINAPP_ECMD_CheckConnections,
+} MAINAPP_ECMD;
+
+typedef struct
+{
+    uint32_t u32OutputIndex;
+} MAINAPP_SFire;
+
 typedef union
 {
-    struct
-    {
-        uint8_t u8Dummy;
-    } sDisarm;
-    struct
-    {
-        uint8_t u8Dummy;
-    } sArm;
-    struct
-    {
-        uint32_t u32OutputIndex;
-    } sFire;
+    MAINAPP_SFire sFire;
 } MAINAPP_UArg;
 
 typedef struct MainApp
@@ -77,10 +65,6 @@ typedef struct
 void MAINAPP_Init();
 
 void MAINAPP_Run();
-
-void MAINAPP_ExecArm();
-
-void MAINAPP_ExecDisarm();
 
 void MAINAPP_ExecFire(uint32_t u32OutputIndex);
 

@@ -65,7 +65,7 @@ extern "C" {
 
 #define SCREEN_OLED_I2CADDRESS 0x3C
 
-typedef struct 
+typedef struct
 {
     uint8_t i2cAddress;
     gpio_num_t pinReset;
@@ -76,21 +76,21 @@ typedef struct
 {                               \
     .i2cAddress = SCREEN_OLED_I2CADDRESS,  \
     .pinReset = (gpio_num_t)-1 \
-} 
+}
 
-typedef struct 
+typedef struct
 {
     i2c_port_t i2c_port;
-    SSD1306_config config;
-    
-    uint8_t* buffer;
-    uint16_t bufferLen;
+    SSD1306_config sConfig;
 
-    uint16_t width;
-    uint16_t height;
+    uint8_t* u8Buffer;
+    uint32_t u32BufferLen;
+
+    uint32_t u32Width;
+    uint32_t u32Height;
 
     GFXfont* font;
-    uint8_t baselineY;
+    uint32_t u32BaselineY;
 } SSD1306_handle;
 
 void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig);

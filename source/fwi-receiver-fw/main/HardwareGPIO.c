@@ -1,5 +1,6 @@
 #include "HardwareGPIO.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "esp_log.h"
 #include "Settings.h"
 #include "led_strip.h"
@@ -42,8 +43,8 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
 void HARDWAREGPIO_Init()
 {
     // Sanity LEDs
-    gpio_reset_pin(HWCONFIG_STATUSLED_PIN);
-    gpio_set_direction(HWCONFIG_STATUSLED_PIN, GPIO_MODE_OUTPUT);
+    gpio_reset_pin(HWCONFIG_LEDWS2812B_PIN);
+    gpio_set_direction(HWCONFIG_LEDWS2812B_PIN, GPIO_MODE_OUTPUT);
     gpio_reset_pin(HWCONFIG_SANITY2_PIN);
     gpio_set_direction(HWCONFIG_SANITY2_PIN, GPIO_MODE_OUTPUT);
 
@@ -65,9 +66,9 @@ void HARDWAREGPIO_Init()
     }
 
     // Relay pin
-    gpio_reset_pin(HWCONFIG_MASTERPWRRELAY_EN);
-    gpio_set_direction(HWCONFIG_MASTERPWRRELAY_EN, GPIO_MODE_OUTPUT);
-    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, false);
+    gpio_reset_pin(HWCONFIG_MASTERPWR_EN);
+    gpio_set_direction(HWCONFIG_MASTERPWR_EN, GPIO_MODE_OUTPUT);
+    gpio_set_level(HWCONFIG_MASTERPWR_EN, false);
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -92,8 +93,8 @@ void HARDWAREGPIO_Init()
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
-        .strip_gpio_num = HWCONFIG_STATUSLED_PIN,
-        .max_leds = 1+HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
+        .strip_gpio_num = HWCONFIG_LEDWS2812B_PIN,
+        .max_leds = HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
     };
     led_strip_rmt_config_t rmt_config = {
         .resolution_hz = 10 * 1000 * 1000, // 10MHz
@@ -123,28 +124,39 @@ void HARDWAREGPIO_Init()
     SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting, strlen(szBooting));
     SSD1306_UpdateDisplay(&m_ssd1306);
     #endif
+
+    // PWM for master power
+    // Prepare and then apply the LEDC PWM timer configuration
+    ledc_timer_config_t ledc_timer = {
+        .speed_mode       = LEDC_LOW_SPEED_MODE,
+        .timer_num        = LEDC_TIMER_0,
+        .duty_resolution  = LEDC_TIMER_12_BIT,
+        .freq_hz          = 50,  // Set output frequency at 50 Hz
+        .clk_cfg          = LEDC_AUTO_CLK
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode     = LEDC_LOW_SPEED_MODE,
+        .channel        = LEDC_CHANNEL_0,
+        .timer_sel      = LEDC_TIMER_0,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = HWCONFIG_MASTERPWR_EN,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 }
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled)
 {
     gpio_set_level(HWCONFIG_SANITY2_PIN, !isEnabled);
-
-    /* If the addressable LED is enabled */
-    if (isEnabled)
-    {
-        /* Set the LED pixel using RGB from 0 (0%) to 255 (100%) for each color */
-        led_strip_set_pixel(led_strip, 0, 255, 255, 255);
-    }
-    else
-    {
-        /* Set the LED pixel using RGB from 0 (0%) to 255 (100%) for each color */
-        led_strip_set_pixel(led_strip, 0, 0, 0, 0);
-    }
 }
 
 void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
 {
-    led_strip_set_pixel(led_strip, 1+u32OutputIndex, r, g, b);
+    led_strip_set_pixel(led_strip, u32OutputIndex, r, g, b);
 }
 
 void HARDWAREGPIO_RefreshLEDStrip()
@@ -179,7 +191,7 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
     HARDWAREGPIO_ClearRelayBus();
 
     // Activate the right area
-    const uint32_t u32AreaIndex = u32OutputIndex/HWCONFIG_OUTPUTBUS_COUNT;
+    const uint32_t u32AreaIndex = u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
     const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
     gpio_set_level(gpioArea, bValue);
 
@@ -200,9 +212,15 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 {
-    gpio_set_level(HWCONFIG_MASTERPWRRELAY_EN, bValue);
-    // Mechanical relay, give it some time to turn off.
-    vTaskDelay(pdMS_TO_TICKS(100));
+    const double dPercent = NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
+    uint32_t u32Value = 0;
+    if (bValue)
+        u32Value = 4095 * dPercent;
+
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, u32Value));
+    // Update duty to apply the new value
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()

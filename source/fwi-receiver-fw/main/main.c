@@ -279,10 +279,13 @@ void app_main(void)
 
     MAINAPP_Init();
 
+    char* szAllTask = (char*)malloc(4096);
+    vTaskList(szAllTask);
+    ESP_LOGI(TAG, "vTaskList: \r\n\r\n%s", szAllTask);
+    free(szAllTask);
+
     // Lock forever
     MAINAPP_Run();
-
-
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)
