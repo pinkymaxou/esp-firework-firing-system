@@ -186,8 +186,8 @@ static bool StartCheckConnections()
     const BaseType_t xReturned = xTaskCreate(
         CheckConnectionsTask,   /* Function that implements the task. */
         "CheckConnections",     /* Text name for the task. */
-        2048,                   /* Stack size in words, not bytes. */
-        ( void * ) 1,           /* Parameter passed into the task. */
+        4096,                   /* Stack size in words, not bytes. */
+        ( void * )NULL,           /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
 
@@ -235,8 +235,8 @@ static void CheckConnectionsTask(void* pParam)
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    vTaskDelete(NULL);
     m_xHandle = NULL;
+    vTaskDelete(NULL);
 }
 
 static bool StartFire(MAINAPP_SFire sFire)
@@ -273,7 +273,7 @@ static bool StartFire(MAINAPP_SFire sFire)
     const BaseType_t xReturned = xTaskCreate(
         FireTask,               /* Function that implements the task. */
         "Fire",                 /* Text name for the task. */
-        2048,                   /* Stack size in words, not bytes. */
+        4096,                   /* Stack size in words, not bytes. */
         ( void * )pCopyFire,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
@@ -315,10 +315,10 @@ static void FireTask(void* pParam)
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
-    free(pFireParam);
 
-    vTaskDelete(NULL);
+    free(pFireParam);
     m_xHandle = NULL;
+    vTaskDelete(NULL);
 }
 
 void MAINAPP_ExecCheckConnections()

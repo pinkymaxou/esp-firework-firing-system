@@ -70,8 +70,6 @@ void HARDWAREGPIO_Init()
     gpio_set_direction(HWCONFIG_MASTERPWR_EN, GPIO_MODE_OUTPUT);
     gpio_set_level(HWCONFIG_MASTERPWR_EN, false);
 
-    HARDWAREGPIO_WriteMasterPowerRelay(false);
-
     gpio_reset_pin(HWCONFIG_MASTERPWRSENSE_IN);
     gpio_set_direction(HWCONFIG_MASTERPWRSENSE_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
@@ -135,6 +133,8 @@ void HARDWAREGPIO_Init()
         .clk_cfg          = LEDC_AUTO_CLK
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
+
+    ESP_LOGI(TAG, "initialize LEDC");
 
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
@@ -213,14 +213,12 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 {
     const double dPercent = NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
-    uint32_t u32Value = 0;
-    if (bValue)
-        u32Value = 4095 * dPercent;
+
+    const uint32_t u32Value = bValue ? (4095 * dPercent) : 0;
 
     ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, u32Value));
     // Update duty to apply the new value
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
-
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
