@@ -92,7 +92,7 @@ void HARDWAREGPIO_Init()
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
         .strip_gpio_num = HWCONFIG_LEDWS2812B_PIN,
-        .max_leds = HWCONFIG_OUTPUT_COUNT, // sanity LED + at least one LED on board
+        .max_leds = HWCONFIG_OUTPUT_COUNT+1, // sanity LED + at least one LED on board
     };
     led_strip_rmt_config_t rmt_config = {
         .resolution_hz = 10 * 1000 * 1000, // 10MHz
@@ -152,11 +152,14 @@ void HARDWAREGPIO_Init()
 void HARDWAREGPIO_SetSanityLED(bool isEnabled)
 {
     gpio_set_level(HWCONFIG_SANITY2_PIN, !isEnabled);
+
+    led_strip_set_pixel(led_strip, 0, 0, isEnabled ? 200 : 0, 0);
+    HARDWAREGPIO_RefreshLEDStrip();
 }
 
 void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
 {
-    led_strip_set_pixel(led_strip, u32OutputIndex, r, g, b);
+    led_strip_set_pixel(led_strip, u32OutputIndex+1, r, g, b);
 }
 
 void HARDWAREGPIO_RefreshLEDStrip()
