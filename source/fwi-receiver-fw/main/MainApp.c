@@ -219,7 +219,7 @@ static void CheckConnectionsTask(void* pParam)
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(40);
+        int ticksMax = pdMS_TO_TICKS(80);
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
