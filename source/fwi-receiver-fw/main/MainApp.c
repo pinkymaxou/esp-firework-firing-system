@@ -220,7 +220,8 @@ static void CheckConnectionsTask(void* pParam)
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(80);
+        int ticksMax = pdMS_TO_TICKS(40);
+        vTaskDelay(pdMS_TO_TICKS(40));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
@@ -303,11 +304,11 @@ static void FireTask(void* pParam)
 
     ESP_LOGI(TAG, "Firing on output index: %"PRIu32, u32OutputIndex);
     int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    UpdateLED(u32OutputIndex, true);
+    //UpdateLED(u32OutputIndex, true);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
-    UpdateLED(u32OutputIndex, true);
+    //UpdateLED(u32OutputIndex, true);
 
     pSRelay->isEN = false;
     pSRelay->isFired = true;

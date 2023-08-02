@@ -42,7 +42,7 @@
 #define HWCONFIG_I2C_SCL GPIO_NUM_21
 
 // OLED screen
-#define HWCONFIG_OLED_ISPRESENT (1)
+#define HWCONFIG_OLED_ISPRESENT (0)
 #define HWCONFIG_OLED_I2CADDR (0x3C)
 
 // Relay sensing and power
