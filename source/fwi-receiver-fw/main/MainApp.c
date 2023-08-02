@@ -208,11 +208,15 @@ static void CheckConnectionsTask(void* pParam)
     // Clear relay bus
     HARDWAREGPIO_ClearRelayBus();
 
+    uint32_t u32LastAreaIndex = 0;
+
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
 
+        const uint32_t u32AreaIndex = i / HWCONFIG_OUTPUTBUS_COUNT;
+ 
         pSRelay->isFired = false;
         pSRelay->isConnected = false;
 
@@ -230,6 +234,14 @@ static void CheckConnectionsTask(void* pParam)
         } while (!pSRelay->isConnected && ticksMax > 0);
 
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
+
+        // Give it some time when it change area to be sure no ghost detection happens
+        if (u32LastAreaIndex != u32AreaIndex)
+        {
+            // Ensure capacitor won't keep it on.
+            vTaskDelay(pdMS_TO_TICKS(500));
+            u32LastAreaIndex = u32AreaIndex;
+        }
     }
 
     ESP_LOGI(TAG, "Check connection completed");
