@@ -216,7 +216,7 @@ static void CheckConnectionsTask(void* pParam)
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
 
         const uint32_t u32AreaIndex = i / HWCONFIG_OUTPUTBUS_COUNT;
- 
+
         pSRelay->isFired = false;
         pSRelay->isConnected = false;
 
@@ -224,8 +224,8 @@ static void CheckConnectionsTask(void* pParam)
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(40);
-        vTaskDelay(pdMS_TO_TICKS(40));
+        int ticksMax = pdMS_TO_TICKS(80);
+        vTaskDelay(pdMS_TO_TICKS(60));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
@@ -239,7 +239,7 @@ static void CheckConnectionsTask(void* pParam)
         if (u32LastAreaIndex != u32AreaIndex)
         {
             // Ensure capacitor won't keep it on.
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(200));
             u32LastAreaIndex = u32AreaIndex;
         }
     }
