@@ -20,7 +20,7 @@
 typedef struct
 {
     bool bIsArmed;
-    TickType_t ttArmedTicks;
+    // TickType_t ttArmedTicks;
 
     MAINAPP_EGENERALSTATE eGeneralState;
 } SState;
@@ -28,7 +28,7 @@ typedef struct
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
+static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
 
 static int32_t m_s32AutodisarmTimeoutMin = 0;
 
@@ -100,8 +100,8 @@ void MAINAPP_Run()
                     StartFire(sCmd.uArg.sFire);
 
                     // Reset armed timeout ..
-                    if (m_sState.bIsArmed)
-                        m_sState.ttArmedTicks = xTaskGetTickCount();
+                    //if (m_sState.bIsArmed)
+                    //    m_sState.ttArmedTicks = xTaskGetTickCount();
                     break;
                 default:
                     break;
@@ -125,6 +125,7 @@ void MAINAPP_Run()
         }
 
         //
+        /*
         if (m_sState.bIsArmed)
         {
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
@@ -137,7 +138,7 @@ void MAINAPP_Run()
                 m_sState.bIsArmed = false;
                 m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
             }
-        }
+        }*/
 
         // Sanity blink ...
         if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
@@ -389,17 +390,18 @@ static void UpdateOLED()
 
     if (m_sState.bIsArmed)
     {
-        const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
-        int min = 0;
-        int sec = 0;
-        if (s32DiffS >= 0)
-        {
-            min = (int)(s32DiffS / 60);
-            sec = (int)(s32DiffS % 60);
-        }
-        sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
-            /*0*/min,
-            /*1*/sec);
+        // const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
+        // int min = 0;
+        // int sec = 0;
+        // if (s32DiffS >= 0)
+        // {
+        //     min = (int)(s32DiffS / 60);
+        //     sec = (int)(s32DiffS % 60);
+        // }
+        // sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
+        //     /*0*/min,
+        //     /*1*/sec);
+        sprintf(szText, "ARMED AND\nDANGEROUS");
     }
     else
     {
