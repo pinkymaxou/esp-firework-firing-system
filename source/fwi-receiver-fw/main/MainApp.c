@@ -30,7 +30,7 @@ typedef struct
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
 
-static int32_t m_s32AutodisarmTimeoutMin = 0;
+// static int32_t m_s32AutodisarmTimeoutMin = 0;
 
 // Input commands
 static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
@@ -78,7 +78,7 @@ void MAINAPP_Run()
     TickType_t ttSanityTicks = 0;
     TickType_t ttUpdateOLEDTick = 0;
 
-    m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+   // m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
 
     while (true)
     {
@@ -178,6 +178,7 @@ static bool StartCheckConnections()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot check connection when the system is armed");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
         goto ERROR;
     }
 
@@ -258,7 +259,6 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
         goto ERROR;
     }
 
@@ -315,12 +315,10 @@ static void FireTask(void* pParam)
     HARDWAREGPIO_WriteMasterPowerRelay(true);
 
     ESP_LOGI(TAG, "Firing on output index: %"PRIu32, u32OutputIndex);
-    int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    //UpdateLED(u32OutputIndex, true);
+    const int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
-    //UpdateLED(u32OutputIndex, true);
 
     pSRelay->isEN = false;
     pSRelay->isFired = true;
