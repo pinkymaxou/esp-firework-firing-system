@@ -12,16 +12,16 @@ typedef enum
     ControlByte_Data = 0x40
 } ControlByte;
 
-static void sendCommand1(SSD1306_handle* pHandle, uint8_t value);
-static void sendCommand(SSD1306_handle* pHandle, uint8_t* value, int n);
+static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value);
+static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int n);
 
-static void sendData1(SSD1306_handle* pHandle, uint8_t value);
-static void sendData(SSD1306_handle* pHandle, uint8_t* value, int n);
-static void writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length);
+static bool sendData1(SSD1306_handle* pHandle, uint8_t value);
+static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int n);
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length);
 
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y);
 
-void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig)
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig)
 {
     pHandle->i2c_port = i2c_port;
     pHandle->sConfig = *pconfig;
@@ -31,6 +31,8 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
 
     pHandle->u32BufferLen = (pHandle->u32Height * pHandle->u32Width) / 8;
     pHandle->u8Buffer = malloc(sizeof(uint8_t) * pHandle->u32BufferLen);
+
+    pHandle->bIsInit = false;
 
     // Clear screen
     SSD1306_ClearDisplay(pHandle);
@@ -44,7 +46,10 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
         gpio_set_level((gpio_num_t)pconfig->pinReset, true);
     }
 
-    sendCommand1(pHandle, SSD1306_DISPLAYOFF);
+    if (!sendCommand1(pHandle, SSD1306_DISPLAYOFF))
+    {
+        return false;
+    }
 
     sendCommand1(pHandle, SSD1306_SETDISPLAYCLOCKDIV);
     sendCommand1(pHandle, 0xF0); // Increase speed of the display max ~96Hz
@@ -88,12 +93,16 @@ void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
         if (pHandle->u32BaselineY < pHandle->font->glyph[i].height)
             pHandle->u32BaselineY = pHandle->font->glyph[i].height;
     }
+
+    pHandle->bIsInit = true;
     // Sometime to help initialization ..
     vTaskDelay(pdMS_TO_TICKS(10)+1);
+    return true;
 }
 
 void SSD1306_Uninit(SSD1306_handle* pHandle)
 {
+    pHandle->bIsInit = false;
     if (pHandle->u8Buffer != NULL)
     {
         free(pHandle->u8Buffer);
@@ -102,11 +111,15 @@ void SSD1306_Uninit(SSD1306_handle* pHandle)
 
 void SSD1306_ClearDisplay(SSD1306_handle* pHandle)
 {
+    if (!pHandle->bIsInit)
+        return;
     memset(pHandle->u8Buffer, 0, pHandle->u32BufferLen);
 }
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle)
 {
+    if (!pHandle->bIsInit)
+        return;
     const uint8_t displayInit[] = {
       SSD1306_PAGEADDR,
       0,                      // Page start address
@@ -119,6 +132,8 @@ void SSD1306_UpdateDisplay(SSD1306_handle* pHandle)
 
 void SSD1306_DisplayState(SSD1306_handle* pHandle, bool isActive)
 {
+    if (!pHandle->bIsInit)
+        return;
     if (isActive)
         sendCommand1(pHandle, SSD1306_DISPLAYON);
     else
@@ -127,30 +142,36 @@ void SSD1306_DisplayState(SSD1306_handle* pHandle, bool isActive)
 
 void SSD1306_InvertDisplay(SSD1306_handle* pHandle)
 {
+    if (!pHandle->bIsInit)
+        return;
     sendCommand1(pHandle, SSD1306_INVERTDISPLAY);
 }
 
 void SSD1306_NormalDisplay(SSD1306_handle* pHandle)
 {
+    if (!pHandle->bIsInit)
+        return;
     sendCommand1(pHandle, SSD1306_NORMALDISPLAY);
 }
 
 void SSD1306_SetPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    if (!IsXYValid(pHandle, x, y))
+    if (!pHandle->bIsInit || !IsXYValid(pHandle, x, y))
         return;
     pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] |=  (1 << (y & 7));
 }
 
 void SSD1306_ClearPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    if (!IsXYValid(pHandle, x, y))
+    if (!pHandle->bIsInit || !IsXYValid(pHandle, x, y))
         return;
     pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] &=  ~(1 << (y & 7));
 }
 
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c)
 {
+    if (!pHandle->bIsInit)
+        return 0;
     // Character is not supported by the font
     if (c < pHandle->font->first || c > pHandle->font->last)
         return 0;
@@ -183,6 +204,8 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
 
 void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer, int len)
 {
+    if (!pHandle->bIsInit)
+        return;
     int x1 = x, y1 = y;
 
     for(int i = 0; i < len; i++)
@@ -206,28 +229,30 @@ static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
     return (x < pHandle->u32Width) && (y < pHandle->u32Height);
 }
 
-static void sendCommand1(SSD1306_handle* pHandle, uint8_t value)
+static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value)
 {
-    writeI2C(pHandle, ControlByte_Command, &value, 1);
+    return writeI2C(pHandle, ControlByte_Command, &value, 1);
 }
 
-static void sendCommand(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int length)
 {
-    writeI2C(pHandle, ControlByte_Command, value, length);
+    return writeI2C(pHandle, ControlByte_Command, value, length);
 }
 
-static void sendData1(SSD1306_handle* pHandle, uint8_t value)
+static bool sendData1(SSD1306_handle* pHandle, uint8_t value)
 {
-    writeI2C(pHandle, ControlByte_Data, &value, 1);
+    return writeI2C(pHandle, ControlByte_Data, &value, 1);
 }
 
-static void sendData(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int length)
 {
-    writeI2C(pHandle, ControlByte_Data, value, length);
+    return writeI2C(pHandle, ControlByte_Data, value, length);
 }
 
-static void writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length)
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length)
 {
+    bool retF = true;
+
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	// Write sampling command
@@ -241,8 +266,13 @@ static void writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* 
     }
 	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_stop(cmd));
 
-	esp_err_t ret = i2c_master_cmd_begin(pHandle->i2c_port, cmd, pdMS_TO_TICKS(1000));
-	ESP_ERROR_CHECK_WITHOUT_ABORT(ret);
+	const esp_err_t ret = i2c_master_cmd_begin(pHandle->i2c_port, cmd, pdMS_TO_TICKS(1000));
+	if (ret != ESP_OK)
+    {
+        ESP_ERROR_CHECK_WITHOUT_ABORT(ret);
+        retF = false;
+    }
 
 	i2c_cmd_link_delete(cmd);
+    return retF;
 }
