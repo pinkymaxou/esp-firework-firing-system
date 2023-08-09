@@ -91,9 +91,11 @@ typedef struct
 
     GFXfont* font;
     uint32_t u32BaselineY;
+
+    bool bIsInit;
 } SSD1306_handle;
 
-void SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig);
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig);
 
 void SSD1306_Uninit(SSD1306_handle* pHandle);
 

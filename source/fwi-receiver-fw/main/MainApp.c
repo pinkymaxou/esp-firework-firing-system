@@ -20,7 +20,7 @@
 typedef struct
 {
     bool bIsArmed;
-    TickType_t ttArmedTicks;
+    // TickType_t ttArmedTicks;
 
     MAINAPP_EGENERALSTATE eGeneralState;
 } SState;
@@ -28,9 +28,9 @@ typedef struct
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false, .ttArmedTicks = 0 };
+static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
 
-static int32_t m_s32AutodisarmTimeoutMin = 0;
+// static int32_t m_s32AutodisarmTimeoutMin = 0;
 
 // Input commands
 static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
@@ -78,7 +78,7 @@ void MAINAPP_Run()
     TickType_t ttSanityTicks = 0;
     TickType_t ttUpdateOLEDTick = 0;
 
-    m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+   // m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
 
     while (true)
     {
@@ -100,8 +100,8 @@ void MAINAPP_Run()
                     StartFire(sCmd.uArg.sFire);
 
                     // Reset armed timeout ..
-                    if (m_sState.bIsArmed)
-                        m_sState.ttArmedTicks = xTaskGetTickCount();
+                    //if (m_sState.bIsArmed)
+                    //    m_sState.ttArmedTicks = xTaskGetTickCount();
                     break;
                 default:
                     break;
@@ -125,6 +125,7 @@ void MAINAPP_Run()
         }
 
         //
+        /*
         if (m_sState.bIsArmed)
         {
             const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
@@ -137,7 +138,7 @@ void MAINAPP_Run()
                 m_sState.bIsArmed = false;
                 m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
             }
-        }
+        }*/
 
         // Sanity blink ...
         if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
@@ -177,6 +178,7 @@ static bool StartCheckConnections()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot check connection when the system is armed");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
         goto ERROR;
     }
 
@@ -186,8 +188,8 @@ static bool StartCheckConnections()
     const BaseType_t xReturned = xTaskCreate(
         CheckConnectionsTask,   /* Function that implements the task. */
         "CheckConnections",     /* Text name for the task. */
-        2048,                   /* Stack size in words, not bytes. */
-        ( void * ) 1,           /* Parameter passed into the task. */
+        4096,                   /* Stack size in words, not bytes. */
+        ( void * )NULL,           /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
 
@@ -207,10 +209,14 @@ static void CheckConnectionsTask(void* pParam)
     // Clear relay bus
     HARDWAREGPIO_ClearRelayBus();
 
+    uint32_t u32LastAreaIndex = 0;
+
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+
+        const uint32_t u32AreaIndex = i / HWCONFIG_OUTPUTBUS_COUNT;
 
         pSRelay->isFired = false;
         pSRelay->isConnected = false;
@@ -219,7 +225,8 @@ static void CheckConnectionsTask(void* pParam)
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(40);
+        int ticksMax = pdMS_TO_TICKS(80);
+        vTaskDelay(pdMS_TO_TICKS(60));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
@@ -228,6 +235,14 @@ static void CheckConnectionsTask(void* pParam)
         } while (!pSRelay->isConnected && ticksMax > 0);
 
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
+
+        // Give it some time when it change area to be sure no ghost detection happens
+        if (u32LastAreaIndex != u32AreaIndex)
+        {
+            // Ensure capacitor won't keep it on.
+            vTaskDelay(pdMS_TO_TICKS(200));
+            u32LastAreaIndex = u32AreaIndex;
+        }
     }
 
     ESP_LOGI(TAG, "Check connection completed");
@@ -235,8 +250,8 @@ static void CheckConnectionsTask(void* pParam)
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    vTaskDelete(NULL);
     m_xHandle = NULL;
+    vTaskDelete(NULL);
 }
 
 static bool StartFire(MAINAPP_SFire sFire)
@@ -244,7 +259,6 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
         goto ERROR;
     }
 
@@ -273,7 +287,7 @@ static bool StartFire(MAINAPP_SFire sFire)
     const BaseType_t xReturned = xTaskCreate(
         FireTask,               /* Function that implements the task. */
         "Fire",                 /* Text name for the task. */
-        2048,                   /* Stack size in words, not bytes. */
+        4096,                   /* Stack size in words, not bytes. */
         ( void * )pCopyFire,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
@@ -301,12 +315,10 @@ static void FireTask(void* pParam)
     HARDWAREGPIO_WriteMasterPowerRelay(true);
 
     ESP_LOGI(TAG, "Firing on output index: %"PRIu32, u32OutputIndex);
-    int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    UpdateLED(u32OutputIndex, true);
+    const int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, false);
-    UpdateLED(u32OutputIndex, true);
 
     pSRelay->isEN = false;
     pSRelay->isFired = true;
@@ -315,10 +327,10 @@ static void FireTask(void* pParam)
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
-    free(pFireParam);
 
-    vTaskDelete(NULL);
+    free(pFireParam);
     m_xHandle = NULL;
+    vTaskDelete(NULL);
 }
 
 void MAINAPP_ExecCheckConnections()
@@ -389,17 +401,18 @@ static void UpdateOLED()
 
     if (m_sState.bIsArmed)
     {
-        const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
-        int min = 0;
-        int sec = 0;
-        if (s32DiffS >= 0)
-        {
-            min = (int)(s32DiffS / 60);
-            sec = (int)(s32DiffS % 60);
-        }
-        sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
-            /*0*/min,
-            /*1*/sec);
+        // const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
+        // int min = 0;
+        // int sec = 0;
+        // if (s32DiffS >= 0)
+        // {
+        //     min = (int)(s32DiffS / 60);
+        //     sec = (int)(s32DiffS % 60);
+        // }
+        // sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
+        //     /*0*/min,
+        //     /*1*/sec);
+        sprintf(szText, "ARMED AND\nDANGEROUS");
     }
     else
     {
