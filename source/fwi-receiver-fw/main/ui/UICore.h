@@ -2,6 +2,7 @@
 #define _UICORE_H_
 
 #include <stdint.h>
+#include "../HardwareGPIO.h"
 
 typedef enum
 {
@@ -12,11 +13,13 @@ typedef enum
 typedef void (*fnEnter)(void);
 typedef void (*fnExit)(void);
 typedef void (*fnEncoderMove)(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
+typedef void (*fnTick)(void);
 
 typedef struct
 {
     fnEnter FnEnter;
     fnExit FnExit;
+    fnTick FnTick;
     fnEncoderMove FnEncoderMove;
 } UICORE_SLifeCycle;
 

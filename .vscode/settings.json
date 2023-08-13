@@ -8,6 +8,9 @@
         "freemono7pt7b.h": "c",
         "websocket.h": "c",
         "uimanager.h": "c",
-        "uihome.h": "c"
+        "uihome.h": "c",
+        "uicore.h": "c",
+        "ssd1306.h": "c",
+        "hwconfig.h": "c"
     }
 }

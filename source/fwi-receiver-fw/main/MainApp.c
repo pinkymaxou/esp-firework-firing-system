@@ -32,7 +32,6 @@ typedef struct
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
-static bool m_bIsRefreshOLED = true;
 
 // static int32_t m_s32AutodisarmTimeoutMin = 0;
 
@@ -54,7 +53,6 @@ static bool StartFire(MAINAPP_SFire sFire);
 static void FireTask(void* pParam);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
-static void UpdateOLED();
 
 void MAINAPP_Init()
 {
@@ -72,8 +70,6 @@ void MAINAPP_Init()
         pSRelay->isFired = false;
         pSRelay->isEN = false;
     }
-
-    UpdateOLED();
 }
 
 void MAINAPP_Run()
@@ -123,7 +119,7 @@ void MAINAPP_Run()
             ESP_LOGI(TAG, "Master switch is armed");
             m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Armed;
 
-            m_bIsRefreshOLED = true;
+            UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
         }
         else if (m_sState.bIsArmed && !bIsMasterSwitchON)
         {
@@ -131,7 +127,7 @@ void MAINAPP_Run()
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
             m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
 
-            m_bIsRefreshOLED = true;
+            UIMANAGER_Goto(UIMANAGER_EMENU_Home);
         }
 
         // Sanity blink ...
@@ -151,20 +147,7 @@ void MAINAPP_Run()
         HARDWAREGPIO_RefreshLEDStrip();
 
         // Update LEDs
-        if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(1000) )
-        {
-            if (HARDWAREGPIO_IsEncoderSwitchON())
-                ESP_LOGI(TAG, "IsEncoderSwitchON");
-
-            m_bIsRefreshOLED = true;
-            ttUpdateOLEDTick = xTaskGetTickCount();
-        }
-
-        if (m_bIsRefreshOLED)
-        {
-            m_bIsRefreshOLED = false;
-            UpdateOLED();
-        }
+        UIMANAGER_RunTick();
 
         vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -394,40 +377,4 @@ bool MAINAPP_IsArmed()
 MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 {
     return m_sState.eGeneralState;
-}
-
-static void UpdateOLED()
-{
-    #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    char szText[128+1] = {0,};
-
-    if (m_sState.bIsArmed)
-    {
-        int32_t s32EncoderCount = HARDWAREGPIO_GetEncoderCount();
-
-        sprintf(szText, "ARMED AND\nDANGEROUS\nPower: %"PRIi32" %%",
-            s32EncoderCount);
-    }
-    else
-    {
-        char szSoftAPSSID[32] = {0,};
-
-        esp_netif_ip_info_t wifiIpSta = {0};
-        MAIN_GetWiFiSTAIP(&wifiIpSta);
-
-        esp_netif_ip_info_t wifiIpAP = {0};
-        MAIN_GetWiFiSoftAPIP(&wifiIpAP);
-
-        MAIN_GetWifiAPSSID(szSoftAPSSID);
-        sprintf(szText, "%s\n"IPSTR"\n"IPSTR,
-            szSoftAPSSID,
-            IP2STR(&wifiIpAP.ip),
-            IP2STR(&wifiIpSta.ip));
-    }
-
-    SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));
-    SSD1306_UpdateDisplay(pss1306Handle);
-    #endif
 }
