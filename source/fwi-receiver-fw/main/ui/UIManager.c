@@ -5,6 +5,7 @@ static const UICORE_SLifeCycle m_sUIHomes[] =
     [UIMANAGER_EMENU_Home] = UIHOME_INITLIFECYCLE,
     [UIMANAGER_EMENU_ArmedReady] = UIARMED_INITLIFECYCLE,
     [UIMANAGER_EMENU_ErrorPleaseDisarm] = UIERRORPLEASEDISARM_INITLIFECYCLE,
+    [UIMANAGER_EMENU_Setting] = UISETTING_INITLIFECYCLE,
 };
 
 static UIMANAGER_EMENU m_eCurrentMenu = -1;
@@ -34,6 +35,14 @@ void UIMANAGER_RunTick()
     if (pLC == NULL)
         return;
     pLC->FnTick();
+}
+
+void UIMANAGER_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+{
+    const UICORE_SLifeCycle* pLC = GetMenuLC(m_eCurrentMenu);
+    if (pLC == NULL)
+        return;
+    pLC->FnEncoderMove(eBtnEvent, s32ClickCount);
 }
 
 static const UICORE_SLifeCycle* GetMenuLC(UIMANAGER_EMENU eMenu)

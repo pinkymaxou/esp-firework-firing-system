@@ -174,13 +174,11 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
     {
         if (encA != encB)
         {
-            if (m_s32EncoderTicks > 0)
-                m_s32EncoderTicks--;
+            m_s32EncoderTicks--;
         }
         else
         {
-            if (m_s32EncoderTicks < 100)
-                m_s32EncoderTicks++;
+            m_s32EncoderTicks++;
         }
         m_lastEncA = encA;
     }
@@ -281,7 +279,9 @@ bool HARDWAREGPIO_IsEncoderSwitchON()
 
 int32_t HARDWAREGPIO_GetEncoderCount()
 {
-    return m_s32EncoderTicks;
+    const int32_t s32Ticks = m_s32EncoderTicks;
+    m_s32EncoderTicks = 0;
+    return s32Ticks;
 }
 
 #if HWCONFIG_OLED_ISPRESENT != 0

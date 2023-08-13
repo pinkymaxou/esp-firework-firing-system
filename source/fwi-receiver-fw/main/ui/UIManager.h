@@ -6,6 +6,7 @@
 #include "UICore.h"
 #include "UIHome.h"
 #include "UIArmed.h"
+#include "UISetting.h"
 #include "UIErrorPleaseDisarm.h"
 
 typedef enum
@@ -14,12 +15,14 @@ typedef enum
     UIMANAGER_EMENU_ArmedReady,
 
     UIMANAGER_EMENU_ErrorPleaseDisarm,
-    //UIMANAGER_EMENU_Setting,
+    UIMANAGER_EMENU_Setting,
 
     UIMANAGER_EMENU_Count
 } UIMANAGER_EMENU;
 
 void UIMANAGER_Goto(UIMANAGER_EMENU eMenu);
+
+void UIMANAGER_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
 
 void UIMANAGER_RunTick();
 

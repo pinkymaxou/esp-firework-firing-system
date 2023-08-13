@@ -13,6 +13,8 @@
         "ssd1306.h": "c",
         "hwconfig.h": "c",
         "main.h": "c",
-        "uiarmed.h": "c"
+        "uiarmed.h": "c",
+        "uisetting.h": "c",
+        "uierrorpleasedisarm.h": "c"
     }
 }

@@ -158,6 +158,25 @@ void MAINAPP_Run()
 
         HARDWAREGPIO_RefreshLEDStrip();
 
+        // Encoder move
+        static TickType_t ttEncoderSwitchTicks = 0;
+        if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
+        {
+            if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
+            {
+                UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
+            }
+            ttEncoderSwitchTicks = 0;
+        }
+        else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
+        {
+            ttEncoderSwitchTicks = xTaskGetTickCount();
+        }
+
+        const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
+        if (s32Count != 0)
+            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+
         // Update LEDs
         UIMANAGER_RunTick();
 

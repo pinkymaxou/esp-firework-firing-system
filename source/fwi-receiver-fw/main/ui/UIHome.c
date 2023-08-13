@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "UIManager.h"
 
 #define TAG "UIHOME"
 
@@ -35,7 +36,8 @@ void UIHOME_Tick()
 
 void UIHOME_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
 {
-
+    if (eBtnEvent == UICORE_EBTNEVENT_Click)
+        UIMANAGER_Goto(UIMANAGER_EMENU_Setting);
 }
 
 static void DrawScreen()
