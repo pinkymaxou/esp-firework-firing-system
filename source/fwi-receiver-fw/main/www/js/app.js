@@ -36,9 +36,9 @@ var currentApp = new Vue({
 			case EGeneralState.CheckingConnection:
 				return "Checking connections";
 			case EGeneralState.CheckingConnectionOK:
-				return "Checking connections OK";
+				return "Check connections OK";
 			case EGeneralState.CheckingConnectionError:
-				return "Checking connections error";
+				return "Check connections error";
 			case EGeneralState.DisarmedAutomaticTimeout:
 				return "Disarmed (automatic by timeout)";
 			case EGeneralState.DisarmedMasterSwitchOff:

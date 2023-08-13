@@ -11,6 +11,7 @@ static led_strip_handle_t led_strip;
 #if HWCONFIG_OLED_ISPRESENT != 0
 static SSD1306_handle m_ssd1306;
 #endif
+static volatile int32_t m_s32EncoderTicks = 0;
 
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
 {
@@ -39,6 +40,8 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
     HWCONFIG_RELAY_MOSA2,
     // HWCONFIG_RELAY_MOSA3
 };
+
+static void IRAM_ATTR gpio_isr_handler(void* arg) ;
 
 void HARDWAREGPIO_Init()
 {
@@ -147,13 +150,50 @@ void HARDWAREGPIO_Init()
         .hpoint         = 0
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+
+    // Conf A
+    gpio_config_t io_confA;
+    io_confA.intr_type = GPIO_INTR_ANYEDGE; // Configure interrupt on positive edge
+    io_confA.pin_bit_mask = (1ULL << HWCONFIG_ENCODERA_IN) | (1ULL << HWCONFIG_ENCODERB_IN); // Replace XX with the GPIO pin number
+    io_confA.mode = GPIO_MODE_INPUT;
+    io_confA.pull_up_en = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_confA);
+
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(HWCONFIG_ENCODERA_IN, gpio_isr_handler, NULL);
+    gpio_isr_handler_add(HWCONFIG_ENCODERB_IN, gpio_isr_handler, NULL);
 }
 
-void HARDWAREGPIO_SetSanityLED(bool isEnabled)
+static bool m_lastEncA = false;
+static void IRAM_ATTR gpio_isr_handler(void* arg)
+{
+    bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
+    bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
+
+    if (encA != m_lastEncA)
+    {
+        if (encA != encB)
+        {
+            if (m_s32EncoderTicks > 0)
+                m_s32EncoderTicks--;
+        }
+        else
+        {
+            if (m_s32EncoderTicks < 100)
+                m_s32EncoderTicks++;
+        }
+        m_lastEncA = encA;
+    }
+}
+
+void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed)
 {
     gpio_set_level(HWCONFIG_SANITY2_PIN, !isEnabled);
 
-    led_strip_set_pixel(led_strip, 0, 0, isEnabled ? 200 : 0, 0);
+    if (isArmed)
+        led_strip_set_pixel(led_strip, 0, isEnabled ? 200 : 0, 0, 0);
+    else
+        led_strip_set_pixel(led_strip, 0, 0, isEnabled ? 200 : 0, 0);
     HARDWAREGPIO_RefreshLEDStrip();
 }
 
@@ -232,6 +272,16 @@ bool HARDWAREGPIO_ReadMasterPowerSense()
 bool HARDWAREGPIO_ReadConnectionSense()
 {
     return gpio_get_level(HWCONFIG_CONNSENSE_IN) == false;
+}
+
+bool HARDWAREGPIO_IsEncoderSwitchON()
+{
+    return gpio_get_level(HWCONFIG_ENCODERSW) == false;
+}
+
+int32_t HARDWAREGPIO_GetEncoderCount()
+{
+    return m_s32EncoderTicks;
 }
 
 #if HWCONFIG_OLED_ISPRESENT != 0
