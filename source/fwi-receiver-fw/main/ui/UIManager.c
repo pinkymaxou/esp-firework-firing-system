@@ -4,6 +4,7 @@ static const UICORE_SLifeCycle m_sUIHomes[] =
 {
     [UIMANAGER_EMENU_Home] = UIHOME_INITLIFECYCLE,
     [UIMANAGER_EMENU_ArmedReady] = UIARMED_INITLIFECYCLE,
+    [UIMANAGER_EMENU_ErrorPleaseDisarm] = UIERRORPLEASEDISARM_INITLIFECYCLE,
 };
 
 static UIMANAGER_EMENU m_eCurrentMenu = -1;

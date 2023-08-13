@@ -6,13 +6,14 @@
 #include "UICore.h"
 #include "UIHome.h"
 #include "UIArmed.h"
+#include "UIErrorPleaseDisarm.h"
 
 typedef enum
 {
     UIMANAGER_EMENU_Home = 0,
     UIMANAGER_EMENU_ArmedReady,
-    //UIMANAGER_EMENU_Armed,
 
+    UIMANAGER_EMENU_ErrorPleaseDisarm,
     //UIMANAGER_EMENU_Setting,
 
     UIMANAGER_EMENU_Count

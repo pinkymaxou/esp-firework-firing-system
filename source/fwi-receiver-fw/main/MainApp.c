@@ -78,9 +78,22 @@ void MAINAPP_Run()
     TickType_t ttSanityTicks = 0;
     TickType_t ttUpdateOLEDTick = 0;
 
-    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+    // Wait until it get disarmed before starting the program.
+    if (HARDWAREGPIO_ReadMasterPowerSense())
+    {
+        UIMANAGER_Goto(UIMANAGER_EMENU_ErrorPleaseDisarm);
 
-   // m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+        while(HARDWAREGPIO_ReadMasterPowerSense())
+        {
+            HARDWAREGPIO_SetSanityLED(bSanityOn, false);
+            bSanityOn = !bSanityOn;
+            vTaskDelay(pdMS_TO_TICKS(150));
+        }
+    }
+
+    // Force reset ...
+    m_sCmd.eCmd = MAINAPP_ECMD_None;
+    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
 
     while (true)
     {
@@ -135,7 +148,6 @@ void MAINAPP_Run()
         {
             ttSanityTicks = xTaskGetTickCount();
             HARDWAREGPIO_SetSanityLED(bSanityOn, m_sState.bIsArmed);
-
             bSanityOn = !bSanityOn;
         }
 
