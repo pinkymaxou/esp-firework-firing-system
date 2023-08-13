@@ -14,6 +14,9 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.h"
+#include "ui/UICore.h"
+#include "ui/UIHome.h"
+#include "ui/UIManager.h"
 
 #define TAG "MainApp"
 
@@ -78,6 +81,8 @@ void MAINAPP_Run()
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
     TickType_t ttUpdateOLEDTick = 0;
+
+    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
 
    // m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
 
