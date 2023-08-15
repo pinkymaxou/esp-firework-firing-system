@@ -61,9 +61,10 @@ static void DrawScreen()
         esp_netif_ip_info_t wifiIpAP = {0};
         MAIN_GetWiFiSoftAPIP(&wifiIpAP);
 
-        sprintf(szText, "%s\n"IPSTR,
+        sprintf(szText, "%s\n"IPSTR"\nUser: %"PRId32,
             szSoftAPSSID,
-            IP2STR(&wifiIpAP.ip));
+            IP2STR(&wifiIpAP.ip),
+            MAIN_GetSAPUserCount());
     }
 
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();

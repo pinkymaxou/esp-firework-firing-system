@@ -7,8 +7,7 @@ void UIARMED_Enter()
 
     int32_t s32EncoderCount = HARDWAREGPIO_GetEncoderCount();
 
-    sprintf(szText, "ARMED AND\nDANGEROUS\nPower: %"PRIi32" %%",
-        s32EncoderCount);
+    sprintf(szText, "ARMED AND\nDANGEROUS");
 
     SSD1306_ClearDisplay(pss1306Handle);
     SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));

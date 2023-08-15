@@ -85,12 +85,12 @@ static void DrawScreen()
 
     if (m_eSettingItem == ESETTING_ITEM_PWM)
     {
-        sprintf(szText, "Settings\nPWM\n%"PRId32"%%",
+        sprintf(szText, "SETTINGS\nPWM\n%"PRId32"%%",
             m_s32FiringPWMPercValue);
     }
     else if (m_eSettingItem == ESETTING_ITEM_HoldTimeMS)
     {
-        sprintf(szText, "Settings\nHold time\n%"PRId32" ms",
+        sprintf(szText, "SETTINGS\nHold time\n%"PRId32" ms",
             m_s32FiringHoldTimeMS);
     }
     SSD1306_ClearDisplay(pss1306Handle);
