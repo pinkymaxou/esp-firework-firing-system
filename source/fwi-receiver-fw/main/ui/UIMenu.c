@@ -94,12 +94,12 @@ static void DrawScreen()
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     SSD1306_ClearDisplay(pss1306Handle);
 
-    SSD1306_DrawString(pss1306Handle, 14, 14*0, "EXIT");
-    SSD1306_DrawString(pss1306Handle, 14, 14*1, "SETTINGS");
-    SSD1306_DrawString(pss1306Handle, 14, 14*2, "TEST CONN.");
+    SSD1306_DrawString(pss1306Handle, 15, 15*0, "EXIT");
+    SSD1306_DrawString(pss1306Handle, 15, 15*1, "SETTINGS");
+    SSD1306_DrawString(pss1306Handle, 15, 15*2, "TEST CONN.");
 
     // Cursor
-    SSD1306_DrawString(pss1306Handle, 0, m_s32MenuItemIndex*14, ">");
+    SSD1306_DrawString(pss1306Handle, 0, m_s32MenuItemIndex*15, ">");
 
     SSD1306_UpdateDisplay(pss1306Handle);
 }
