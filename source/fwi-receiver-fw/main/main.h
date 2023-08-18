@@ -11,4 +11,6 @@ void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip);
 
 void MAIN_GetWifiAPSSID(char szSoftAPSSID[32]);
 
+int32_t MAIN_GetSAPUserCount();
+
 #endif

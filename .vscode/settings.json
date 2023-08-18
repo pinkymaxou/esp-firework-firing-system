@@ -6,6 +6,16 @@
         "tiny3x3a2pt7b.h": "c",
         "freeserif9pt7b.h": "c",
         "freemono7pt7b.h": "c",
-        "websocket.h": "c"
+        "websocket.h": "c",
+        "uimanager.h": "c",
+        "uihome.h": "c",
+        "uicore.h": "c",
+        "ssd1306.h": "c",
+        "hwconfig.h": "c",
+        "main.h": "c",
+        "uiarmed.h": "c",
+        "uisetting.h": "c",
+        "uierrorpleasedisarm.h": "c",
+        "uimenu.h": "c"
     }
 }

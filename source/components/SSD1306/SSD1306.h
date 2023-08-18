@@ -111,7 +111,7 @@ void SSD1306_NormalDisplay(SSD1306_handle* pHandle);
 
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c);
 
-void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer, int len);
+void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer);
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle);
 

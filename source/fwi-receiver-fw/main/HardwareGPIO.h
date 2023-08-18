@@ -11,7 +11,7 @@
 
 void HARDWAREGPIO_Init();
 
-void HARDWAREGPIO_SetSanityLED(bool isEnabled);
+void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed);
 
 void HARDWAREGPIO_ClearRelayBus();
 
@@ -26,6 +26,10 @@ bool HARDWAREGPIO_ReadConnectionSense();
 void HARDWAREGPIO_RefreshLEDStrip();
 
 void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b);
+
+bool HARDWAREGPIO_IsEncoderSwitchON();
+
+int32_t HARDWAREGPIO_GetEncoderCount();
 
 SSD1306_handle* GPIO_GetSSD1306Handle();
 

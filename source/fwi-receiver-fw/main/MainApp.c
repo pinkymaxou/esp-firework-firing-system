@@ -14,6 +14,9 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.h"
+#include "ui/UICore.h"
+#include "ui/UIHome.h"
+#include "ui/UIManager.h"
 
 #define TAG "MainApp"
 
@@ -50,7 +53,6 @@ static bool StartFire(MAINAPP_SFire sFire);
 static void FireTask(void* pParam);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
-static void UpdateOLED();
 
 void MAINAPP_Init()
 {
@@ -68,17 +70,29 @@ void MAINAPP_Init()
         pSRelay->isFired = false;
         pSRelay->isEN = false;
     }
-
-    UpdateOLED();
 }
 
 void MAINAPP_Run()
 {
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
-    TickType_t ttUpdateOLEDTick = 0;
 
-   // m_s32AutodisarmTimeoutMin = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_AutoDisarmTimeout);
+    // Wait until it get disarmed before starting the program.
+    if (HARDWAREGPIO_ReadMasterPowerSense())
+    {
+        UIMANAGER_Goto(UIMANAGER_EMENU_ErrorPleaseDisarm);
+
+        while(HARDWAREGPIO_ReadMasterPowerSense())
+        {
+            HARDWAREGPIO_SetSanityLED(bSanityOn, false);
+            bSanityOn = !bSanityOn;
+            vTaskDelay(pdMS_TO_TICKS(150));
+        }
+    }
+
+    // Force reset ...
+    m_sCmd.eCmd = MAINAPP_ECMD_None;
+    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
 
     while (true)
     {
@@ -116,36 +130,23 @@ void MAINAPP_Run()
             m_sState.bIsArmed = true;
             ESP_LOGI(TAG, "Master switch is armed");
             m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Armed;
+
+            UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
         }
         else if (m_sState.bIsArmed && !bIsMasterSwitchON)
         {
             m_sState.bIsArmed = false;
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
             m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
+
+            UIMANAGER_Goto(UIMANAGER_EMENU_Home);
         }
-
-        //
-        /*
-        if (m_sState.bIsArmed)
-        {
-            const TickType_t ttDiffArmed = (xTaskGetTickCount() - m_sState.ttArmedTicks);
-
-            // Automatic disarm after 15 minutes
-            const bool bIsTimeout = ttDiffArmed > pdMS_TO_TICKS(m_s32AutodisarmTimeoutMin*60*1000);
-            if (bIsTimeout)
-            {
-                ESP_LOGI(TAG, "Automatic disarming, timeout");
-                m_sState.bIsArmed = false;
-                m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedAutomaticTimeout;
-            }
-        }*/
 
         // Sanity blink ...
         if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
         {
             ttSanityTicks = xTaskGetTickCount();
-            HARDWAREGPIO_SetSanityLED(bSanityOn);
-
+            HARDWAREGPIO_SetSanityLED(bSanityOn, m_sState.bIsArmed);
             bSanityOn = !bSanityOn;
         }
 
@@ -156,12 +157,27 @@ void MAINAPP_Run()
 
         HARDWAREGPIO_RefreshLEDStrip();
 
-        // Update LEDs
-        if ( (xTaskGetTickCount() - ttUpdateOLEDTick) > pdMS_TO_TICKS(250) )
+        // Encoder move
+        static TickType_t ttEncoderSwitchTicks = 0;
+        if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
         {
-            UpdateOLED();
-            ttUpdateOLEDTick = xTaskGetTickCount();
+            if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
+            {
+                UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
+            }
+            ttEncoderSwitchTicks = 0;
         }
+        else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
+        {
+            ttEncoderSwitchTicks = xTaskGetTickCount();
+        }
+
+        const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
+        if (s32Count != 0)
+            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+
+        // Update LEDs
+        UIMANAGER_RunTick();
 
         vTaskDelay(pdMS_TO_TICKS(1));
     }
@@ -328,7 +344,7 @@ static void FireTask(void* pParam)
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    free(pFireParam);
+    free((void*)pFireParam);
     m_xHandle = NULL;
     vTaskDelete(NULL);
 }
@@ -391,48 +407,4 @@ bool MAINAPP_IsArmed()
 MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 {
     return m_sState.eGeneralState;
-}
-
-static void UpdateOLED()
-{
-    #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    char szText[128+1] = {0,};
-
-    if (m_sState.bIsArmed)
-    {
-        // const int32_t s32DiffS = ((m_s32AutodisarmTimeoutMin*60*1000) - pdTICKS_TO_MS(xTaskGetTickCount() - m_sState.ttArmedTicks)) / 1000;
-        // int min = 0;
-        // int sec = 0;
-        // if (s32DiffS >= 0)
-        // {
-        //     min = (int)(s32DiffS / 60);
-        //     sec = (int)(s32DiffS % 60);
-        // }
-        // sprintf(szText, "ARMED AND\nDANGEROUS\n%02d:%02d",
-        //     /*0*/min,
-        //     /*1*/sec);
-        sprintf(szText, "ARMED AND\nDANGEROUS");
-    }
-    else
-    {
-        char szSoftAPSSID[32] = {0,};
-
-        esp_netif_ip_info_t wifiIpSta = {0};
-        MAIN_GetWiFiSTAIP(&wifiIpSta);
-
-        esp_netif_ip_info_t wifiIpAP = {0};
-        MAIN_GetWiFiSoftAPIP(&wifiIpAP);
-
-        MAIN_GetWifiAPSSID(szSoftAPSSID);
-        sprintf(szText, "%s\n"IPSTR"\n"IPSTR,
-            szSoftAPSSID,
-            IP2STR(&wifiIpAP.ip),
-            IP2STR(&wifiIpSta.ip));
-    }
-
-    SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));
-    SSD1306_UpdateDisplay(pss1306Handle);
-    #endif
 }

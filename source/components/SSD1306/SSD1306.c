@@ -202,10 +202,12 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
     return glyph->xAdvance;
 }
 
-void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer, int len)
+void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer)
 {
     if (!pHandle->bIsInit)
         return;
+
+    const int len = strlen(buffer);
     int x1 = x, y1 = y;
 
     for(int i = 0; i < len; i++)
