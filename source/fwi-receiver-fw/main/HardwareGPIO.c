@@ -122,7 +122,7 @@ void HARDWAREGPIO_Init()
     SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
     SSD1306_ClearDisplay(&m_ssd1306);
     const char* szBooting = "Booting ...";
-    SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting, strlen(szBooting));
+    SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting);
     SSD1306_UpdateDisplay(&m_ssd1306);
     #endif
 

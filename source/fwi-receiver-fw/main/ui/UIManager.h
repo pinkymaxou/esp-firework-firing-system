@@ -4,10 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "UICore.h"
-#include "UIHome.h"
-#include "UIArmed.h"
-#include "UISetting.h"
-#include "UIErrorPleaseDisarm.h"
 
 typedef enum
 {
@@ -15,6 +11,7 @@ typedef enum
     UIMANAGER_EMENU_ArmedReady,
 
     UIMANAGER_EMENU_ErrorPleaseDisarm,
+    UIMANAGER_EMENU_Menu,
     UIMANAGER_EMENU_Setting,
 
     UIMANAGER_EMENU_Count

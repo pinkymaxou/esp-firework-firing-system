@@ -1,12 +1,19 @@
 #include "UIManager.h"
+#include "UIHome.h"
+#include "UIArmed.h"
+#include "UISetting.h"
+#include "UIErrorPleaseDisarm.h"
+#include "UIMenu.h"
 
 static const UICORE_SLifeCycle m_sUIHomes[] =
 {
     [UIMANAGER_EMENU_Home] = UIHOME_INITLIFECYCLE,
     [UIMANAGER_EMENU_ArmedReady] = UIARMED_INITLIFECYCLE,
     [UIMANAGER_EMENU_ErrorPleaseDisarm] = UIERRORPLEASEDISARM_INITLIFECYCLE,
+    [UIMANAGER_EMENU_Menu] = UIMENU_INITLIFECYCLE,
     [UIMANAGER_EMENU_Setting] = UISETTING_INITLIFECYCLE,
 };
+static_assert(UIMANAGER_EMENU_Count == (sizeof(m_sUIHomes)/sizeof(m_sUIHomes[0])), "Life cycle doesn't fit");
 
 static UIMANAGER_EMENU m_eCurrentMenu = -1;
 

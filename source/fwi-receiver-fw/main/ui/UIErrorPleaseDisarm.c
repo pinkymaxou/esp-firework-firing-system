@@ -8,7 +8,7 @@ void UIERRORPLEASEDISARM_Enter()
     sprintf(szText, "PLEASE\nDISARM\nto start");
 
     SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));
+    SSD1306_DrawString(pss1306Handle, 0, 0, szText);
     SSD1306_UpdateDisplay(pss1306Handle);
 }
 

@@ -15,6 +15,7 @@
         "main.h": "c",
         "uiarmed.h": "c",
         "uisetting.h": "c",
-        "uierrorpleasedisarm.h": "c"
+        "uierrorpleasedisarm.h": "c",
+        "uimenu.h": "c"
     }
 }

@@ -61,7 +61,7 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
             break;
         case ESETTING_ITEM_HoldTimeMS:
             if (eBtnEvent == UICORE_EBTNEVENT_Click)
-                UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+                UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
             else if (eBtnEvent == UICORE_EBTNEVENT_EncoderClick)
             {
                 const int32_t s32Value = m_s32FiringHoldTimeMS + s32ClickCount*50;
@@ -94,6 +94,6 @@ static void DrawScreen()
             m_s32FiringHoldTimeMS);
     }
     SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText, strlen(szText));
+    SSD1306_DrawString(pss1306Handle, 0, 0, szText);
     SSD1306_UpdateDisplay(pss1306Handle);
 }

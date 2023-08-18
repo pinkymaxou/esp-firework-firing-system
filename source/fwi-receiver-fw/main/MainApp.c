@@ -76,7 +76,6 @@ void MAINAPP_Run()
 {
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
-    TickType_t ttUpdateOLEDTick = 0;
 
     // Wait until it get disarmed before starting the program.
     if (HARDWAREGPIO_ReadMasterPowerSense())
@@ -345,7 +344,7 @@ static void FireTask(void* pParam)
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    free(pFireParam);
+    free((void*)pFireParam);
     m_xHandle = NULL;
     vTaskDelete(NULL);
 }
