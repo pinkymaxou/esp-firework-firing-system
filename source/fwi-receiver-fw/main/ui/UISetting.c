@@ -44,6 +44,7 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
     switch(m_eSettingItem)
     {
         case ESETTING_ITEM_PWM:
+        {
             if (eBtnEvent == UICORE_EBTNEVENT_Click)
             {
                 m_eSettingItem = ESETTING_ITEM_HoldTimeMS;
@@ -59,7 +60,9 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                 }
             }
             break;
+        }
         case ESETTING_ITEM_HoldTimeMS:
+        {
             if (eBtnEvent == UICORE_EBTNEVENT_Click)
                 UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
             else if (eBtnEvent == UICORE_EBTNEVENT_EncoderClick)
@@ -72,9 +75,12 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                 }
             }
             break;
+        }
         default:
+        {
             UIMANAGER_Goto(UIMANAGER_EMENU_Home);
             break;
+        }
     }
 }
 
