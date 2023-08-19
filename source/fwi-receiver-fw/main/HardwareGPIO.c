@@ -3,7 +3,9 @@
 #include "driver/ledc.h"
 #include "esp_log.h"
 #include "Settings.h"
+#include "assets/BitmapPotato.h"
 #include "led_strip.h"
+#include <assert.h>
 
 #define TAG "HardwareGPIO"
 
@@ -121,8 +123,8 @@ void HARDWAREGPIO_Init()
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
     SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
     SSD1306_ClearDisplay(&m_ssd1306);
-    const char* szBooting = "Booting ...";
-    SSD1306_DrawString(&m_ssd1306, 0, 0, szBooting);
+    memcpy(m_ssd1306.u8Buffer, m_u8LogoDatas, m_u32LogoDataLen);
+    assert(m_u32LogoDataLen == m_ssd1306.u32BufferLen); // , "Bitmap and buffer doesn't match"
     SSD1306_UpdateDisplay(&m_ssd1306);
     #endif
 

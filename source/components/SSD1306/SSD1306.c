@@ -168,6 +168,11 @@ void SSD1306_ClearPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
     pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] &=  ~(1 << (y & 7));
 }
 
+/*void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* pU8BitmapDatas, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height)
+{
+    
+}
+*/
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c)
 {
     if (!pHandle->bIsInit)
