@@ -292,6 +292,8 @@ void app_main(void)
     ESP_LOGI(TAG, "vTaskList: \r\n\r\n%s", szAllTask);
     free(szAllTask);
 
+    // Just give sometime to display the logo
+    vTaskDelay(pdMS_TO_TICKS(500));
     // Lock forever
     MAINAPP_Run();
 }

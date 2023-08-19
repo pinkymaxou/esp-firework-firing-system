@@ -1,14 +1,13 @@
 #include "UIArmed.h"
+#include "assets/BitmapPotato.h"
 
 void UIARMED_Enter()
 {
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    char szText[128+1] = {0,};
-
-    sprintf(szText, "ARMED AND\nDANGEROUS");
 
     SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText);
+    memcpy(pss1306Handle->u8Buffer, m_u8FireworkDatas, m_u32FireworkDataLen);
+    SSD1306_DrawString(pss1306Handle, 60, 15, "ARMED");
     SSD1306_UpdateDisplay(pss1306Handle);
 }
 
