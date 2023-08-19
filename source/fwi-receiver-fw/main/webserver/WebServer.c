@@ -554,7 +554,7 @@ static char* GetSysInfo()
     cJSON_AddItemToObject(pEntryJSON10, "value", cJSON_CreateString(buff));
     cJSON_AddItemToArray(pEntries, pEntryJSON10);
 
-    const char* pStr =  cJSON_PrintUnformatted(pRoot);
+    char* pStr =  cJSON_PrintUnformatted(pRoot);
     cJSON_Delete(pRoot);
     return pStr;
     ERROR:

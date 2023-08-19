@@ -2,6 +2,7 @@
 #include "UIManager.h"
 #include "../MainApp.h"
 #include "esp_log.h"
+#include "esp_system.h"
 
 #define TAG "UIMenu"
 
@@ -10,19 +11,34 @@ typedef enum
     UIMENU_EMENUITEM_Exit = 0,
     UIMENU_EMENUITEM_Settings,
     UIMENU_EMENUITEM_TestConn,
+    UIMENU_EMENUITEM_Reboot,
 
     UIMENU_EMENUITEM_Count,
 } UIMENU_EMENUITEM;
+
+typedef struct
+{
+    const char* szName;
+} UIMENU_SMenu;
 
 static void DrawScreen();
 
 static bool m_bIsNeedRefresh = false;
 static int32_t m_s32MenuItemIndex = 0;
+static const UIMENU_SMenu m_sMenuItems[] =
+{
+    [UIMENU_EMENUITEM_Exit]         = { .szName = "Exit" },
+    [UIMENU_EMENUITEM_Settings]     = { .szName = "Settings" },
+    [UIMENU_EMENUITEM_TestConn]     = { .szName = "Test conn." },
+    [UIMENU_EMENUITEM_Reboot]       = { .szName = "Reboot" },
+};
+static_assert((int)UIMENU_EMENUITEM_Count == ( sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
 
 static int32_t m_s32EncoderTicks = 0;
 
 void UIMENU_Enter()
 {
+    m_s32MenuItemIndex = 0;
     m_bIsNeedRefresh = true;
 }
 
@@ -81,6 +97,10 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                 case UIMENU_EMENUITEM_TestConn:
                     MAINAPP_ExecCheckConnections();
                     break;
+                case UIMENU_EMENUITEM_Reboot:
+                    ESP_LOGI(TAG, "Rebooting ...");
+                    esp_restart();
+                    break;
                 default:
                     break;
             }
@@ -94,9 +114,11 @@ static void DrawScreen()
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     SSD1306_ClearDisplay(pss1306Handle);
 
-    SSD1306_DrawString(pss1306Handle, 15, 15*0, "EXIT");
-    SSD1306_DrawString(pss1306Handle, 15, 15*1, "SETTINGS");
-    SSD1306_DrawString(pss1306Handle, 15, 15*2, "TEST CONN.");
+    for(int i = 0; i < UIMENU_EMENUITEM_Count; i++)
+    {
+        const UIMENU_SMenu* psMenuItem = &m_sMenuItems[i];
+        SSD1306_DrawString(pss1306Handle, 15, 15*i, psMenuItem->szName);
+    }
 
     // Cursor
     SSD1306_DrawString(pss1306Handle, 0, m_s32MenuItemIndex*15, ">");

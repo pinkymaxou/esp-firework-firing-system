@@ -112,6 +112,7 @@ void SSD1306_NormalDisplay(SSD1306_handle* pHandle);
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c);
 
 void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer);
+//void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* pU8BitmapDatas, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height);
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle);
 

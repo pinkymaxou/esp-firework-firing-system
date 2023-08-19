@@ -26,7 +26,7 @@ typedef enum
     EF_EFILE_FONT_ORBITRON_REGULAR_WOFF = 4,    /*!< @brief File: font/Orbitron-Regular.woff (size: 178 KB) */
     EF_EFILE_FONT_SQUARED_TTF = 5,    /*!< @brief File: font/Squared.ttf (size: 13 KB) */
     EF_EFILE_JS_APP_JS = 6,    /*!< @brief File: js/app.js (size: 2 KB) */
-    EF_EFILE_JS_COMMON_APP_JS = 7,    /*!< @brief File: js/common-app.js (size: 661  B) */
+    EF_EFILE_JS_COMMON_APP_JS = 7,    /*!< @brief File: js/common-app.js (size: 612  B) */
     EF_EFILE_JS_SETTINGS_APP_JS = 8,    /*!< @brief File: js/settings-app.js (size: 2 KB) */
     EF_EFILE_JS_VUE_MIN_JS = 9,    /*!< @brief File: js/vue.min.js (size: 92 KB) */
     EF_EFILE_COUNT = 10
