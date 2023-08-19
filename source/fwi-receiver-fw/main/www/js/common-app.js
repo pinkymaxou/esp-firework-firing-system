@@ -15,9 +15,7 @@ const EGeneralState = {
 	CheckingConnection: 8,
 	CheckingConnectionOK: 9,
 	CheckingConnectionError: 10,
-	DisarmedAutomaticTimeout: 11,
-	DisarmedMasterSwitchOff: 12,
-	Disarmed: 13,
+	DisarmedMasterSwitchOff: 12
 };
 
 function SendAction(actionURL, data)
