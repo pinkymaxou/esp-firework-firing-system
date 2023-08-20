@@ -221,7 +221,7 @@ void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const c
         if (c == '\r' || c == '\n')
         {
             y1 += pHandle->font->yAdvance;
-            x1 = 0;
+            x1 = x;
         }
         else
         {
