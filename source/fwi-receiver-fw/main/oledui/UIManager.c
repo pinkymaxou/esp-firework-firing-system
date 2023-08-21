@@ -4,6 +4,7 @@
 #include "UISetting.h"
 #include "UIErrorPleaseDisarm.h"
 #include "UIMenu.h"
+#include "UITestConn.h"
 
 static const UICORE_SLifeCycle m_sUIHomes[] =
 {
@@ -12,6 +13,7 @@ static const UICORE_SLifeCycle m_sUIHomes[] =
     [UIMANAGER_EMENU_ErrorPleaseDisarm] = UIERRORPLEASEDISARM_INITLIFECYCLE,
     [UIMANAGER_EMENU_Menu] = UIMENU_INITLIFECYCLE,
     [UIMANAGER_EMENU_Setting] = UISETTING_INITLIFECYCLE,
+    [UIMANAGER_EMENU_TestConn] = UITESTCONN_INITLIFECYCLE,
 };
 static_assert(UIMANAGER_EMENU_Count == (sizeof(m_sUIHomes)/sizeof(m_sUIHomes[0])), "Life cycle doesn't fit");
 

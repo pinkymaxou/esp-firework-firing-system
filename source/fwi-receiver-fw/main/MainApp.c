@@ -54,6 +54,8 @@ static void FireTask(void* pParam);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
 
+static void CheckUserInput();
+
 void MAINAPP_Init()
 {
     m_xSemaphoreHandle = xSemaphoreCreateMutexStatic(&m_xSemaphoreCreateMutex);
@@ -112,10 +114,6 @@ void MAINAPP_Run()
                     break;
                 case MAINAPP_ECMD_Fire:
                     StartFire(sCmd.uArg.sFire);
-
-                    // Reset armed timeout ..
-                    //if (m_sState.bIsArmed)
-                    //    m_sState.ttArmedTicks = xTaskGetTickCount();
                     break;
                 default:
                     break;
@@ -143,7 +141,7 @@ void MAINAPP_Run()
         }
 
         // Sanity blink ...
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
+        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 100 : 500))
         {
             ttSanityTicks = xTaskGetTickCount();
             HARDWAREGPIO_SetSanityLED(bSanityOn, m_sState.bIsArmed);
@@ -157,24 +155,7 @@ void MAINAPP_Run()
 
         HARDWAREGPIO_RefreshLEDStrip();
 
-        // Encoder move
-        static TickType_t ttEncoderSwitchTicks = 0;
-        if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
-        {
-            if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
-            {
-                UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
-            }
-            ttEncoderSwitchTicks = 0;
-        }
-        else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
-        {
-            ttEncoderSwitchTicks = xTaskGetTickCount();
-        }
-
-        const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
-        if (s32Count != 0)
-            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+        CheckUserInput();
 
         // Update LEDs
         UIMANAGER_RunTick();
@@ -381,6 +362,29 @@ static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 
     if (bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
+}
+
+static void CheckUserInput()
+{
+    // Encoder move
+    static TickType_t ttEncoderSwitchTicks = 0;
+    if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
+    {
+        // 100 ms check maximum ...
+        if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
+        {
+            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
+        }
+        ttEncoderSwitchTicks = 0;
+    }
+    else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
+    {
+        ttEncoderSwitchTicks = xTaskGetTickCount();
+    }
+
+    const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
+    if (s32Count != 0)
+        UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
 }
 
 MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)

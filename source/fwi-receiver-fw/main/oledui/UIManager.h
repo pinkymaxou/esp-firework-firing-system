@@ -13,6 +13,7 @@ typedef enum
     UIMANAGER_EMENU_ErrorPleaseDisarm,
     UIMANAGER_EMENU_Menu,
     UIMANAGER_EMENU_Setting,
+    UIMANAGER_EMENU_TestConn,
 
     UIMANAGER_EMENU_Count
 } UIMANAGER_EMENU;
