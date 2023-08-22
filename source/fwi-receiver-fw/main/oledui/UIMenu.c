@@ -96,6 +96,7 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                     break;
                 case UIMENU_EMENUITEM_TestConn:
                     MAINAPP_ExecCheckConnections();
+                    UIMANAGER_Goto(UIMANAGER_EMENU_TestConn);
                     break;
                 case UIMENU_EMENUITEM_Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");
@@ -114,14 +115,18 @@ static void DrawScreen()
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     SSD1306_ClearDisplay(pss1306Handle);
 
+    // Cursor
+    SSD1306_FillRect(pss1306Handle, 0, m_s32MenuItemIndex*15+3, 127, 16, true);
+
     for(int i = 0; i < UIMENU_EMENUITEM_Count; i++)
     {
         const UIMENU_SMenu* psMenuItem = &m_sMenuItems[i];
+
+        SSD1306_SetTextColor(pss1306Handle, (i != m_s32MenuItemIndex));
         SSD1306_DrawString(pss1306Handle, 15, 15*i, psMenuItem->szName);
     }
 
-    // Cursor
-    SSD1306_DrawString(pss1306Handle, 0, m_s32MenuItemIndex*15, ">");
-
+    // Restore ...
+    SSD1306_SetTextColor(pss1306Handle, true);
     SSD1306_UpdateDisplay(pss1306Handle);
 }

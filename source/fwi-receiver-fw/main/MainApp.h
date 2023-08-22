@@ -76,4 +76,6 @@ MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState();
 
 bool MAINAPP_IsArmed();
 
+double MAINAPP_GetProgress();
+
 #endif

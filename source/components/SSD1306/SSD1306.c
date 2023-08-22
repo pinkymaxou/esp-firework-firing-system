@@ -6,6 +6,9 @@
 #include "fonts/FreeSerif9pt7b.h"
 #include "fonts/Picopixel.h"
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 typedef enum
 {
     ControlByte_Command = 0x00,
@@ -28,6 +31,8 @@ bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
 
     pHandle->u32Width = 128;
     pHandle->u32Height = 64;
+
+    pHandle->bTextColor = true;
 
     pHandle->u32BufferLen = (pHandle->u32Height * pHandle->u32Width) / 8;
     pHandle->u8Buffer = malloc(sizeof(uint8_t) * pHandle->u32BufferLen);
@@ -170,7 +175,7 @@ void SSD1306_ClearPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 
 /*void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* pU8BitmapDatas, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height)
 {
-    
+
 }
 */
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c)
@@ -200,7 +205,12 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
             byte = pMap[i / 8];
 
         if (byte & 0x80)
-            SSD1306_SetPixel(pHandle, x1, y1);
+        {
+            if (pHandle->bTextColor)
+                SSD1306_SetPixel(pHandle, x1, y1);
+            else
+                SSD1306_ClearPixel(pHandle, x1, y1);
+        }
         byte <<= 1;
     }
 
@@ -221,12 +231,68 @@ void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const c
         if (c == '\r' || c == '\n')
         {
             y1 += pHandle->font->yAdvance;
-            x1 = 0;
+            x1 = x;
         }
         else
         {
             int xAdvance = SSD1306_DrawChar(pHandle, x1, y1, c);
             x1 += xAdvance;
+        }
+    }
+}
+
+void SSD1306_SetTextColor(SSD1306_handle* pHandle, bool bTextColor)
+{
+    pHandle->bTextColor = bTextColor;
+}
+
+void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor)
+{
+    const uint32_t u32Right = MIN(u32X + u32Width, pHandle->u32Width - 1);
+    const uint32_t u32Bottom = MIN(u32Y + u32Height, pHandle->u32Height - 1);
+
+    for(uint32_t y = u32Y; y < u32Bottom; y++)
+    {
+        for(uint32_t x = u32X; x < u32Right; x++)
+        {
+            if (bColor)
+                SSD1306_SetPixel(pHandle, x, y);
+            else
+                SSD1306_ClearPixel(pHandle, x, y);
+        }
+    }
+}
+
+void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor)
+{
+    const uint32_t u32Right = MIN(u32X + u32Width, pHandle->u32Width - 1);
+    const uint32_t u32Bottom = MIN(u32Y + u32Height, pHandle->u32Height - 1);
+
+    for(uint32_t y = u32Y; y < u32Bottom; y++)
+    {
+        if (bColor)
+        {
+            SSD1306_SetPixel(pHandle, u32X, y);
+            SSD1306_SetPixel(pHandle, u32Right, y);
+        }
+        else
+        {
+            SSD1306_ClearPixel(pHandle, u32X, y);
+            SSD1306_ClearPixel(pHandle, u32Right, y);
+        }
+    }
+
+    for(uint32_t x = u32X; x < u32Right; x++)
+    {
+        if (bColor)
+        {
+            SSD1306_SetPixel(pHandle, x, u32Y);
+            SSD1306_SetPixel(pHandle, x, u32Bottom);
+        }
+        else
+        {
+            SSD1306_ClearPixel(pHandle, x, u32Y);
+            SSD1306_ClearPixel(pHandle, x, u32Bottom);
         }
     }
 }

@@ -14,9 +14,9 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.h"
-#include "ui/UICore.h"
-#include "ui/UIHome.h"
-#include "ui/UIManager.h"
+#include "oledui/UICore.h"
+#include "oledui/UIHome.h"
+#include "oledui/UIManager.h"
 
 #define TAG "MainApp"
 
@@ -26,12 +26,13 @@ typedef struct
     // TickType_t ttArmedTicks;
 
     MAINAPP_EGENERALSTATE eGeneralState;
+    double dProgressOfOne;
 } SState;
 
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
+static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
 
 // static int32_t m_s32AutodisarmTimeoutMin = 0;
 
@@ -53,6 +54,8 @@ static bool StartFire(MAINAPP_SFire sFire);
 static void FireTask(void* pParam);
 
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
+
+static void CheckUserInput();
 
 void MAINAPP_Init()
 {
@@ -112,10 +115,6 @@ void MAINAPP_Run()
                     break;
                 case MAINAPP_ECMD_Fire:
                     StartFire(sCmd.uArg.sFire);
-
-                    // Reset armed timeout ..
-                    //if (m_sState.bIsArmed)
-                    //    m_sState.ttArmedTicks = xTaskGetTickCount();
                     break;
                 default:
                     break;
@@ -143,7 +142,7 @@ void MAINAPP_Run()
         }
 
         // Sanity blink ...
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 50 : 500))
+        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.bIsArmed ? 100 : 500))
         {
             ttSanityTicks = xTaskGetTickCount();
             HARDWAREGPIO_SetSanityLED(bSanityOn, m_sState.bIsArmed);
@@ -157,29 +156,12 @@ void MAINAPP_Run()
 
         HARDWAREGPIO_RefreshLEDStrip();
 
-        // Encoder move
-        static TickType_t ttEncoderSwitchTicks = 0;
-        if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
-        {
-            if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
-            {
-                UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
-            }
-            ttEncoderSwitchTicks = 0;
-        }
-        else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
-        {
-            ttEncoderSwitchTicks = xTaskGetTickCount();
-        }
-
-        const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
-        if (s32Count != 0)
-            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+        CheckUserInput();
 
         // Update LEDs
         UIMANAGER_RunTick();
 
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(1);
     }
 }
 
@@ -218,6 +200,7 @@ static bool StartCheckConnections()
 static void CheckConnectionsTask(void* pParam)
 {
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+    m_sState.dProgressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -240,13 +223,13 @@ static void CheckConnectionsTask(void* pParam)
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
-        // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(80);
-        vTaskDelay(pdMS_TO_TICKS(60));
+        // go to the next one if the return current is detected or wait maximum 200ms
+        int ticksMax = 8;
+        vTaskDelay(pdMS_TO_TICKS(200));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
-            vTaskDelay(pdMS_TO_TICKS(1));
+            vTaskDelay(pdMS_TO_TICKS(10));
             ticksMax--;
         } while (!pSRelay->isConnected && ticksMax > 0);
 
@@ -259,12 +242,16 @@ static void CheckConnectionsTask(void* pParam)
             vTaskDelay(pdMS_TO_TICKS(200));
             u32LastAreaIndex = u32AreaIndex;
         }
+
+        m_sState.dProgressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
     }
 
     ESP_LOGI(TAG, "Check connection completed");
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    m_sState.dProgressOfOne = 1.0d;
 
     m_xHandle = NULL;
     vTaskDelete(NULL);
@@ -383,6 +370,29 @@ static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
 }
 
+static void CheckUserInput()
+{
+    // Encoder move
+    static TickType_t ttEncoderSwitchTicks = 0;
+    if ( !HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
+    {
+        // 100 ms check maximum ...
+        if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
+        {
+            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
+        }
+        ttEncoderSwitchTicks = 0;
+    }
+    else if (HARDWAREGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
+    {
+        ttEncoderSwitchTicks = xTaskGetTickCount();
+    }
+
+    const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
+    if (s32Count != 0)
+        UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+}
+
 MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)
 {
     return m_sOutputs[u32OutputIndex];
@@ -407,4 +417,9 @@ bool MAINAPP_IsArmed()
 MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 {
     return m_sState.eGeneralState;
+}
+
+double MAINAPP_GetProgress()
+{
+    return m_sState.dProgressOfOne;
 }
