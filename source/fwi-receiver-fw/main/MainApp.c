@@ -223,7 +223,7 @@ static void CheckConnectionsTask(void* pParam)
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 40ms
         int ticksMax = pdMS_TO_TICKS(80);
-        vTaskDelay(pdMS_TO_TICKS(60));
+        vTaskDelay(pdMS_TO_TICKS(200));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
