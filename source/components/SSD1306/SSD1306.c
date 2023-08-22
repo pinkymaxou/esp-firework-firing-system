@@ -263,6 +263,40 @@ void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uin
     }
 }
 
+void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor)
+{
+    const uint32_t u32Right = MIN(u32X + u32Width, pHandle->u32Width - 1);
+    const uint32_t u32Bottom = MIN(u32Y + u32Height, pHandle->u32Height - 1);
+
+    for(uint32_t y = u32Y; y < u32Bottom; y++)
+    {
+        if (bColor)
+        {
+            SSD1306_SetPixel(pHandle, u32X, y);
+            SSD1306_SetPixel(pHandle, u32Right, y);
+        }
+        else
+        {
+            SSD1306_ClearPixel(pHandle, u32X, y);
+            SSD1306_ClearPixel(pHandle, u32Right, y);
+        }
+    }
+
+    for(uint32_t x = u32X; x < u32Right; x++)
+    {
+        if (bColor)
+        {
+            SSD1306_SetPixel(pHandle, x, u32Y);
+            SSD1306_SetPixel(pHandle, x, u32Bottom);
+        }
+        else
+        {
+            SSD1306_ClearPixel(pHandle, x, u32Y);
+            SSD1306_ClearPixel(pHandle, x, u32Bottom);
+        }
+    }
+}
+
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
     return (x < pHandle->u32Width) && (y < pHandle->u32Height);

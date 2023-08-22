@@ -26,12 +26,13 @@ typedef struct
     // TickType_t ttArmedTicks;
 
     MAINAPP_EGENERALSTATE eGeneralState;
+    double dProgressOfOne;
 } SState;
 
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/ };
+static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
 
 // static int32_t m_s32AutodisarmTimeoutMin = 0;
 
@@ -160,7 +161,7 @@ void MAINAPP_Run()
         // Update LEDs
         UIMANAGER_RunTick();
 
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(1);
     }
 }
 
@@ -199,6 +200,7 @@ static bool StartCheckConnections()
 static void CheckConnectionsTask(void* pParam)
 {
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+    m_sState.dProgressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -221,13 +223,13 @@ static void CheckConnectionsTask(void* pParam)
         // Activate the relay ...
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Give it some time to detect
-        // go to the next one if the return current is detected or wait maximum 40ms
-        int ticksMax = pdMS_TO_TICKS(80);
+        // go to the next one if the return current is detected or wait maximum 200ms
+        int ticksMax = 8;
         vTaskDelay(pdMS_TO_TICKS(200));
         do
         {
             pSRelay->isConnected = HARDWAREGPIO_ReadConnectionSense();
-            vTaskDelay(pdMS_TO_TICKS(1));
+            vTaskDelay(pdMS_TO_TICKS(10));
             ticksMax--;
         } while (!pSRelay->isConnected && ticksMax > 0);
 
@@ -240,12 +242,16 @@ static void CheckConnectionsTask(void* pParam)
             vTaskDelay(pdMS_TO_TICKS(200));
             u32LastAreaIndex = u32AreaIndex;
         }
+
+        m_sState.dProgressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
     }
 
     ESP_LOGI(TAG, "Check connection completed");
     m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    m_sState.dProgressOfOne = 1.0d;
 
     m_xHandle = NULL;
     vTaskDelete(NULL);
@@ -411,4 +417,9 @@ bool MAINAPP_IsArmed()
 MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
 {
     return m_sState.eGeneralState;
+}
+
+double MAINAPP_GetProgress()
+{
+    return m_sState.dProgressOfOne;
 }

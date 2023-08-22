@@ -48,9 +48,16 @@ static void DrawScreen()
 
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     char szText[64+1];
-    
+
     SSD1306_ClearDisplay(pss1306Handle);
-    sprintf(szText, "Detected\n%" PRIu32 " / %" PRIu32, u32ConnCount, (uint32_t)HWCONFIG_OUTPUT_COUNT);
-    SSD1306_DrawString(pss1306Handle, 15, 15, szText);
+    sprintf(szText, "Checking\n%" PRIu32 " / %" PRIu32, u32ConnCount, (uint32_t)HWCONFIG_OUTPUT_COUNT);
+    SSD1306_DrawString(pss1306Handle, 15, 4, szText);
+
+    const int32_t s32Width = 128 - 16*2;
+
+    const int32_t s32BarWidth = (int32_t)(MAINAPP_GetProgress()*s32Width);
+    SSD1306_FillRect(pss1306Handle, 16, 64 - 16, s32BarWidth, 16, true);
+    SSD1306_DrawRect(pss1306Handle, 16, 64 - 16, s32Width, 16, true);
+
     SSD1306_UpdateDisplay(pss1306Handle);
 }
