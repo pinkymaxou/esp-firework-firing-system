@@ -32,6 +32,7 @@ typedef enum
     MAINAPP_ECMD_None = 0,
     MAINAPP_ECMD_Fire,
     MAINAPP_ECMD_CheckConnections,
+    MAINAPP_ECMD_OutputCalib,
 } MAINAPP_ECMD;
 
 typedef struct
@@ -67,6 +68,8 @@ void MAINAPP_Run();
 void MAINAPP_ExecFire(uint32_t u32OutputIndex);
 
 void MAINAPP_ExecCheckConnections();
+
+void MAINAPP_ExecFullOutputCalibration();
 
 MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex);
 

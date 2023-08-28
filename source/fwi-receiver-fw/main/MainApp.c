@@ -53,6 +53,9 @@ static void CheckConnectionsTask(void* pParam);
 static bool StartFire(MAINAPP_SFire sFire);
 static void FireTask(void* pParam);
 
+static bool StartFullOutputCalibrationTask();
+static void FullOutputCalibrationTask(void* pParam);
+
 static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
 
 static void CheckUserInput();
@@ -112,6 +115,9 @@ void MAINAPP_Run()
                 case MAINAPP_ECMD_CheckConnections:
                     // Cannot check connection while armed
                     StartCheckConnections();
+                    break;
+                case MAINAPP_ECMD_OutputCalib:
+                    StartFullOutputCalibrationTask();
                     break;
                 case MAINAPP_ECMD_Fire:
                     StartFire(sCmd.uArg.sFire);
@@ -336,10 +342,103 @@ static void FireTask(void* pParam)
     vTaskDelete(NULL);
 }
 
+static bool StartFullOutputCalibrationTask()
+{
+    if (m_xHandle != NULL)
+    {
+        ESP_LOGE(TAG, "Already doing a job");
+        goto ERROR;
+    }
+
+    // Should't be able to works when the power is present
+    if (m_sState.bIsArmed)
+    {
+        ESP_LOGE(TAG, "Cannot fire, not ready !");
+        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        goto ERROR;
+    }
+
+    ESP_LOGI(TAG, "Ouput calibration command issued");
+
+    /* Create the task, storing the handle. */
+    const BaseType_t xReturned = xTaskCreate(
+        FullOutputCalibrationTask,/* Function that implements the task. */
+        "OutputCalibration",    /* Text name for the task. */
+        4096,                   /* Stack size in words, not bytes. */
+        ( void * )NULL,    /* Parameter passed into the task. */
+        tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
+        &m_xHandle );           /* Used to pass out the created task's handle. */
+    assert(xReturned == pdPASS);
+    return true;
+    ERROR:
+    return false;
+}
+
+static void FullOutputCalibrationTask(void* pParam)
+{
+    // Master power relay shouln'd be active during check
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    // Clear relay bus
+    HARDWAREGPIO_ClearRelayBus();
+
+    // Scan the bus to find connected
+    for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
+    {
+        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
+        // Ensure the jumper is not there yet
+        bool bIsDetect = HARDWAREGPIO_ReadConnectionSense();
+        while(bIsDetect)
+        {
+            ESP_LOGI(TAG, "Waiting for jumper on output %" PRIu32 " to get disconnected ... ", pSRelay->u32Index+1);
+            vTaskDelay(pdMS_TO_TICKS(250));
+            bIsDetect = HARDWAREGPIO_ReadConnectionSense();
+        }
+        ESP_LOGI(TAG, "Jumper is disconnected");
+        // Give some time to insert it
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        uint32_t u32Count = 0;
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
+
+        // Ensure the jumper is connected
+        bool bIsDetect2 = HARDWAREGPIO_ReadConnectionSense();
+        while(!bIsDetect2)
+        {
+            u32Count++;
+            vTaskDelay(1);
+            bIsDetect2 = HARDWAREGPIO_ReadConnectionSense();
+        }
+
+        HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, false);
+
+        ESP_LOGI(TAG, "Output %" PRIu32 ", count: %" PRIu32 " ms", pSRelay->u32Index+1, (uint32_t)pdTICKS_TO_MS(u32Count));
+    }
+
+    // Ensure the power if really off
+    HARDWAREGPIO_ClearRelayBus();
+    HARDWAREGPIO_WriteMasterPowerRelay(false);
+
+    m_xHandle = NULL;
+    vTaskDelete(NULL);
+}
+
 void MAINAPP_ExecCheckConnections()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
     const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_CheckConnections };
+    m_sCmd = sCmd;
+    xSemaphoreGive(m_xSemaphoreHandle);
+}
+
+void MAINAPP_ExecFullOutputCalibration()
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_OutputCalib };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
