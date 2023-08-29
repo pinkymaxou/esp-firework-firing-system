@@ -108,23 +108,22 @@ void MAINAPP_Run()
         xSemaphoreGive(m_xSemaphoreHandle);
 
         // Command from another thread
-        if (sCmd.eCmd != MAINAPP_ECMD_None)
+        switch (sCmd.eCmd)
         {
-            switch (sCmd.eCmd)
-            {
-                case MAINAPP_ECMD_CheckConnections:
-                    // Cannot check connection while armed
-                    StartCheckConnections();
-                    break;
-                case MAINAPP_ECMD_OutputCalib:
-                    StartFullOutputCalibrationTask();
-                    break;
-                case MAINAPP_ECMD_Fire:
-                    StartFire(sCmd.uArg.sFire);
-                    break;
-                default:
-                    break;
-            }
+            case MAINAPP_ECMD_CheckConnections:
+                // Cannot check connection while armed
+                StartCheckConnections();
+                break;
+            case MAINAPP_ECMD_OutputCalib:
+                StartFullOutputCalibrationTask();
+                break;
+            case MAINAPP_ECMD_Fire:
+                StartFire(sCmd.uArg.sFire);
+                break;
+            case MAINAPP_ECMD_None:
+                break;
+            default:
+                break;
         }
 
         // Check for disarming condition
@@ -221,7 +220,7 @@ static void CheckConnectionsTask(void* pParam)
     {
         MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
 
-        const uint32_t u32AreaIndex = i / HWCONFIG_OUTPUTBUS_COUNT;
+        const uint32_t u32AreaIndex = HARDWAREGPIO_GetRelayArea(i);
 
         pSRelay->isFired = false;
         pSRelay->isConnected = false;

@@ -280,6 +280,11 @@ bool HARDWAREGPIO_IsEncoderSwitchON()
     return gpio_get_level(HWCONFIG_ENCODERSW) == false;
 }
 
+uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex)
+{
+    return u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
+}
+
 int32_t HARDWAREGPIO_GetEncoderCount()
 {
     const int32_t s32Ticks = m_s32EncoderTicks;
