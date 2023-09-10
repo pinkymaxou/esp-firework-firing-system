@@ -17,5 +17,6 @@
         "uisetting.h": "c",
         "uierrorpleasedisarm.h": "c",
         "uimenu.h": "c"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

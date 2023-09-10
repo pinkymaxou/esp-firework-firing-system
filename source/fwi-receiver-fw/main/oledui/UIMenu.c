@@ -101,6 +101,7 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                 case UIMENU_EMENUITEM_Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");
                     esp_restart();
+                    // MAINAPP_ExecFullOutputCalibration();
                     break;
                 default:
                     break;

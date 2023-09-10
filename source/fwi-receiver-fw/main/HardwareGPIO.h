@@ -29,6 +29,8 @@ void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, 
 
 bool HARDWAREGPIO_IsEncoderSwitchON();
 
+uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex);
+
 int32_t HARDWAREGPIO_GetEncoderCount();
 
 SSD1306_handle* GPIO_GetSSD1306Handle();

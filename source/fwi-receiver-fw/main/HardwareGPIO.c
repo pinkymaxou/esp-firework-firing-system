@@ -78,6 +78,7 @@ void HARDWAREGPIO_Init()
     gpio_reset_pin(HWCONFIG_MASTERPWRSENSE_IN);
     gpio_set_direction(HWCONFIG_MASTERPWRSENSE_IN, GPIO_MODE_INPUT);
     gpio_pullup_en(HWCONFIG_MASTERPWRSENSE_IN);
+
     gpio_reset_pin(HWCONFIG_CONNSENSE_IN);
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
 
@@ -277,6 +278,11 @@ bool HARDWAREGPIO_ReadConnectionSense()
 bool HARDWAREGPIO_IsEncoderSwitchON()
 {
     return gpio_get_level(HWCONFIG_ENCODERSW) == false;
+}
+
+uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex)
+{
+    return u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
 }
 
 int32_t HARDWAREGPIO_GetEncoderCount()
