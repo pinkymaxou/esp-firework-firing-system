@@ -16,7 +16,8 @@
         "uiarmed.h": "c",
         "uisetting.h": "c",
         "uierrorpleasedisarm.h": "c",
-        "uimenu.h": "c"
+        "uimenu.h": "c",
+        "espnow.h": "c"
     },
     "cmake.configureOnOpen": false
 }
