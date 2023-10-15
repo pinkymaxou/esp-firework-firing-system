@@ -583,7 +583,7 @@ static char* GetStatusJSON()
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
 
-        const MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
+        const FWIOUTPUT_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
 
         cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber((int)eOutputState));
         cJSON_AddItemToArray(pOutputs, pEntryJSON10);

@@ -14,9 +14,11 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.h"
+#include "remote/ESPNow.h"
 #include "oledui/UICore.h"
 #include "oledui/UIHome.h"
 #include "oledui/UIManager.h"
+#include "fwi-output.h"
 
 #define TAG "MainApp"
 
@@ -29,7 +31,7 @@ typedef struct
     double dProgressOfOne;
 } SState;
 
-#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
+#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = FWIOUTPUT_EGENERALSTATE_Idle }
 
 static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
 static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
@@ -133,7 +135,7 @@ void MAINAPP_Run()
         {
             m_sState.bIsArmed = true;
             ESP_LOGI(TAG, "Master switch is armed");
-            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Armed;
+            m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_Armed;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
         }
@@ -141,7 +143,7 @@ void MAINAPP_Run()
         {
             m_sState.bIsArmed = false;
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
-            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
+            m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_DisarmedMasterSwitchOff;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_Home);
         }
@@ -166,6 +168,8 @@ void MAINAPP_Run()
         // Update LEDs
         UIMANAGER_RunTick();
 
+        ESPNOW_RunTick();
+
         vTaskDelay(1);
     }
 }
@@ -181,7 +185,7 @@ static bool StartCheckConnections()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot check connection when the system is armed");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
+        m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_CheckingConnectionError;
         goto ERROR;
     }
 
@@ -204,7 +208,7 @@ static bool StartCheckConnections()
 
 static void CheckConnectionsTask(void* pParam)
 {
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+    m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_CheckingConnection;
     m_sState.dProgressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
@@ -252,7 +256,7 @@ static void CheckConnectionsTask(void* pParam)
     }
 
     ESP_LOGI(TAG, "Check connection completed");
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
+    m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_CheckingConnectionOK;
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -273,7 +277,7 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (sFire.u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
+        m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_FiringUnknownError;
         goto ERROR;
     }
 
@@ -282,7 +286,7 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (!m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_FiringMasterSwitchWrongStateError;
         goto ERROR;
     }
 
@@ -311,7 +315,7 @@ static void FireTask(void* pParam)
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
+    m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_Firing;
 
     ESP_LOGI(TAG, "Firing in progress: %"PRIu32, u32OutputIndex);
 
@@ -331,7 +335,7 @@ static void FireTask(void* pParam)
     pSRelay->isEN = false;
     pSRelay->isFired = true;
 
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
+    m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_FiringOK;
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -353,7 +357,7 @@ static bool StartFullOutputCalibrationTask()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        m_sState.eGeneralState = FWIOUTPUT_EGENERALSTATE_FiringMasterSwitchWrongStateError;
         goto ERROR;
     }
 
@@ -454,12 +458,12 @@ static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
     MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
-    MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(pSRelay);
-    if (eOutputState == MAINAPP_EOUTPUTSTATE_Enabled)
+    FWIOUTPUT_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(pSRelay);
+    if (eOutputState == FWIOUTPUT_EOUTPUTSTATE_Enabled)
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
-    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Fired) // White for fired
+    else if (eOutputState == FWIOUTPUT_EOUTPUTSTATE_Fired) // White for fired
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 100, 100, 0);
-    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Connected) // YELLOW for connected
+    else if (eOutputState == FWIOUTPUT_EOUTPUTSTATE_Connected) // YELLOW for connected
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 200, 200, 0);
     else // minimal white illuminiation
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 10, 10, 10);
@@ -496,15 +500,15 @@ MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)
     return m_sOutputs[u32OutputIndex];
 }
 
-MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
+FWIOUTPUT_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
 {
     if (pSRelay->isEN)
-        return MAINAPP_EOUTPUTSTATE_Enabled;
+        return FWIOUTPUT_EOUTPUTSTATE_Enabled;
     if (pSRelay->isFired) // White for fired
-        return MAINAPP_EOUTPUTSTATE_Fired;
+        return FWIOUTPUT_EOUTPUTSTATE_Fired;
     if (pSRelay->isConnected) // YELLOW for connected
-        return MAINAPP_EOUTPUTSTATE_Connected;
-    return MAINAPP_EOUTPUTSTATE_Idle;
+        return FWIOUTPUT_EOUTPUTSTATE_Connected;
+    return FWIOUTPUT_EOUTPUTSTATE_Idle;
 }
 
 bool MAINAPP_IsArmed()
