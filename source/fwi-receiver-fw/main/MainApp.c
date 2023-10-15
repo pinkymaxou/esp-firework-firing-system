@@ -14,7 +14,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.h"
-#include "remote/ESPNow.h"
+#include "ESPNow.h"
 #include "oledui/UICore.h"
 #include "oledui/UIHome.h"
 #include "oledui/UIManager.h"

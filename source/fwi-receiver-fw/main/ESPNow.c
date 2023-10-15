@@ -9,6 +9,7 @@
 #include "MainApp.h"
 #include "fwi-output.h"
 #include "fwi-remote-comm.h"
+#include "FWIHelper.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
@@ -19,8 +20,6 @@ static void espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status
 static void espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len);
 
 static bool SendFrame(ESPNOW_STxFrame* ptxFrame);
-
-static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len);
 
 static uint8_t m_u8WiFiChannel = 1;
 
@@ -112,10 +111,10 @@ static void espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_
             }
             default:
             {
-                char hexDataString[128+1] = {0};
-                if (data_len < 64)
-                    ToHexString(hexDataString, data, data_len);
-                ESP_LOGI(TAG, "Receiving data: ' %s ', len: %d", (const char*)hexDataString, data_len);
+                char hexDataString[256+1] = {0};
+                if (data_len <= 128)
+                    FWIHELPER_ToHexString(hexDataString, data, data_len);
+                ESP_LOGW(TAG, "Receiving data [unknown]: ' %s ', len: %d", (const char*)hexDataString, data_len);
                 break;
             }
         }
@@ -153,6 +152,8 @@ void ESPNOW_RunTick()
             }
             case FWIREMOTECOMM_EFRAMEID_C2SGetStatus:
             {
+                //ESP_LOGI(TAG, "Get status received");
+
                 const FWIREMOTECOMM_C2SGetStatus* pRX = &sRXFrame.URx.c2sGetStatus;
 
                 ESPNOW_STxFrame sTxFrame;
@@ -168,7 +169,6 @@ void ESPNOW_RunTick()
                     const FWIOUTPUT_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
                     sTxFrame.URx.s2cGetStatusResp.u8OutState[i] = (int)eOutputState;
                 }
-
                 SendFrame(&sTxFrame);
                 break;
             }
@@ -180,7 +180,7 @@ void ESPNOW_RunTick()
 
 static bool SendFrame(ESPNOW_STxFrame* ptxFrame)
 {
-    uint8_t buffers[128];
+    uint8_t buffers[256];
     const uint16_t u16 = (uint16_t)ptxFrame->eFrameID;
 
     int32_t s32Count = 0;
@@ -189,13 +189,13 @@ static bool SendFrame(ESPNOW_STxFrame* ptxFrame)
 
     switch( ptxFrame->eFrameID)
     {
-        case FWIREMOTECOMM_EFRAMEID_C2SFire:
+        case FWIREMOTECOMM_EFRAMEID_S2CFireResp:
         {
             memcpy(buffers + s32Count, &ptxFrame->URx.s2cFireResp, sizeof(FWIREMOTECOMM_S2CFireResp));
             s32Count += sizeof(FWIREMOTECOMM_S2CFireResp);
             break;
         }
-        case FWIREMOTECOMM_EFRAMEID_C2SGetStatus:
+        case FWIREMOTECOMM_EFRAMEID_S2CGetStatusResp:
         {
             memcpy(buffers + s32Count, &ptxFrame->URx.s2cGetStatusResp, sizeof(FWIREMOTECOMM_S2CGetStatusResp));
             s32Count += sizeof(FWIREMOTECOMM_S2CGetStatusResp);
@@ -204,12 +204,8 @@ static bool SendFrame(ESPNOW_STxFrame* ptxFrame)
         default:
             return false;
     }
+
+    //ESP_LOGI(TAG, "==> frameID: %d", (int)ptxFrame->eFrameID);
     esp_now_send(m_u8BroadcastMACs, buffers, s32Count);
     return true;
-}
-
-static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)
-{
-    for (uint32_t i = 0; i < len; i++)
-        sprintf(dstHexString + (i * 2), "%02X", data[i]);
 }

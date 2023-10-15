@@ -21,7 +21,7 @@
 #include "webserver/WebServer.h"
 #include "Settings.h"
 #include "MainApp.h"
-#include "remote/ESPNow.h"
+#include "ESPNow.h"
 #include "main.h"
 
 #define TAG "main"
