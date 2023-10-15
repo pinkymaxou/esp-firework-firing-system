@@ -17,7 +17,8 @@
         "uisetting.h": "c",
         "uierrorpleasedisarm.h": "c",
         "uimenu.h": "c",
-        "espnow.h": "c"
+        "espnow.h": "c",
+        "fwi-output.h": "c"
     },
     "cmake.configureOnOpen": false
 }
