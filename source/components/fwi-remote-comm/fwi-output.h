@@ -1,0 +1,30 @@
+#ifndef _FWIOUTPUT_H_
+#define _FWIOUTPUT_H_
+
+typedef enum
+{
+    FWIOUTPUT_EOUTPUTSTATE_Idle = 0,
+    FWIOUTPUT_EOUTPUTSTATE_Enabled = 1,
+    FWIOUTPUT_EOUTPUTSTATE_Fired = 2,
+    FWIOUTPUT_EOUTPUTSTATE_Connected = 3,
+} FWIOUTPUT_EOUTPUTSTATE;
+
+typedef enum
+{
+    FWIOUTPUT_EGENERALSTATE_Idle = 0,
+
+    FWIOUTPUT_EGENERALSTATE_FiringMasterSwitchWrongStateError = 1,
+    FWIOUTPUT_EGENERALSTATE_FiringUnknownError = 2,
+    FWIOUTPUT_EGENERALSTATE_Firing = 3,
+    FWIOUTPUT_EGENERALSTATE_FiringOK = 4,
+
+    FWIOUTPUT_EGENERALSTATE_Armed = 7,
+
+    FWIOUTPUT_EGENERALSTATE_CheckingConnection = 8,
+    FWIOUTPUT_EGENERALSTATE_CheckingConnectionOK = 9,
+    FWIOUTPUT_EGENERALSTATE_CheckingConnectionError = 10,
+
+    FWIOUTPUT_EGENERALSTATE_DisarmedMasterSwitchOff = 12,
+} MAINAPP_EGENERALSTATE;
+
+#endif
