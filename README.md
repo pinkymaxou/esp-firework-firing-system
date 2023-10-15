@@ -16,16 +16,3 @@ It uses of the shelves cheap 16 relays board
 - OLED screen with encoder included
 - Support Wi-Fi with integrated HTTP server
 
-# PCB
-
-# ERRATUM
-
-PCB version 1.0 contains an error. The sanity LED is connected to GPIO0, connect it will prevent the board from booting.
-Version 1.1 fix this, but version 1.0 is already in production so it needs a manual fix.
-The LED SHALL be ground driven, on version 1.0 it is +3.3 driven. It's not good, it create a PULL-DOWN. It should be a pull-up.
-
-- Swap 48 and 47 pins.
-    -   47 (LED-RING) => 48,
-    -   48 (SDA) => 47
-
-![](./cad/Schematic_esp-firework-firing-system-hw1.1.png)

@@ -1,1 +1,3 @@
 /source/fwi-receiver-fw/build
+/source/fwi-remote-fw/build
+source/fwi-remote-fw/sdkconfig.old
