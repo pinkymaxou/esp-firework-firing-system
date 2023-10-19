@@ -22,24 +22,24 @@ typedef struct
 {
     uint32_t u32TransactionID;
     uint8_t u8OutputIndex;
-} __attribute__((aligned)) FWIREMOTECOMM_C2SFire;
+} __attribute__((packed)) FWIREMOTECOMM_C2SFire;
 
 typedef struct
 {
     uint32_t u32TransactionID;
-} __attribute__((aligned)) FWIREMOTECOMM_S2CFireResp;
+} __attribute__((packed)) FWIREMOTECOMM_S2CFireResp;
 
 typedef struct
 {
     uint32_t u32TransactionID;
-} __attribute__((aligned)) FWIREMOTECOMM_C2SGetStatus;
+} __attribute__((packed)) FWIREMOTECOMM_C2SGetStatus;
 
 typedef struct
 {
     uint32_t u32TransactionID;
     uint8_t u8GeneralState;     /* MAINAPP_EGENERALSTATE*/
     uint8_t u8OutState[32];     /* FWIOUTPUT_EOUTPUTSTATE */
-} __attribute__((aligned)) FWIREMOTECOMM_S2CGetStatusResp;
+} __attribute__((packed)) FWIREMOTECOMM_S2CGetStatusResp;
 
 extern uint32_t g_FWIREMOTECOMM_u32Magic;
 
