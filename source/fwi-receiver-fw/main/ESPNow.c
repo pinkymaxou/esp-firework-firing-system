@@ -77,54 +77,71 @@ static void espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_
         return;
     }
 
-    if (data_len >= 2)
+    const int32_t s32PreambleLength = 4 + 2; // Magic + Frame ID
+
+    if (data_len < s32PreambleLength)
     {
-        uint16_t u16FrameID;
-        memcpy(&u16FrameID, data, sizeof(uint16_t));
-        ESPNOW_SRxFrame sRXFrame;
+        return;
+    }
 
-        bool bIsRXValid = false;
-        sRXFrame.eFrameID = (FWIREMOTECOMM_EFRAMEID)u16FrameID;
-        switch(sRXFrame.eFrameID)
+    int32_t s32Offset = 0;
+    uint32_t u32Magic = 0;
+    memcpy(&u32Magic, data, sizeof(uint32_t));
+    s32Offset += sizeof(uint32_t);
+
+    if (u32Magic != g_FWIREMOTECOMM_u32Magic)
+    {
+        ESP_LOGE(TAG, "No magic");
+        return;
+    }
+
+    uint16_t u16FrameID;
+    memcpy(&u16FrameID, data + s32Offset, sizeof(uint16_t));
+    s32Offset += sizeof(uint16_t);
+
+    ESPNOW_SRxFrame sRXFrame;
+
+    bool bIsRXValid = false;
+    sRXFrame.eFrameID = (FWIREMOTECOMM_EFRAMEID)u16FrameID;
+    switch(sRXFrame.eFrameID)
+    {
+        case FWIREMOTECOMM_EFRAMEID_C2SFire:
         {
-            case FWIREMOTECOMM_EFRAMEID_C2SFire:
+            if (data_len < s32PreambleLength + sizeof(FWIREMOTECOMM_C2SFire))
             {
-                if (data_len < 2 + sizeof(FWIREMOTECOMM_C2SFire))
-                {
-                    ESP_LOGE(TAG, "Cannot decode C2SFire");
-                    break;
-                }
-                memcpy(&sRXFrame.URx.c2sFire, data+2, sizeof(FWIREMOTECOMM_C2SFire));
-                bIsRXValid = true;
+                ESP_LOGE(TAG, "Cannot decode C2SFire");
                 break;
             }
-            case FWIREMOTECOMM_EFRAMEID_C2SGetStatus:
-            {
-                if (data_len < 2 + sizeof(FWIREMOTECOMM_C2SGetStatus))
-                {
-                    ESP_LOGE(TAG, "Cannot decode C2SFire");
-                    break;
-                }
-                memcpy(&sRXFrame.URx.c2sGetStatus, data+2, sizeof(FWIREMOTECOMM_C2SGetStatus));
-                bIsRXValid = true;
-                break;
-            }
-            default:
-            {
-                char hexDataString[256+1] = {0};
-                if (data_len <= 128)
-                    FWIHELPER_ToHexString(hexDataString, data, data_len);
-                ESP_LOGW(TAG, "Receiving data [unknown]: ' %s ', len: %d", (const char*)hexDataString, data_len);
-                break;
-            }
+            memcpy(&sRXFrame.URx.c2sFire, data + s32PreambleLength, sizeof(FWIREMOTECOMM_C2SFire));
+            bIsRXValid = true;
+            break;
         }
-
-        if (bIsRXValid)
+        case FWIREMOTECOMM_EFRAMEID_C2SGetStatus:
         {
-            if (xQueueSend(m_qReceiveESPNow, &sRXFrame, 0) != pdPASS)
+            if (data_len < s32PreambleLength + sizeof(FWIREMOTECOMM_C2SGetStatus))
             {
-                ESP_LOGW(TAG, "Queue overflow");
+                ESP_LOGE(TAG, "Cannot decode C2SFire");
+                break;
             }
+            memcpy(&sRXFrame.URx.c2sGetStatus, data + s32PreambleLength, sizeof(FWIREMOTECOMM_C2SGetStatus));
+            bIsRXValid = true;
+            break;
+        }
+        default:
+        {
+            char hexDataString[256+1] = {0};
+            if (data_len <= 128)
+                FWIHELPER_ToHexString(hexDataString, data, data_len);
+            ESP_LOGW(TAG, "Receiving data [unknown]: ' %s ', len: %d", (const char*)hexDataString, data_len);
+            break;
+        }
+    }
+
+    if (bIsRXValid)
+    {
+        if (xQueueSend(m_qReceiveESPNow, &sRXFrame, 0) != pdPASS)
+        {
+            ESP_LOGW(TAG, "Queue overflow");
         }
     }
 }
@@ -181,10 +198,14 @@ void ESPNOW_RunTick()
 static bool SendFrame(ESPNOW_STxFrame* ptxFrame)
 {
     uint8_t buffers[256];
-    const uint16_t u16 = (uint16_t)ptxFrame->eFrameID;
 
     int32_t s32Count = 0;
-    memcpy(buffers, &u16, sizeof(uint16_t));
+
+    memcpy(buffers, &g_FWIREMOTECOMM_u32Magic, sizeof(uint32_t));
+    s32Count += sizeof(uint32_t);
+
+    const uint16_t u16 = (uint16_t)ptxFrame->eFrameID;
+    memcpy(buffers + s32Count, &u16, sizeof(uint16_t));
     s32Count += sizeof(uint16_t);
 
     switch( ptxFrame->eFrameID)
