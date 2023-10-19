@@ -18,7 +18,13 @@
         "uierrorpleasedisarm.h": "c",
         "uimenu.h": "c",
         "espnow.h": "c",
-        "fwi-output.h": "c"
+        "fwi-output.h": "c",
+        "fwi-remote-comm.h": "c",
+        "nvsjson.h": "c",
+        "settings.h": "c",
+        "mainapp.h": "c",
+        "fwihelper.h": "c"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "cmake.sourceDirectory": "K:/Projects/Git/esp-firework-firing-system/source/components/fwi-remote-comm"
 }
