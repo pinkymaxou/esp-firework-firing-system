@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "ESPNow.h"
 #include "esp_log.h"
 #include "esp_now.h"
@@ -226,7 +227,7 @@ static bool SendFrame(ESPNOW_STxFrame* ptxFrame)
             return false;
     }
 
-    //ESP_LOGI(TAG, "==> frameID: %d", (int)ptxFrame->eFrameID);
+    // ESP_LOGI(TAG, "==> frameID: %d, cnt: %"PRId32, (int)ptxFrame->eFrameID, s32Count);
     esp_now_send(m_u8BroadcastMACs, buffers, s32Count);
     return true;
 }
