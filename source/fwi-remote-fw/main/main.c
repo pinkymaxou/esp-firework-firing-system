@@ -95,7 +95,7 @@ void app_main(void)
 
     while(1)
     {
-        const uint8_t u8Buffers[128];
+        uint8_t u8Buffers[128];
 
         // Send a "get status"
         int32_t s32Count = 0;
