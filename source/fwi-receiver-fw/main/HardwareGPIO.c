@@ -82,17 +82,7 @@ void HARDWAREGPIO_Init()
     gpio_reset_pin(HWCONFIG_CONNSENSE_IN);
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
 
-    // User input
-    gpio_reset_pin(HWCONFIG_ENCODERA_IN);
-    gpio_set_direction(HWCONFIG_ENCODERA_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERA_IN);
-    gpio_reset_pin(HWCONFIG_ENCODERB_IN);
-    gpio_set_direction(HWCONFIG_ENCODERB_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERB_IN);
-    gpio_reset_pin(HWCONFIG_ENCODERSW);
-    gpio_set_direction(HWCONFIG_ENCODERSW, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERSW);
-
+    ESP_LOGI(TAG, "Clearing relay bus ...");
     HARDWAREGPIO_ClearRelayBus();
 
     /* LED strip initialization with the GPIO and pixels number*/
@@ -107,6 +97,7 @@ void HARDWAREGPIO_Init()
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
 
+    #if HWCONFIG_OLED_ISPRESENT != 0
 	const int i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
     i2c_config_t conf = {0};
     conf.mode = I2C_MODE_MASTER;
@@ -119,7 +110,6 @@ void HARDWAREGPIO_Init()
 
 	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
 
-    #if HWCONFIG_OLED_ISPRESENT != 0
     static SSD1306_config cfgSSD1306 = SSD1306_CONFIG_DEFAULT_128x64;
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
     SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
@@ -157,7 +147,7 @@ void HARDWAREGPIO_Init()
     // Conf A
     gpio_config_t io_confA;
     io_confA.intr_type = GPIO_INTR_ANYEDGE; // Configure interrupt on positive edge
-    io_confA.pin_bit_mask = (1ULL << HWCONFIG_ENCODERA_IN) | (1ULL << HWCONFIG_ENCODERB_IN); // Replace XX with the GPIO pin number
+    io_confA.pin_bit_mask = (1ULL << HWCONFIG_ENCODERA_IN) | (1ULL << HWCONFIG_ENCODERB_IN) | (1ULL << HWCONFIG_ENCODERSW); // Replace XX with the GPIO pin number
     io_confA.mode = GPIO_MODE_INPUT;
     io_confA.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_confA);
@@ -168,7 +158,7 @@ void HARDWAREGPIO_Init()
 }
 
 static bool m_lastEncA = false;
-static void IRAM_ATTR gpio_isr_handler(void* arg)
+static void gpio_isr_handler(void* arg)
 {
     bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
     bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;

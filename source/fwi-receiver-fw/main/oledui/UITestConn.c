@@ -36,6 +36,7 @@ void UITESTCONN_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
 
 static void DrawScreen()
 {
+    #if HWCONFIG_OLED_ISPRESENT != 0
     // All ignitor slots status
     uint32_t u32ConnCount = 0;
 
@@ -62,4 +63,5 @@ static void DrawScreen()
         SSD1306_DrawRect(pss1306Handle, 16, 64 - 16, s32Width, 16, true);
     }
     SSD1306_UpdateDisplay(pss1306Handle);
+    #endif
 }
