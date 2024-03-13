@@ -1,6 +1,12 @@
 #ifndef _MAINAPP_H_
 #define _MAINAPP_H_
 
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
     MAINAPP_EOUTPUTSTATE_Idle = 0,
@@ -80,5 +86,9 @@ MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState();
 bool MAINAPP_IsArmed();
 
 double MAINAPP_GetProgress();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

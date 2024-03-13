@@ -1,6 +1,6 @@
 #include "UIMenu.h"
-#include "UIManager.h"
-#include "../MainApp.h"
+#include "UIManager.hpp"
+#include "../MainApp.hpp"
 #include "esp_log.h"
 #include "esp_system.h"
 

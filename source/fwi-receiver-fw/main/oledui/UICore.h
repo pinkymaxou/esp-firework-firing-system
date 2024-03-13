@@ -2,7 +2,11 @@
 #define _UICORE_H_
 
 #include <stdint.h>
-#include "../HardwareGPIO.h"
+#include "../HardwareGPIO.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum
 {
@@ -22,5 +26,9 @@ typedef struct
     fnTick FnTick;
     fnEncoderMove FnEncoderMove;
 } UICORE_SLifeCycle;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

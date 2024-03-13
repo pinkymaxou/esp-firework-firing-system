@@ -15,8 +15,8 @@
 #include "cJSON.h"
 #include "Settings.h"
 #include "main.h"
-#include "HardwareGPIO.h"
-#include "MainApp.h"
+#include "HardwareGPIO.hpp"
+#include "MainApp.hpp"
 #include "HWConfig.h"
 
 #define TAG "webserver"

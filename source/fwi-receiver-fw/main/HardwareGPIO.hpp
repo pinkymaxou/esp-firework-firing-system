@@ -9,6 +9,10 @@
 #include "SSD1306.h"
 #include "HWConfig.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void HARDWAREGPIO_Init();
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed);
@@ -34,5 +38,9 @@ uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex);
 int32_t HARDWAREGPIO_GetEncoderCount();
 
 SSD1306_handle* GPIO_GetSSD1306Handle();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

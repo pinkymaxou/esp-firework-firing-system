@@ -1,7 +1,7 @@
 #include "UITestConn.h"
 #include "assets/BitmapPotato.h"
-#include "UIManager.h"
-#include "MainApp.h"
+#include "UIManager.hpp"
+#include "MainApp.hpp"
 
 static TickType_t m_ttLastChangeTicks = 0;
 

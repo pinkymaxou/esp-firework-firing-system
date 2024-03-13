@@ -1,4 +1,4 @@
-#include "HardwareGPIO.h"
+#include "HardwareGPIO.hpp"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "esp_log.h"
@@ -97,8 +97,9 @@ void HARDWAREGPIO_Init()
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
 
-	const int i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
-    i2c_config_t conf = {0};
+	const i2c_port_t i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
+    i2c_config_t conf;
+    memset(&conf, 0, sizeof(conf));
     conf.mode = I2C_MODE_MASTER;
     conf.sda_io_num = HWCONFIG_I2C_SDA;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
@@ -106,7 +107,6 @@ void HARDWAREGPIO_Init()
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = HWCONFIG_I2C_MASTER_FREQ_HZ;
     i2c_param_config(i2c_master_port, &conf);
-
 	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
 
     #if HWCONFIG_OLED_ISPRESENT != 0
@@ -123,8 +123,8 @@ void HARDWAREGPIO_Init()
     // Prepare and then apply the LEDC PWM timer configuration
     ledc_timer_config_t ledc_timer = {
         .speed_mode       = LEDC_LOW_SPEED_MODE,
-        .timer_num        = LEDC_TIMER_0,
         .duty_resolution  = LEDC_TIMER_12_BIT,
+        .timer_num        = LEDC_TIMER_0,
         .freq_hz          = 100,  // Set output frequency at 100 Hz
         .clk_cfg          = LEDC_AUTO_CLK
     };
@@ -134,11 +134,11 @@ void HARDWAREGPIO_Init()
 
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
+        .gpio_num       = HWCONFIG_MASTERPWR_EN,
         .speed_mode     = LEDC_LOW_SPEED_MODE,
         .channel        = LEDC_CHANNEL_0,
-        .timer_sel      = LEDC_TIMER_0,
         .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = HWCONFIG_MASTERPWR_EN,
+        .timer_sel      = LEDC_TIMER_0,
         .duty           = 0, // Set duty to 0%
         .hpoint         = 0
     };

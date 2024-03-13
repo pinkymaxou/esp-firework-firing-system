@@ -5,8 +5,14 @@
 #include <stddef.h>
 #include "UICore.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
+    UIMANAGER_EMENU_None = -1,
+
     UIMANAGER_EMENU_Home = 0,
     UIMANAGER_EMENU_ArmedReady,
 
@@ -23,5 +29,9 @@ void UIMANAGER_Goto(UIMANAGER_EMENU eMenu);
 void UIMANAGER_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
 
 void UIMANAGER_RunTick();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

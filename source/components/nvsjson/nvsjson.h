@@ -6,6 +6,10 @@
 #include <stddef.h>
 #include "nvs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
     NVSJSON_ESETRET_OK = 0,
@@ -75,7 +79,7 @@ typedef struct
 } NVSJSON_SHandle;
 
 #define NVSJSON_GETVALUESTRING_MAXLEN (100)
-		
+
 #define NVSJSON_INITSTRING_RNG(_szKey, _szDesc, _szDefault, _eFlags) { .szKey = _szKey, .eType = NVSJSON_ETYPE_String,.szDesc = _szDesc, .uConfig = { .sString = { .szDefault = _szDefault, .ptrValidator = NULL } }, .eFlags = _eFlags }
 #define NVSJSON_INITSTRING_VAL(_szKey, _szDesc, _szDefault, _ptrValidateString, _eFlags) { .szKey = _szKey, .eType = NVSJSON_ETYPE_String,.szDesc = _szDesc, .uConfig = { .sString = { .szDefault = _szDefault, .ptrValidator = _ptrValidateString } }, .eFlags = _eFlags }
 
@@ -101,5 +105,8 @@ NVSJSON_ESETRET NVSJSON_SetValueString(NVSJSON_SHandle* pHandle, uint16_t u16Ent
 char* NVSJSON_ExportJSON(NVSJSON_SHandle* pHandle);
 bool NVSJSON_ImportJSON(NVSJSON_SHandle* pHandle, const char* szJSON);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

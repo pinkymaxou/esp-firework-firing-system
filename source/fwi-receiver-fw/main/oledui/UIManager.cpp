@@ -1,4 +1,4 @@
-#include "UIManager.h"
+#include "UIManager.hpp"
 #include "UIHome.h"
 #include "UIArmed.h"
 #include "UISetting.h"
@@ -17,7 +17,7 @@ static const UICORE_SLifeCycle m_sUIHomes[] =
 };
 static_assert(UIMANAGER_EMENU_Count == (sizeof(m_sUIHomes)/sizeof(m_sUIHomes[0])), "Life cycle doesn't fit");
 
-static UIMANAGER_EMENU m_eCurrentMenu = -1;
+static UIMANAGER_EMENU m_eCurrentMenu = UIMANAGER_EMENU_None;
 
 static const UICORE_SLifeCycle* GetMenuLC(UIMANAGER_EMENU eMenu);
 
@@ -32,7 +32,7 @@ void UIMANAGER_Goto(UIMANAGER_EMENU eMenu)
     if (pOldLC != NULL)
     {
         pOldLC->FnExit();
-        m_eCurrentMenu = -1;
+        m_eCurrentMenu = UIMANAGER_EMENU_None;
     }
     m_eCurrentMenu = eMenu;
     pLC->FnEnter();

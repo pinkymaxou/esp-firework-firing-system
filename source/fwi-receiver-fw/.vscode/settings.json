@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "uicore.h": "c",
+        "hardwaregpio.hpp": "c"
+    }
+}

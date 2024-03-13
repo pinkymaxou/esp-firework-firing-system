@@ -4,9 +4,9 @@
 #include "freertos/timers.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "MainApp.h"
+#include "MainApp.hpp"
 #include "HWConfig.h"
-#include "HardwareGPIO.h"
+#include "HardwareGPIO.hpp"
 #include "Settings.h"
 #include "esp_mac.h"
 #include "lwip/err.h"
@@ -16,7 +16,7 @@
 #include "main.h"
 #include "oledui/UICore.h"
 #include "oledui/UIHome.h"
-#include "oledui/UIManager.h"
+#include "oledui/UIManager.hpp"
 
 #define TAG "MainApp"
 
@@ -175,14 +175,14 @@ static bool StartCheckConnections()
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
-        goto ERROR;
+        return false;
     }
 
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot check connection when the system is armed");
         m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
-        goto ERROR;
+        return false;
     }
 
     ESP_LOGI(TAG, "Checking connections ...");
@@ -198,8 +198,6 @@ static bool StartCheckConnections()
 
     assert(xReturned == pdPASS);
     return true;
-    ERROR:
-    return false;
 }
 
 static void CheckConnectionsTask(void* pParam)
@@ -267,14 +265,14 @@ static bool StartFire(MAINAPP_SFire sFire)
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
-        goto ERROR;
+        return false;
     }
 
     if (sFire.u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
         m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
-        goto ERROR;
+        return false;
     }
 
     // If it's in dry-run mode, power shouldn't be present
@@ -283,7 +281,7 @@ static bool StartFire(MAINAPP_SFire sFire)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
         m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
-        goto ERROR;
+        return false;
     }
 
     ESP_LOGI(TAG, "Fire command issued for output index: %"PRIu32, sFire.u32OutputIndex);
@@ -301,8 +299,6 @@ static bool StartFire(MAINAPP_SFire sFire)
         &m_xHandle );           /* Used to pass out the created task's handle. */
     assert(xReturned == pdPASS);
     return true;
-    ERROR:
-    return false;
 }
 
 static void FireTask(void* pParam)
@@ -346,7 +342,7 @@ static bool StartFullOutputCalibrationTask()
     if (m_xHandle != NULL)
     {
         ESP_LOGE(TAG, "Already doing a job");
-        goto ERROR;
+        return false;
     }
 
     // Should't be able to works when the power is present
@@ -354,7 +350,7 @@ static bool StartFullOutputCalibrationTask()
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
         m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
-        goto ERROR;
+        return false;
     }
 
     ESP_LOGI(TAG, "Ouput calibration command issued");
@@ -369,8 +365,6 @@ static bool StartFullOutputCalibrationTask()
         &m_xHandle );           /* Used to pass out the created task's handle. */
     assert(xReturned == pdPASS);
     return true;
-    ERROR:
-    return false;
 }
 
 static void FullOutputCalibrationTask(void* pParam)
