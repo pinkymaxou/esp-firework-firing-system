@@ -621,6 +621,12 @@ static const char* GetESPChipId(esp_chip_model_t eChipid)
             return "ESP32-S3";
         case CHIP_ESP32H2:
             return "ESP32-H2";
+        case CHIP_ESP32P4:
+            return "ESP32P4";
+        case CHIP_ESP32C6:
+            return "ESP32C6";
+        case CHIP_POSIX_LINUX:
+            return "POSIX_LINUX";
     }
     return "";
 }
