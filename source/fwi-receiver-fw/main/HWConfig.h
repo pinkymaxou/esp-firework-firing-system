@@ -42,7 +42,7 @@
 #define HWCONFIG_I2C_SCL GPIO_NUM_21
 
 // OLED screen
-#define HWCONFIG_OLED_ISPRESENT (1)
+#define HWCONFIG_OLED_ISPRESENT (0)
 #define HWCONFIG_OLED_I2CADDR (0x3C)
 
 // Relay sensing and power
@@ -50,7 +50,8 @@
 #define HWCONFIG_MASTERPWRSENSE_IN GPIO_NUM_39
 #define HWCONFIG_CONNSENSE_IN GPIO_NUM_37
 
-// User input
+// User input (it interfere with the UART, could be deactivated and use the native USB port instead)
+#define HWCONFIG_ENCODER_ISPRESENT (0)
 #define HWCONFIG_ENCODERA_IN GPIO_NUM_43
 #define HWCONFIG_ENCODERB_IN GPIO_NUM_44
 #define HWCONFIG_ENCODERSW GPIO_NUM_38

@@ -46,6 +46,7 @@ static void DrawScreen()
             u32ConnCount++;
     }
 
+    #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     char szText[64+1];
 
@@ -62,4 +63,5 @@ static void DrawScreen()
         SSD1306_DrawRect(pss1306Handle, 16, 64 - 16, s32Width, 16, true);
     }
     SSD1306_UpdateDisplay(pss1306Handle);
+    #endif
 }

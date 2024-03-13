@@ -1,1 +1,4 @@
 /source/fwi-receiver-fw/build
+source/fwi-receiver-fw/sdkconfig.old
+source/fwi-receiver-fw/dependencies.lock
+source/fwi-receiver-fw/managed_components/espressif__led_strip/.component_hash

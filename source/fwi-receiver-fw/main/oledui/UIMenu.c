@@ -113,6 +113,7 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
 
 static void DrawScreen()
 {
+    #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
     SSD1306_ClearDisplay(pss1306Handle);
 
@@ -130,4 +131,5 @@ static void DrawScreen()
     // Restore ...
     SSD1306_SetTextColor(pss1306Handle, true);
     SSD1306_UpdateDisplay(pss1306Handle);
+    #endif
 }

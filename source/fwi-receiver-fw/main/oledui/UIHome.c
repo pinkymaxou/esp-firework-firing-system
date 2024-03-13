@@ -42,6 +42,7 @@ void UIHOME_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
 
 static void DrawScreen()
 {
+    #if HWCONFIG_OLED_ISPRESENT != 0
     char szText[128+1] = {0,};
     char szSoftAPSSID[32] = {0,};
 
@@ -71,4 +72,5 @@ static void DrawScreen()
     SSD1306_ClearDisplay(pss1306Handle);
     SSD1306_DrawString(pss1306Handle, 0, 0, szText);
     SSD1306_UpdateDisplay(pss1306Handle);
+    #endif
 }
