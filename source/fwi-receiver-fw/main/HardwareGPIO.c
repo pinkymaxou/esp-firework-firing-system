@@ -83,16 +83,6 @@ void HARDWAREGPIO_Init()
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
 
     // User input
-    gpio_reset_pin(HWCONFIG_ENCODERA_IN);
-    gpio_set_direction(HWCONFIG_ENCODERA_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERA_IN);
-    gpio_reset_pin(HWCONFIG_ENCODERB_IN);
-    gpio_set_direction(HWCONFIG_ENCODERB_IN, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERB_IN);
-    gpio_reset_pin(HWCONFIG_ENCODERSW);
-    gpio_set_direction(HWCONFIG_ENCODERSW, GPIO_MODE_INPUT);
-    gpio_pullup_en(HWCONFIG_ENCODERSW);
-
     HARDWAREGPIO_ClearRelayBus();
 
     /* LED strip initialization with the GPIO and pixels number*/
@@ -154,10 +144,12 @@ void HARDWAREGPIO_Init()
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
+    #if HWCONFIG_ENCODER_ISPRESENT != 0
     // Conf A
     gpio_config_t io_confA;
     io_confA.intr_type = GPIO_INTR_ANYEDGE; // Configure interrupt on positive edge
-    io_confA.pin_bit_mask = (1ULL << HWCONFIG_ENCODERA_IN) | (1ULL << HWCONFIG_ENCODERB_IN); // Replace XX with the GPIO pin number
+    // Replace XX with the GPIO pin number
+    io_confA.pin_bit_mask = (1ULL << HWCONFIG_ENCODERA_IN) | (1ULL << HWCONFIG_ENCODERB_IN) | (1ULL << HWCONFIG_ENCODERSW);
     io_confA.mode = GPIO_MODE_INPUT;
     io_confA.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_confA);
@@ -165,6 +157,7 @@ void HARDWAREGPIO_Init()
     gpio_install_isr_service(0);
     gpio_isr_handler_add(HWCONFIG_ENCODERA_IN, gpio_isr_handler, NULL);
     gpio_isr_handler_add(HWCONFIG_ENCODERB_IN, gpio_isr_handler, NULL);
+    #endif
 }
 
 static bool m_lastEncA = false;
