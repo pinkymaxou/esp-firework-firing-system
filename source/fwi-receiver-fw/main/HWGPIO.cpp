@@ -109,7 +109,6 @@ void HWGPIO_Init()
     i2c_param_config(i2c_master_port, &conf);
 	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
 
-    #if HWCONFIG_OLED_ISPRESENT != 0
     static SSD1306_config cfgSSD1306 = SSD1306_CONFIG_DEFAULT_128x64;
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
     SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);

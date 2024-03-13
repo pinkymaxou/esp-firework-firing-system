@@ -33,6 +33,7 @@ void UITestConn::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 
 void UITestConn::DrawScreen()
 {
+    #if HWCONFIG_OLED_ISPRESENT != 0
     // All ignitor slots status
     uint32_t u32ConnCount = 0;
 
