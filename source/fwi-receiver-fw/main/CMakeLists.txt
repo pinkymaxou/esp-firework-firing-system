@@ -1,6 +1,6 @@
 idf_component_register(
     SRCS "Settings.cpp"
-    "webserver/WSWebSocket.c" "webserver/WebServer.c"
+    "webserver/WSWebSocket.cpp" "webserver/WebServer.cpp"
     "HardwareGPIO.cpp" "main.cpp" "MainApp.cpp"
     "assets/EmbeddedFiles.c"
     "assets/BitmapPotato.c"

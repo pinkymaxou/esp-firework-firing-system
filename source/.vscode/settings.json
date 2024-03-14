@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "uimanager.hpp": "c",
-        "settings.hpp": "c"
+        "settings.hpp": "c",
+        "wswebsocket.hpp": "c"
     }
 }

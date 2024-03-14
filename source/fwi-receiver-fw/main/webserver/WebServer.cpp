@@ -1,5 +1,5 @@
-#include "webserver.h"
-#include "WSWebSocket.h"
+#include "WebServer.hpp"
+#include "WSWebSocket.hpp"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_app_format.h"
@@ -66,7 +66,7 @@ static const httpd_uri_t m_sHttpUI = {
     .handler   = file_get_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = ""
+    .user_ctx  = nullptr
 };
 
 static const httpd_uri_t m_sHttpGetAPI = {
@@ -75,7 +75,7 @@ static const httpd_uri_t m_sHttpGetAPI = {
     .handler   = api_get_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = ""
+    .user_ctx  = nullptr
 };
 
 static const httpd_uri_t m_sHttpPostAPI = {
@@ -84,7 +84,7 @@ static const httpd_uri_t m_sHttpPostAPI = {
     .handler   = api_post_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = ""
+    .user_ctx  = nullptr
 };
 static const httpd_uri_t m_sHttpActionPost = {
     .uri       = "/action/*",
@@ -92,7 +92,7 @@ static const httpd_uri_t m_sHttpActionPost = {
     .handler   = file_post_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = ""
+    .user_ctx  = nullptr
 };
 
 static const httpd_uri_t m_sHttpOTAUploadPost = {
@@ -101,15 +101,15 @@ static const httpd_uri_t m_sHttpOTAUploadPost = {
     .handler   = file_otauploadpost_handler,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = ""
+    .user_ctx  = nullptr
 };
 
 static const httpd_uri_t m_sHttpWebServer = {
-        .uri        = "/ws",
-        .method     = HTTP_GET,
-        .handler    = WSWEBSOCKET_Handler,
-        .user_ctx   = NULL,
-        .is_websocket = true
+    .uri        = "/ws",
+    .method     = HTTP_GET,
+    .handler    = WSWEBSOCKET_Handler,
+    .user_ctx   = NULL,
+    .is_websocket = true
 };
 
 void WEBSERVER_Init()
@@ -193,7 +193,7 @@ static esp_err_t file_post_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "file_post_handler, url: %s", req->uri);
 
     cJSON* root = NULL;
-
+    {
     int n = 0;
     while(1)
     {
@@ -239,6 +239,7 @@ static esp_err_t file_post_handler(httpd_req_t *req)
     if (root != NULL)
         cJSON_Delete(root);
     return ESP_OK;
+    }
     ERROR:
     ESP_LOGE(TAG, "Invalid request");
     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Bad request");
@@ -250,7 +251,7 @@ static esp_err_t file_post_handler(httpd_req_t *req)
 static esp_err_t api_get_handler(httpd_req_t *req)
 {
     char* pExportJSON = NULL;
-
+    {
     if (strcmp(req->uri, API_GETSETTINGSJSON_URI) == 0)
     {
         pExportJSON = NVSJSON_ExportJSON(&g_sSettingHandle);
@@ -286,6 +287,7 @@ static esp_err_t api_get_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "api_get_handler, url: %s", req->uri);
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Unknown request");
     }
+    }
     END:
     if (pExportJSON != NULL)
         free(pExportJSON);
@@ -298,6 +300,7 @@ static esp_err_t api_get_handler(httpd_req_t *req)
 static esp_err_t api_post_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "api_post_handler, url: %s", req->uri);
+
     if (strcmp(req->uri, API_POSTSETTINGSJSON_URI) == 0)
     {
         int n = httpd_req_recv(req, (char*)m_u8Buffers, HTTPSERVER_BUFFERSIZE);
@@ -322,10 +325,9 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 static esp_err_t file_otauploadpost_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "file_otauploadpost_handler / uri: %s", req->uri);
-
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
-
+    {
     if (configured != running)
     {
         ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08x, but running from offset 0x%08x",
@@ -397,6 +399,7 @@ static esp_err_t file_otauploadpost_handler(httpd_req_t *req)
     esp_restart();
 
     httpd_resp_set_hdr(req, "Connection", "close");
+    }
     return ESP_OK;
 ERROR:
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -456,7 +459,7 @@ static const EF_SFile* GetFile(const char* strFilename)
 static char* GetSysInfo()
 {
     cJSON* pRoot = NULL;
-
+    {
     char buff[100];
     pRoot = cJSON_CreateObject();
     if (pRoot == NULL)
@@ -557,6 +560,7 @@ static char* GetSysInfo()
     char* pStr =  cJSON_PrintUnformatted(pRoot);
     cJSON_Delete(pRoot);
     return pStr;
+    }
     ERROR:
     cJSON_Delete(pRoot);
     return NULL;
@@ -565,6 +569,7 @@ static char* GetSysInfo()
 static char* GetStatusJSON()
 {
     cJSON* pRoot = NULL;
+    {
     pRoot = cJSON_CreateObject();
     if (pRoot == NULL)
         goto ERROR;
@@ -594,6 +599,7 @@ static char* GetStatusJSON()
     char* pStr =  cJSON_PrintUnformatted(pRoot);
     cJSON_Delete(pRoot);
     return pStr;
+    }
     ERROR:
     cJSON_Delete(pRoot);
     return NULL;

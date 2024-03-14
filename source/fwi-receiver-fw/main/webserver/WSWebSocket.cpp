@@ -1,4 +1,4 @@
-#include "WSWebSocket.h"
+#include "WSWebSocket.hpp"
 #include "esp_log.h"
 
 #define TAG "WSWebSocket"
@@ -19,7 +19,7 @@ struct async_resp_arg {
 static void ws_async_send(void *arg)
 {
     static const char * data = "Async data";
-    struct async_resp_arg *resp_arg = arg;
+    struct async_resp_arg* resp_arg = (struct async_resp_arg*)arg;
     httpd_handle_t hd = resp_arg->hd;
     int fd = resp_arg->fd;
     httpd_ws_frame_t ws_pkt;
@@ -34,7 +34,7 @@ static void ws_async_send(void *arg)
 
 static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
 {
-    struct async_resp_arg *resp_arg = malloc(sizeof(struct async_resp_arg));
+    struct async_resp_arg *resp_arg = (struct async_resp_arg*)malloc(sizeof(struct async_resp_arg));
     resp_arg->hd = req->handle;
     resp_arg->fd = httpd_req_to_sockfd(req);
     return httpd_queue_work(handle, ws_async_send, resp_arg);
