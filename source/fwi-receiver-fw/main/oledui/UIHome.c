@@ -1,5 +1,5 @@
 #include "UIHome.h"
-#include "../main.h"
+#include "../main.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "uimanager.hpp": "c",
+        "settings.hpp": "c"
+    }
+}

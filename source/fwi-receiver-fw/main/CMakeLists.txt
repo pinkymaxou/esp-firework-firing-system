@@ -1,7 +1,7 @@
 idf_component_register(
-    SRCS "Settings.c"
+    SRCS "Settings.cpp"
     "webserver/WSWebSocket.c" "webserver/WebServer.c"
-    "HardwareGPIO.cpp" "main.c" "MainApp.cpp"
+    "HardwareGPIO.cpp" "main.cpp" "MainApp.cpp"
     "assets/EmbeddedFiles.c"
     "assets/BitmapPotato.c"
     "oledui/UIMenu.c" "oledui/UIHome.c" "oledui/UIArmed.c" "oledui/UIErrorPleaseDisarm.c" "oledui/UISetting.c" "oledui/UIManager.cpp" "oledui/UITestConn.c"

@@ -1,7 +1,7 @@
 #include <inttypes.h>
 #include "UISetting.h"
 #include "UIManager.hpp"
-#include "../Settings.h"
+#include "../Settings.hpp"
 
 typedef enum
 {

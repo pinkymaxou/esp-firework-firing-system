@@ -2,7 +2,7 @@
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "esp_log.h"
-#include "Settings.h"
+#include "Settings.hpp"
 #include "assets/BitmapPotato.h"
 #include "led_strip.h"
 #include <assert.h>
