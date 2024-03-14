@@ -1,7 +1,7 @@
 #ifndef _UIERRORPLEASEDISARM_H_
 #define _UIERRORPLEASEDISARM_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

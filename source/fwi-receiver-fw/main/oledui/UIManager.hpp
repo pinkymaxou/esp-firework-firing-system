@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

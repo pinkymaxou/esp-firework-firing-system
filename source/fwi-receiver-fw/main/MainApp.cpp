@@ -14,8 +14,8 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.hpp"
-#include "oledui/UICore.h"
-#include "oledui/UIHome.h"
+#include "oledui/UICore.hpp"
+#include "oledui/UIHome.hpp"
 #include "oledui/UIManager.hpp"
 
 #define TAG "MainApp"

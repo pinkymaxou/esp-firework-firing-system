@@ -1,4 +1,4 @@
-#include "UIArmed.h"
+#include "UIArmed.hpp"
 #include "assets/BitmapPotato.h"
 
 static TickType_t m_ttLastChangeTicks = 0;

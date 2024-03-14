@@ -1,7 +1,7 @@
 #ifndef _UIARMED_H_
 #define _UIARMED_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

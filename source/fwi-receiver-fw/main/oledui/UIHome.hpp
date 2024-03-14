@@ -1,7 +1,7 @@
 #ifndef _UIHOME_H_
 #define _UIHOME_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

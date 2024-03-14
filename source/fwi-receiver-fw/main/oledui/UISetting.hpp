@@ -1,7 +1,7 @@
 #ifndef _UISETTING_H_
 #define _UISETTING_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

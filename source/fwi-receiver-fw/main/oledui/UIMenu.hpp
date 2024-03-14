@@ -1,7 +1,7 @@
 #ifndef _UIMENU_H_
 #define _UIMENU_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

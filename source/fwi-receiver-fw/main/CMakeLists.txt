@@ -4,6 +4,6 @@ idf_component_register(
     "HardwareGPIO.cpp" "main.cpp" "MainApp.cpp"
     "assets/EmbeddedFiles.c"
     "assets/BitmapPotato.c"
-    "oledui/UIMenu.c" "oledui/UIHome.c" "oledui/UIArmed.c" "oledui/UIErrorPleaseDisarm.c" "oledui/UISetting.c" "oledui/UIManager.cpp" "oledui/UITestConn.c"
+    "oledui/UIMenu.cpp" "oledui/UIHome.cpp" "oledui/UIArmed.cpp" "oledui/UIErrorPleaseDisarm.cpp" "oledui/UISetting.cpp" "oledui/UIManager.cpp" "oledui/UITestConn.cpp"
     INCLUDE_DIRS "."
     REQUIRES lwip log json esp_common esp_rom esp_hw_support esp_timer esp_app_format nvs_flash esp_wifi driver app_update led_strip esp_http_server nvsjson SSD1306)

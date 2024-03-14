@@ -1,7 +1,7 @@
 #ifndef _UITESTCONN_H_
 #define _UITESTCONN_H_
 
-#include "UICore.h"
+#include "UICore.hpp"
 
 #ifdef __cplusplus
 extern "C" {

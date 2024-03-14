@@ -1,10 +1,10 @@
 #include "UIManager.hpp"
-#include "UIHome.h"
-#include "UIArmed.h"
-#include "UISetting.h"
-#include "UIErrorPleaseDisarm.h"
-#include "UIMenu.h"
-#include "UITestConn.h"
+#include "UIHome.hpp"
+#include "UIArmed.hpp"
+#include "UISetting.hpp"
+#include "UIErrorPleaseDisarm.hpp"
+#include "UIMenu.hpp"
+#include "UITestConn.hpp"
 
 static const UICORE_SLifeCycle m_sUIHomes[] =
 {
