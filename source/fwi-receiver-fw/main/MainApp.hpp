@@ -37,29 +37,29 @@ class MainApp
         DisarmedMasterSwitchOff = 12,
     };
 
-    typedef enum
+    enum class ECmd
     {
-        MAINAPP_ECMD_None = 0,
-        MAINAPP_ECMD_Fire,
-        MAINAPP_ECMD_CheckConnections,
-        MAINAPP_ECMD_OutputCalib,
-    } MAINAPP_ECMD;
+        None = 0,
+        Fire,
+        CheckConnections,
+        OutputCalib,
+    };
 
-    typedef struct
+    struct SFire
     {
         uint32_t u32OutputIndex;
-    } MAINAPP_SFire;
+    };
 
-    typedef union
+    union UArg
     {
-        MAINAPP_SFire sFire;
-    } MAINAPP_UArg;
+        SFire sFire;
+    };
 
-    typedef struct
+    struct SCmd
     {
-        MAINAPP_ECMD eCmd;
-        MAINAPP_UArg uArg;
-    } MAINAPP_SCmd;
+        MainApp::ECmd eCmd;
+        UArg uArg;
+    } ;
 
     struct SRelay
     {
@@ -76,7 +76,7 @@ class MainApp
         bool bIsArmed;
         // TickType_t ttArmedTicks;
 
-        MainApp::EGeneralState eGeneralState;
+        EGeneralState eGeneralState;
         double dProgressOfOne;
     } SState;
 
@@ -108,7 +108,7 @@ class MainApp
     bool StartCheckConnections();
     static void CheckConnectionsTask(void* pParam);
 
-    bool StartFire(MAINAPP_SFire sFire);
+    bool StartFire(MainApp::SFire sFire);
     static void FireTask(void* pParam);
 
     bool StartFullOutputCalibrationTask();
@@ -123,7 +123,7 @@ class MainApp
     SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
 
     // Input commands
-    MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
+    SCmd m_sCmd = { .eCmd = ECmd::None };
 
     // Semaphore
     StaticSemaphore_t m_xSemaphoreCreateMutex;

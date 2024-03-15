@@ -57,30 +57,30 @@ void MainApp::Run()
     }
 
     // Force reset ...
-    m_sCmd.eCmd = MAINAPP_ECMD_None;
+    m_sCmd.eCmd = ECmd::None;
     UIMANAGER_Goto(UIMANAGER_EMENU_Home);
 
     while (true)
     {
         xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-        MAINAPP_SCmd sCmd = m_sCmd;
-        m_sCmd.eCmd = MAINAPP_ECMD_None;
+        SCmd sCmd = m_sCmd;
+        m_sCmd.eCmd = ECmd::None;
         xSemaphoreGive(m_xSemaphoreHandle);
 
         // Command from another thread
         switch (sCmd.eCmd)
         {
-            case MAINAPP_ECMD_CheckConnections:
+            case ECmd::CheckConnections:
                 // Cannot check connection while armed
                 StartCheckConnections();
                 break;
-            case MAINAPP_ECMD_OutputCalib:
+            case ECmd::OutputCalib:
                 StartFullOutputCalibrationTask();
                 break;
-            case MAINAPP_ECMD_Fire:
+            case ECmd::Fire:
                 StartFire(sCmd.uArg.sFire);
                 break;
-            case MAINAPP_ECMD_None:
+            case ECmd::None:
                 break;
             default:
                 break;
@@ -93,7 +93,7 @@ void MainApp::Run()
         {
             m_sState.bIsArmed = true;
             ESP_LOGI(TAG, "Master switch is armed");
-            m_sState.eGeneralState = MainApp::EGeneralState::Armed;
+            m_sState.eGeneralState = EGeneralState::Armed;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
         }
@@ -101,7 +101,7 @@ void MainApp::Run()
         {
             m_sState.bIsArmed = false;
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
-            m_sState.eGeneralState = MainApp::EGeneralState::DisarmedMasterSwitchOff;
+            m_sState.eGeneralState = EGeneralState::DisarmedMasterSwitchOff;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_Home);
         }
@@ -222,7 +222,7 @@ void MainApp::CheckConnectionsTask(void* pParam)
     vTaskDelete(NULL);
 }
 
-bool MainApp::StartFire(MAINAPP_SFire sFire)
+bool MainApp::StartFire(MainApp::SFire sFire)
 {
     if (m_xHandle != NULL)
     {
@@ -248,7 +248,7 @@ bool MainApp::StartFire(MAINAPP_SFire sFire)
 
     ESP_LOGI(TAG, "Fire command issued for output index: %"PRIu32, sFire.u32OutputIndex);
 
-    MAINAPP_SFire* pCopyFire = (MAINAPP_SFire*)malloc(sizeof(MAINAPP_SFire));
+    MainApp::SFire* pCopyFire = (MainApp::SFire*)malloc(sizeof(MainApp::SFire));
     *pCopyFire = sFire;
 
     /* Create the task, storing the handle. */
@@ -267,7 +267,7 @@ void MainApp::FireTask(void* pParam)
 {
     MainApp* pMainApp = (MainApp*)&g_app;
 
-    const MAINAPP_SFire* pFireParam = (const MAINAPP_SFire*)pParam;
+    const MainApp::SFire* pFireParam = (const MainApp::SFire*)pParam;
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -389,7 +389,7 @@ void MainApp::FullOutputCalibrationTask(void* pParam)
 void MainApp::ExecCheckConnections()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_CheckConnections };
+    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::CheckConnections };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
@@ -397,7 +397,7 @@ void MainApp::ExecCheckConnections()
 void MainApp::ExecFullOutputCalibration()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_OutputCalib };
+    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::OutputCalib };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
@@ -405,7 +405,7 @@ void MainApp::ExecFullOutputCalibration()
 void MainApp::ExecFire(uint32_t u32OutputIndex)
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Fire, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
+    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::Fire, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
     m_sCmd = sCmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
