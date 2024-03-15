@@ -30,6 +30,7 @@ static NVSJSON_SConfig m_sConfig = { .szPartitionName = "NVS", .pSettingEntries 
 void SETTINGS_Init()
 {
     NVSJSON_Init(&g_sSettingHandle, &m_sConfig);
+    NVSJSON_Load(&g_sSettingHandle);
 }
 
 static bool ValidateWifiPassword(const NVSJSON_SSettingEntry* pSettingEntry, const char* szValue)

@@ -57,6 +57,7 @@ void MainApp::Run()
     }
 
     // Force reset ...
+    ESP_LOGI(TAG, "Going to home");
     m_sCmd.eCmd = ECmd::None;
     g_uiMgr.Goto(UIManager::EMenu::Home);
 

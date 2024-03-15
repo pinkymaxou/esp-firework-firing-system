@@ -296,8 +296,10 @@ void app_main(void)
     free(szAllTask);
 
     // Just give sometime to display the logo
+    ESP_LOGI(TAG, "Showing logo");
     vTaskDelay(pdMS_TO_TICKS(500));
     // Lock forever
+    ESP_LOGI(TAG, "Run");
     g_app.Run();
 }
 
