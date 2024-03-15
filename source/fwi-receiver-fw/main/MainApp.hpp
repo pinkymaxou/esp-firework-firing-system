@@ -2,10 +2,10 @@
 #define _MAINAPP_H_
 
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "freertos/timers.h"
+#include "HWConfig.h"
 
 typedef enum
 {
@@ -41,54 +41,97 @@ typedef enum
     MAINAPP_ECMD_OutputCalib,
 } MAINAPP_ECMD;
 
-typedef struct
+class MainApp
 {
-    uint32_t u32OutputIndex;
-} MAINAPP_SFire;
+    public:
+    typedef struct
+    {
+        uint32_t u32OutputIndex;
+    } MAINAPP_SFire;
 
-typedef union
-{
-    MAINAPP_SFire sFire;
-} MAINAPP_UArg;
+    typedef union
+    {
+        MAINAPP_SFire sFire;
+    } MAINAPP_UArg;
 
-typedef struct MainApp
-{
-    MAINAPP_ECMD eCmd;
-    MAINAPP_UArg uArg;
-} MAINAPP_SCmd;
+    typedef struct
+    {
+        MAINAPP_ECMD eCmd;
+        MAINAPP_UArg uArg;
+    } MAINAPP_SCmd;
 
-typedef struct
-{
-    uint32_t u32Index;
-    // Status
-    bool isConnected;
-    bool isFired;
+    struct SRelay
+    {
+        uint32_t u32Index;
+        // Status
+        bool isConnected;
+        bool isFired;
 
-    bool isEN;
-} MAINAPP_SRelay;
+        bool isEN;
+    };
 
-void MAINAPP_Init();
+    typedef struct
+    {
+        bool bIsArmed;
+        // TickType_t ttArmedTicks;
 
-void MAINAPP_Run();
+        MAINAPP_EGENERALSTATE eGeneralState;
+        double dProgressOfOne;
+    } SState;
 
-void MAINAPP_ExecFire(uint32_t u32OutputIndex);
+    MainApp() = default;
 
-void MAINAPP_ExecCheckConnections();
+    void Init();
 
-void MAINAPP_ExecFullOutputCalibration();
+    void Run();
 
-MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex);
+    void ExecFire(uint32_t u32OutputIndex);
 
-MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay);
+    void ExecCheckConnections();
 
-MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState();
+    void ExecFullOutputCalibration();
 
-bool MAINAPP_IsArmed();
+    SRelay GetRelayState(uint32_t u32OutputIndex);
 
-double MAINAPP_GetProgress();
+    MAINAPP_EOUTPUTSTATE GetOutputState(const SRelay* pSRelay);
 
-#ifdef __cplusplus
-}
-#endif
+    MAINAPP_EGENERALSTATE GetGeneralState();
+
+    bool IsArmed();
+
+    double GetProgress();
+
+    private:
+
+    // Firing related
+    bool StartCheckConnections();
+    static void CheckConnectionsTask(void* pParam);
+
+    bool StartFire(MAINAPP_SFire sFire);
+    static void FireTask(void* pParam);
+
+    bool StartFullOutputCalibrationTask();
+    static void FullOutputCalibrationTask(void* pParam);
+
+    void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
+
+    void CheckUserInput();
+
+    private:
+    SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
+    SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
+
+    // Input commands
+    MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
+
+    // Semaphore
+    StaticSemaphore_t m_xSemaphoreCreateMutex;
+    SemaphoreHandle_t m_xSemaphoreHandle;
+
+    // Launching related tasks
+    TaskHandle_t m_xHandle = NULL;
+};
+
+extern MainApp g_app;
 
 #endif

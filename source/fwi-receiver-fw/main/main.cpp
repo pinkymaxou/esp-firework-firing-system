@@ -288,7 +288,7 @@ void app_main(void)
     ESP_LOGI(TAG, "WEBSERVER_Init");
     WEBSERVER_Init();
 
-    MAINAPP_Init();
+    g_app.Init();
 
     char* szAllTask = (char*)malloc(4096);
     vTaskList(szAllTask);
@@ -298,7 +298,7 @@ void app_main(void)
     // Just give sometime to display the logo
     vTaskDelay(pdMS_TO_TICKS(500));
     // Lock forever
-    MAINAPP_Run();
+    g_app.Run();
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)

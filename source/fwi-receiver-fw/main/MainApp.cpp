@@ -1,11 +1,7 @@
 #include <stdbool.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/timers.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "MainApp.hpp"
-#include "HWConfig.h"
 #include "HardwareGPIO.hpp"
 #include "Settings.hpp"
 #include "esp_mac.h"
@@ -20,47 +16,11 @@
 
 #define TAG "MainApp"
 
-typedef struct
-{
-    bool bIsArmed;
-    // TickType_t ttArmedTicks;
-
-    MAINAPP_EGENERALSTATE eGeneralState;
-    double dProgressOfOne;
-} SState;
-
 #define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
 
-static MAINAPP_SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-static SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
+MainApp g_app;
 
-// static int32_t m_s32AutodisarmTimeoutMin = 0;
-
-// Input commands
-static MAINAPP_SCmd m_sCmd = { .eCmd = MAINAPP_ECMD_None };
-
-// Semaphore
-static StaticSemaphore_t m_xSemaphoreCreateMutex;
-static SemaphoreHandle_t m_xSemaphoreHandle;
-
-// Launching related tasks
-static TaskHandle_t m_xHandle = NULL;
-
-// Firing related
-static bool StartCheckConnections();
-static void CheckConnectionsTask(void* pParam);
-
-static bool StartFire(MAINAPP_SFire sFire);
-static void FireTask(void* pParam);
-
-static bool StartFullOutputCalibrationTask();
-static void FullOutputCalibrationTask(void* pParam);
-
-static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
-
-static void CheckUserInput();
-
-void MAINAPP_Init()
+void MainApp::Init()
 {
     m_xSemaphoreHandle = xSemaphoreCreateMutexStatic(&m_xSemaphoreCreateMutex);
     configASSERT( m_xSemaphoreHandle );
@@ -70,7 +30,7 @@ void MAINAPP_Init()
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+        MainApp::SRelay* pSRelay = &m_sOutputs[i];
         pSRelay->u32Index = i;
         pSRelay->isConnected = false;
         pSRelay->isFired = false;
@@ -78,7 +38,7 @@ void MAINAPP_Init()
     }
 }
 
-void MAINAPP_Run()
+void MainApp::Run()
 {
     bool bSanityOn = false;
     TickType_t ttSanityTicks = 0;
@@ -170,7 +130,7 @@ void MAINAPP_Run()
     }
 }
 
-static bool StartCheckConnections()
+bool MainApp::StartCheckConnections()
 {
     if (m_xHandle != NULL)
     {
@@ -192,7 +152,7 @@ static bool StartCheckConnections()
         CheckConnectionsTask,   /* Function that implements the task. */
         "CheckConnections",     /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
-        ( void * )NULL,           /* Parameter passed into the task. */
+        ( void * )this,           /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
 
@@ -200,10 +160,12 @@ static bool StartCheckConnections()
     return true;
 }
 
-static void CheckConnectionsTask(void* pParam)
+void MainApp::CheckConnectionsTask(void* pParam)
 {
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
-    m_sState.dProgressOfOne = 0.0d;
+    MainApp* pMainApp = (MainApp*)pParam;
+
+    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+    pMainApp->m_sState.dProgressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -216,7 +178,7 @@ static void CheckConnectionsTask(void* pParam)
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+        MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[i];
 
         const uint32_t u32AreaIndex = HARDWAREGPIO_GetRelayArea(i);
 
@@ -246,21 +208,21 @@ static void CheckConnectionsTask(void* pParam)
             u32LastAreaIndex = u32AreaIndex;
         }
 
-        m_sState.dProgressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
+        pMainApp->m_sState.dProgressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
     }
 
     ESP_LOGI(TAG, "Check connection completed");
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
+    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    m_sState.dProgressOfOne = 1.0d;
+    pMainApp->m_sState.dProgressOfOne = 1.0d;
 
-    m_xHandle = NULL;
+    pMainApp->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
-static bool StartFire(MAINAPP_SFire sFire)
+bool MainApp::StartFire(MAINAPP_SFire sFire)
 {
     if (m_xHandle != NULL)
     {
@@ -301,17 +263,19 @@ static bool StartFire(MAINAPP_SFire sFire)
     return true;
 }
 
-static void FireTask(void* pParam)
+void MainApp::FireTask(void* pParam)
 {
+    MainApp* pMainApp = (MainApp*)&g_app;
+
     const MAINAPP_SFire* pFireParam = (const MAINAPP_SFire*)pParam;
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
+    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
 
     ESP_LOGI(TAG, "Firing in progress: %"PRIu32, u32OutputIndex);
 
-    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+    MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[u32OutputIndex];
 
     pSRelay->isEN = true;
 
@@ -327,17 +291,17 @@ static void FireTask(void* pParam)
     pSRelay->isEN = false;
     pSRelay->isFired = true;
 
-    m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
+    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
     free((void*)pFireParam);
-    m_xHandle = NULL;
+    pMainApp->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
-static bool StartFullOutputCalibrationTask()
+bool MainApp::StartFullOutputCalibrationTask()
 {
     if (m_xHandle != NULL)
     {
@@ -360,15 +324,17 @@ static bool StartFullOutputCalibrationTask()
         FullOutputCalibrationTask,/* Function that implements the task. */
         "OutputCalibration",    /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
-        ( void * )NULL,    /* Parameter passed into the task. */
+        ( void * )this,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
     assert(xReturned == pdPASS);
     return true;
 }
 
-static void FullOutputCalibrationTask(void* pParam)
+void MainApp::FullOutputCalibrationTask(void* pParam)
 {
+    MainApp* pMainApp = (MainApp*)pParam;
+
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -378,7 +344,7 @@ static void FullOutputCalibrationTask(void* pParam)
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MAINAPP_SRelay* pSRelay = &m_sOutputs[i];
+        MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[i];
 
         HARDWAREGPIO_WriteSingleRelay(pSRelay->u32Index, true);
         // Ensure the jumper is not there yet
@@ -416,11 +382,11 @@ static void FullOutputCalibrationTask(void* pParam)
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
-    m_xHandle = NULL;
+    pMainApp->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
-void MAINAPP_ExecCheckConnections()
+void MainApp::ExecCheckConnections()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
     const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_CheckConnections };
@@ -428,7 +394,7 @@ void MAINAPP_ExecCheckConnections()
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
-void MAINAPP_ExecFullOutputCalibration()
+void MainApp::ExecFullOutputCalibration()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
     const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_OutputCalib };
@@ -436,7 +402,7 @@ void MAINAPP_ExecFullOutputCalibration()
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
-void MAINAPP_ExecFire(uint32_t u32OutputIndex)
+void MainApp::ExecFire(uint32_t u32OutputIndex)
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
     const MAINAPP_SCmd sCmd = { .eCmd = MAINAPP_ECMD_Fire, .uArg = { .sFire = { .u32OutputIndex = u32OutputIndex } } };
@@ -444,11 +410,11 @@ void MAINAPP_ExecFire(uint32_t u32OutputIndex)
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
-static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
+void MainApp::UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
-    MAINAPP_SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
+    MainApp::SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
-    MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(pSRelay);
+    MAINAPP_EOUTPUTSTATE eOutputState = GetOutputState(pSRelay);
     if (eOutputState == MAINAPP_EOUTPUTSTATE_Enabled)
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
     else if (eOutputState == MAINAPP_EOUTPUTSTATE_Fired) // White for fired
@@ -462,7 +428,7 @@ static void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
         HARDWAREGPIO_RefreshLEDStrip();
 }
 
-static void CheckUserInput()
+void MainApp::CheckUserInput()
 {
     // Encoder move
     static TickType_t ttEncoderSwitchTicks = 0;
@@ -485,12 +451,12 @@ static void CheckUserInput()
         UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
 }
 
-MAINAPP_SRelay MAINAPP_GetRelayState(uint32_t u32OutputIndex)
+MainApp::SRelay MainApp::GetRelayState(uint32_t u32OutputIndex)
 {
     return m_sOutputs[u32OutputIndex];
 }
 
-MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
+MAINAPP_EOUTPUTSTATE MainApp::GetOutputState(const MainApp::SRelay* pSRelay)
 {
     if (pSRelay->isEN)
         return MAINAPP_EOUTPUTSTATE_Enabled;
@@ -501,17 +467,17 @@ MAINAPP_EOUTPUTSTATE MAINAPP_GetOutputState(const MAINAPP_SRelay* pSRelay)
     return MAINAPP_EOUTPUTSTATE_Idle;
 }
 
-bool MAINAPP_IsArmed()
+bool MainApp::IsArmed()
 {
     return m_sState.bIsArmed;
 }
 
-MAINAPP_EGENERALSTATE MAINAPP_GetGeneralState()
+MAINAPP_EGENERALSTATE MainApp::GetGeneralState()
 {
     return m_sState.eGeneralState;
 }
 
-double MAINAPP_GetProgress()
+double MainApp::GetProgress()
 {
     return m_sState.dProgressOfOne;
 }

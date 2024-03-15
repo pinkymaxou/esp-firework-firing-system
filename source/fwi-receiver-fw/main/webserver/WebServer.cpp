@@ -227,10 +227,10 @@ static esp_err_t file_post_handler(httpd_req_t *req)
             goto ERROR;
         }
 
-        MAINAPP_ExecFire(cJsonIndex->valueint);
+        g_app.ExecFire(cJsonIndex->valueint);
     }
     else if (strcmp(req->uri, ACTION_POST_CHECKCONNECTIONS) == 0)
-        MAINAPP_ExecCheckConnections();
+        g_app.ExecCheckConnections();
     else
         goto ERROR;
 
@@ -577,18 +577,18 @@ static char* GetStatusJSON()
     cJSON* pStatusEntry = cJSON_CreateObject();
     static int reqIndex = 0;
     cJSON_AddItemToObject(pStatusEntry, "req", cJSON_CreateNumber(++reqIndex));
-    cJSON_AddItemToObject(pStatusEntry, "is_armed", cJSON_CreateBool(MAINAPP_IsArmed()));
-    cJSON_AddItemToObject(pStatusEntry, "general_state", cJSON_CreateNumber((int)MAINAPP_GetGeneralState()));
+    cJSON_AddItemToObject(pStatusEntry, "is_armed", cJSON_CreateBool(g_app.IsArmed()));
+    cJSON_AddItemToObject(pStatusEntry, "general_state", cJSON_CreateNumber((int)g_app.GetGeneralState()));
     cJSON* pOutputs = cJSON_AddArrayToObject(pStatusEntry, "outputs");
 
     // All ignitor slots status
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MAINAPP_SRelay sRelay = MAINAPP_GetRelayState(i);
+        MainApp::SRelay sRelay = g_app.GetRelayState(i);
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
 
-        const MAINAPP_EOUTPUTSTATE eOutputState = MAINAPP_GetOutputState(&sRelay);
+        const MAINAPP_EOUTPUTSTATE eOutputState = g_app.GetOutputState(&sRelay);
 
         cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber((int)eOutputState));
         cJSON_AddItemToArray(pOutputs, pEntryJSON10);

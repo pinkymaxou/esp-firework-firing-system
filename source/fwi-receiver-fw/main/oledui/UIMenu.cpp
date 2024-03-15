@@ -95,7 +95,7 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
                     UIMANAGER_Goto(UIMANAGER_EMENU_Setting);
                     break;
                 case UIMENU_EMENUITEM_TestConn:
-                    MAINAPP_ExecCheckConnections();
+                    g_app.ExecCheckConnections();
                     UIMANAGER_Goto(UIMANAGER_EMENU_TestConn);
                     break;
                 case UIMENU_EMENUITEM_Reboot:
