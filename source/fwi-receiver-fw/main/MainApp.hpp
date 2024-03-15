@@ -6,6 +6,7 @@
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
 #include "HWConfig.h"
+#include "oledui/UIManager.hpp"
 
 class MainApp
 {

@@ -1,24 +1,13 @@
-#ifndef _UIARMED_H_
-#define _UIARMED_H_
+#pragma once
 
-#include "UICore.hpp"
+#include "UIBase.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class UIArmed : UIBase
+{
+    void OnEnter(void) override;
+    void OnExit(void) override;
 
-void UIARMED_Enter();
+    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
-void UIARMED_Exit();
-
-void UIARMED_Tick();
-
-void UIARMED_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
-
-#define UIARMED_INITLIFECYCLE { .FnEnter = UIARMED_Enter, .FnExit = UIARMED_Exit, .FnTick = UIARMED_Tick, .FnEncoderMove = UIARMED_EncoderMove }
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+    void OnTick(void) override;
+};

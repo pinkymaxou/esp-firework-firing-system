@@ -1,7 +1,7 @@
 #include "UIErrorPleaseDisarm.hpp"
 #include "assets/BitmapPotato.h"
 
-void UIERRORPLEASEDISARM_Enter()
+void UIErrorPleaseDisarm::OnEnter()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
@@ -16,17 +16,17 @@ void UIERRORPLEASEDISARM_Enter()
     #endif
 }
 
-void UIERRORPLEASEDISARM_Exit()
+void UIErrorPleaseDisarm::OnExit()
 {
 
 }
 
-void UIERRORPLEASEDISARM_Tick()
+void UIErrorPleaseDisarm::OnTick()
 {
 
 }
 
-void UIERRORPLEASEDISARM_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UIErrorPleaseDisarm::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
 
 }

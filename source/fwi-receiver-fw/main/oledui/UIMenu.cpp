@@ -36,18 +36,18 @@ static_assert((int)UIMENU_EMENUITEM_Count == ( sizeof(m_sMenuItems)/sizeof(m_sMe
 
 static int32_t m_s32EncoderTicks = 0;
 
-void UIMENU_Enter()
+void UIMenu::OnEnter()
 {
     m_s32MenuItemIndex = 0;
     m_bIsNeedRefresh = true;
 }
 
-void UIMENU_Exit()
+void UIMenu::OnExit()
 {
 
 }
 
-void UIMENU_Tick()
+void UIMenu::OnTick()
 {
     if (m_bIsNeedRefresh)
     {
@@ -56,11 +56,11 @@ void UIMENU_Tick()
     }
 }
 
-void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
     switch (eBtnEvent)
     {
-        case UICORE_EBTNEVENT_EncoderClick:
+        case UIBase::BTEvent::EncoderClick:
         {
             m_s32EncoderTicks += s32ClickCount;
 
@@ -84,19 +84,19 @@ void UIMENU_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
             }
             break;
         }
-        case UICORE_EBTNEVENT_Click:
+        case UIBase::BTEvent::Click:
         {
             switch((UIMENU_EMENUITEM)m_s32MenuItemIndex)
             {
                 case UIMENU_EMENUITEM_Exit:
-                    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+                    g_uiMgr.Goto(UIManager::EMenu::Home);
                     break;
                 case UIMENU_EMENUITEM_Settings:
-                    UIMANAGER_Goto(UIMANAGER_EMENU_Setting);
+                    g_uiMgr.Goto(UIManager::EMenu::Setting);
                     break;
                 case UIMENU_EMENUITEM_TestConn:
                     g_app.ExecCheckConnections();
-                    UIMANAGER_Goto(UIMANAGER_EMENU_TestConn);
+                    g_uiMgr.Goto(UIManager::EMenu::TestConn);
                     break;
                 case UIMENU_EMENUITEM_Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");

@@ -1,24 +1,13 @@
-#ifndef _UISETTING_H_
-#define _UISETTING_H_
+#pragma once
 
-#include "UICore.hpp"
+#include "UIBase.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class UISetting : UIBase
+{
+    void OnEnter(void) override;
+    void OnExit(void) override;
 
-void UISETTING_Enter();
+    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
-void UISETTING_Exit();
-
-void UISETTING_Tick();
-
-void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
-
-#define UISETTING_INITLIFECYCLE { .FnEnter = UISETTING_Enter, .FnExit = UISETTING_Exit, .FnTick = UISETTING_Tick, .FnEncoderMove = UISETTING_EncoderMove }
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+    void OnTick(void) override;
+};

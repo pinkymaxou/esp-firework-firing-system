@@ -1,37 +1,61 @@
-#ifndef _UIMANAGER_H_
-#define _UIMANAGER_H_
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
-#include "UICore.hpp"
+#include "UIBase.hpp"
+#include "UIHome.hpp"
+#include "UIArmed.hpp"
+#include "UISetting.hpp"
+#include "UIErrorPleaseDisarm.hpp"
+#include "UIMenu.hpp"
+#include "UITestConn.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef enum
+class UIManager
 {
-    UIMANAGER_EMENU_None = -1,
+    public:
+    enum class EMenu
+    {
+        None = -1,
 
-    UIMANAGER_EMENU_Home = 0,
-    UIMANAGER_EMENU_ArmedReady,
+        Home = 0,
+        ArmedReady,
 
-    UIMANAGER_EMENU_ErrorPleaseDisarm,
-    UIMANAGER_EMENU_Menu,
-    UIMANAGER_EMENU_Setting,
-    UIMANAGER_EMENU_TestConn,
+        ErrorPleaseDisarm,
+        Menu,
+        Setting,
+        TestConn,
 
-    UIMANAGER_EMENU_Count
-} UIMANAGER_EMENU;
+        Count
+    };
 
-void UIMANAGER_Goto(UIMANAGER_EMENU eMenu);
+    void Goto(EMenu eMenu);
 
-void UIMANAGER_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
+    void EncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount);
 
-void UIMANAGER_RunTick();
+    void RunTick();
 
-#ifdef __cplusplus
-}
-#endif
+    private:
+    UIBase* GetMenuLC(EMenu eMenu);
 
-#endif
+    EMenu m_eCurrentMenu = EMenu::None;
+
+    UIHome m_sHome;
+    UIArmed m_sArmed;
+    UIErrorPleaseDisarm m_sErrorPleaseDisarm;
+    UIMenu m_sMenu;
+    UISetting m_sSetting;
+    UITestConn m_sTestConn;
+
+    UIBase* m_psUIHomes[(int)UIManager::EMenu::Count] =
+    {
+        [(int)UIManager::EMenu::Home] = (UIBase*)&m_sHome,
+        [(int)UIManager::EMenu::ArmedReady] = (UIBase*)&m_sArmed,
+        [(int)UIManager::EMenu::ErrorPleaseDisarm] = (UIBase*)&m_sErrorPleaseDisarm,
+        [(int)UIManager::EMenu::Menu] = (UIBase*)&m_sMenu,
+        [(int)UIManager::EMenu::Setting] = (UIBase*)&m_sSetting,
+        [(int)UIManager::EMenu::TestConn] = (UIBase*)&m_sTestConn,
+    };
+    //static_assert(UIManager::EMenu::Count == (sizeof(m_psUIHomes)/sizeof(m_psUIHomes[0])), "Life cycle doesn't fit");
+
+};
+extern UIManager g_uiMgr;

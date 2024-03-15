@@ -1,24 +1,13 @@
-#ifndef _UITESTCONN_H_
-#define _UITESTCONN_H_
+#pragma once
 
-#include "UICore.hpp"
+#include "UIBase.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class UITestConn : UIBase
+{
+    void OnEnter(void) override;
+    void OnExit(void) override;
 
-void UITESTCONN_Enter();
+    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
-void UITESTCONN_Exit();
-
-void UITESTCONN_Tick();
-
-void UITESTCONN_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
-
-#define UITESTCONN_INITLIFECYCLE { .FnEnter = UITESTCONN_Enter, .FnExit = UITESTCONN_Exit, .FnTick = UITESTCONN_Tick, .FnEncoderMove = UITESTCONN_EncoderMove }
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+    void OnTick(void) override;
+};

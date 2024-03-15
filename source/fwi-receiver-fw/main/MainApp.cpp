@@ -10,7 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.hpp"
-#include "oledui/UICore.hpp"
+#include "oledui/UIBase.hpp"
 #include "oledui/UIHome.hpp"
 #include "oledui/UIManager.hpp"
 
@@ -46,7 +46,7 @@ void MainApp::Run()
     // Wait until it get disarmed before starting the program.
     if (HARDWAREGPIO_ReadMasterPowerSense())
     {
-        UIMANAGER_Goto(UIMANAGER_EMENU_ErrorPleaseDisarm);
+        g_uiMgr.Goto(UIManager::EMenu::ErrorPleaseDisarm);
 
         while(HARDWAREGPIO_ReadMasterPowerSense())
         {
@@ -58,7 +58,7 @@ void MainApp::Run()
 
     // Force reset ...
     m_sCmd.eCmd = ECmd::None;
-    UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+    g_uiMgr.Goto(UIManager::EMenu::Home);
 
     while (true)
     {
@@ -95,7 +95,7 @@ void MainApp::Run()
             ESP_LOGI(TAG, "Master switch is armed");
             m_sState.eGeneralState = EGeneralState::Armed;
 
-            UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
+            g_uiMgr.Goto(UIManager::EMenu::ArmedReady);
         }
         else if (m_sState.bIsArmed && !bIsMasterSwitchON)
         {
@@ -103,7 +103,7 @@ void MainApp::Run()
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
             m_sState.eGeneralState = EGeneralState::DisarmedMasterSwitchOff;
 
-            UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+            g_uiMgr.Goto(UIManager::EMenu::Home);
         }
 
         // Sanity blink ...
@@ -124,7 +124,7 @@ void MainApp::Run()
         CheckUserInput();
 
         // Update LEDs
-        UIMANAGER_RunTick();
+        g_uiMgr.RunTick();
 
         vTaskDelay(1);
     }
@@ -437,7 +437,7 @@ void MainApp::CheckUserInput()
         // 100 ms check maximum ...
         if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
         {
-            UIMANAGER_EncoderMove(UICORE_EBTNEVENT_Click, 0);
+            g_uiMgr.EncoderMove(UIBase::BTEvent::Click, 0);
         }
         ttEncoderSwitchTicks = 0;
     }
@@ -448,7 +448,7 @@ void MainApp::CheckUserInput()
 
     const int32_t s32Count = HARDWAREGPIO_GetEncoderCount();
     if (s32Count != 0)
-        UIMANAGER_EncoderMove(UICORE_EBTNEVENT_EncoderClick, s32Count);
+        g_uiMgr.EncoderMove(UIBase::BTEvent::EncoderClick, s32Count);
 }
 
 MainApp::SRelay MainApp::GetRelayState(uint32_t u32OutputIndex)

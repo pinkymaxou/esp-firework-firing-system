@@ -1,24 +1,13 @@
-#ifndef _UIERRORPLEASEDISARM_H_
-#define _UIERRORPLEASEDISARM_H_
+#pragma once
 
-#include "UICore.hpp"
+#include "UIBase.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class UIErrorPleaseDisarm : UIBase
+{
+    void OnEnter(void) override;
+    void OnExit(void) override;
 
-void UIERRORPLEASEDISARM_Enter();
+    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
-void UIERRORPLEASEDISARM_Exit();
-
-void UIERRORPLEASEDISARM_Tick();
-
-void UIERRORPLEASEDISARM_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount);
-
-#define UIERRORPLEASEDISARM_INITLIFECYCLE { .FnEnter = UIERRORPLEASEDISARM_Enter, .FnExit = UIERRORPLEASEDISARM_Exit, .FnTick = UIERRORPLEASEDISARM_Tick, .FnEncoderMove = UIERRORPLEASEDISARM_EncoderMove }
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+    void OnTick(void) override;
+};

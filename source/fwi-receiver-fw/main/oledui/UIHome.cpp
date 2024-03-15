@@ -12,19 +12,19 @@ static bool m_bIsPublicIP = false;
 
 static void DrawScreen();
 
-void UIHOME_Enter()
+void UIHome::OnEnter()
 {
     m_bIsPublicIP = false;
     m_ttLastChangeTicks = 0;
     DrawScreen();
 }
 
-void UIHOME_Exit()
+void UIHome::OnExit()
 {
 
 }
 
-void UIHOME_Tick()
+void UIHome::OnTick()
 {
     if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(1000) )
     {
@@ -34,10 +34,11 @@ void UIHOME_Tick()
     }
 }
 
-void UIHOME_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UIHome::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
-    if (eBtnEvent == UICORE_EBTNEVENT_Click)
-        UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
+    if (eBtnEvent == UIBase::BTEvent::Click) {
+        g_uiMgr.Goto(UIManager::EMenu::Menu);
+    }
 }
 
 static void DrawScreen()

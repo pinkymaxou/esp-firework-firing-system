@@ -7,17 +7,17 @@ static TickType_t m_ttLastChangeTicks = 0;
 
 static void DrawScreen();
 
-void UITESTCONN_Enter()
+void UITestConn::OnEnter()
 {
     DrawScreen();
 }
 
-void UITESTCONN_Exit()
+void UITestConn::OnExit()
 {
 
 }
 
-void UITESTCONN_Tick()
+void UITestConn::OnTick()
 {
     if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
     {
@@ -26,11 +26,11 @@ void UITESTCONN_Tick()
     }
 }
 
-void UITESTCONN_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UITestConn::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
-    if (eBtnEvent == UICORE_EBTNEVENT_Click)
+    if (eBtnEvent == UIBase::BTEvent::Click)
     {
-        UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
+        g_uiMgr.Goto(UIManager::EMenu::Menu);
     }
 }
 
