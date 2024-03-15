@@ -8,12 +8,12 @@ NVSJSON_SHandle g_sSettingHandle;
 static const NVSJSON_SSettingEntry g_sConfigEntries[SETTINGS_EENTRY_Count] =
 {
     // MIN MAX DEFAULT
-    [SETTINGS_EENTRY_ESPNOW_PMK]   = NVSJSON_INITSTRING_RNG("espn.pmk",    "Primary master key for ESP-NOW", "pmk1234567890123", NVSJSON_EFLAGS_NeedsReboot),
+    [SETTINGS_EENTRY_ESPNOW_PMK]   = NVSJSON_INITSTRING_RNG("espn.pmk",     "Primary master key for ESP-NOW", "pmk1234567890123", NVSJSON_EFLAGS_NeedsReboot),
 
     [SETTINGS_EENTRY_WiFiChannel]  = NVSJSON_INITINT32_RNG("WiFi.Chan",     "Wi-Fi channel, cannot connect to AP with different channel", 3, 1, 11, (NVSJSON_EFLAGS)(NVSJSON_EFLAGS_None | NVSJSON_EFLAGS_NeedsReboot)),
 
     // WiFi Station related
-    [SETTINGS_EENTRY_WAPPass]      = NVSJSON_INITSTRING_VAL("WAP.Pass", "WiFi password [empty, or > 8 characters]", "", ValidateWifiPassword, (NVSJSON_EFLAGS)(NVSJSON_EFLAGS_None | NVSJSON_EFLAGS_NeedsReboot)),
+    [SETTINGS_EENTRY_WAPPass]      = NVSJSON_INITSTRING_VAL("WAP.Pass",     "WiFi password [empty, or > 8 characters]", "", ValidateWifiPassword, (NVSJSON_EFLAGS)(NVSJSON_EFLAGS_None | NVSJSON_EFLAGS_NeedsReboot)),
 
     // WiFi Station related
     [SETTINGS_EENTRY_WSTAIsActive] = NVSJSON_INITINT32_RNG("WSTA.IsActive", "Wifi is active", 0, 0, 1, NVSJSON_EFLAGS_NeedsReboot),

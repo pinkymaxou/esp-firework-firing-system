@@ -56,7 +56,7 @@ typedef union
     } sDouble;
     struct
     {
-       char* szDefault;
+       const char* szDefault;
        PtrValidateString ptrValidator;
     } sString;
 } NVSJSON_UConfig;
