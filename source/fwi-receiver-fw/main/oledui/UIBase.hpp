@@ -18,4 +18,6 @@ class UIBase
     virtual void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) { };
 
     virtual void OnTick(void) { };
+
+    virtual void DrawScreen(void) { };
 };

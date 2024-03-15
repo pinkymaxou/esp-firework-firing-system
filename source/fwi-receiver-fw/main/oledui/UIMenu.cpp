@@ -21,8 +21,6 @@ typedef struct
     const char* szName;
 } UIMENU_SMenu;
 
-static void DrawScreen();
-
 static bool m_bIsNeedRefresh = false;
 static int32_t m_s32MenuItemIndex = 0;
 static const UIMENU_SMenu m_sMenuItems[] =
@@ -111,7 +109,7 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
     }
 }
 
-static void DrawScreen()
+void UIMenu::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();

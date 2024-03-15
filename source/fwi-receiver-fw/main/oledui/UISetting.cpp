@@ -11,8 +11,6 @@ typedef enum
     ESETTING_ITEM_Count
 } ESETTING_ITEM;
 
-static void DrawScreen();
-
 static ESETTING_ITEM m_eSettingItem = ESETTING_ITEM_PWM;
 static int32_t m_s32FiringPWMPercValue = 5;
 static int32_t m_s32FiringHoldTimeMS = 750;
@@ -84,7 +82,7 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
     }
 }
 
-static void DrawScreen()
+void UISetting::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();

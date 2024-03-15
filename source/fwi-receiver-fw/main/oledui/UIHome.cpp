@@ -10,8 +10,6 @@
 static TickType_t m_ttLastChangeTicks = 0;
 static bool m_bIsPublicIP = false;
 
-static void DrawScreen();
-
 void UIHome::OnEnter()
 {
     m_bIsPublicIP = false;
@@ -41,7 +39,7 @@ void UIHome::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
     }
 }
 
-static void DrawScreen()
+void UIHome::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     char szText[128+1] = {0,};

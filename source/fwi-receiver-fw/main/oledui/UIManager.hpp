@@ -39,6 +39,7 @@ class UIManager
 
     EMenu m_eCurrentMenu = EMenu::None;
 
+    // UI
     UIHome m_sHome;
     UIArmed m_sArmed;
     UIErrorPleaseDisarm m_sErrorPleaseDisarm;

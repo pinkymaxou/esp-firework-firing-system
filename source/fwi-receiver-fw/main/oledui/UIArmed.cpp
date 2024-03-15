@@ -4,8 +4,6 @@
 static TickType_t m_ttLastChangeTicks = 0;
 static bool m_bAlernImage = false;
 
-static void DrawScreen();
-
 void UIArmed::OnEnter(void)
 {
     //DrawScreen();
@@ -31,7 +29,7 @@ void UIArmed::OnTick(void)
     }
 }
 
-static void DrawScreen()
+void UIArmed::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();

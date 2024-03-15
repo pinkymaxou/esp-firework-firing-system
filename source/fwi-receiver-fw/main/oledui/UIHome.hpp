@@ -10,4 +10,6 @@ class UIHome : UIBase
     void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
     void OnTick(void) override;
+    
+    void DrawScreen(void) override;
 };

@@ -5,8 +5,6 @@
 
 static TickType_t m_ttLastChangeTicks = 0;
 
-static void DrawScreen();
-
 void UITestConn::OnEnter()
 {
     DrawScreen();
@@ -34,7 +32,7 @@ void UITestConn::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
     }
 }
 
-static void DrawScreen()
+void UITestConn::DrawScreen()
 {
     // All ignitor slots status
     uint32_t u32ConnCount = 0;
