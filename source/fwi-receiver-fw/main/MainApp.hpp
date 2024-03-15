@@ -7,43 +7,44 @@
 #include "freertos/timers.h"
 #include "HWConfig.h"
 
-typedef enum
-{
-    MAINAPP_EOUTPUTSTATE_Idle = 0,
-    MAINAPP_EOUTPUTSTATE_Enabled = 1,
-    MAINAPP_EOUTPUTSTATE_Fired = 2,
-    MAINAPP_EOUTPUTSTATE_Connected = 3,
-} MAINAPP_EOUTPUTSTATE;
-
-typedef enum
-{
-    MAINAPP_EGENERALSTATE_Idle = 0,
-
-    MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError = 1,
-    MAINAPP_EGENERALSTATE_FiringUnknownError = 2,
-    MAINAPP_EGENERALSTATE_Firing = 3,
-    MAINAPP_EGENERALSTATE_FiringOK = 4,
-
-    MAINAPP_EGENERALSTATE_Armed = 7,
-
-    MAINAPP_EGENERALSTATE_CheckingConnection = 8,
-    MAINAPP_EGENERALSTATE_CheckingConnectionOK = 9,
-    MAINAPP_EGENERALSTATE_CheckingConnectionError = 10,
-
-    MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff = 12,
-} MAINAPP_EGENERALSTATE;
-
-typedef enum
-{
-    MAINAPP_ECMD_None = 0,
-    MAINAPP_ECMD_Fire,
-    MAINAPP_ECMD_CheckConnections,
-    MAINAPP_ECMD_OutputCalib,
-} MAINAPP_ECMD;
-
 class MainApp
 {
     public:
+
+    enum class EOutputState
+    {
+        Idle = 0,
+        Enabled = 1,
+        Fired = 2,
+        Connected = 3,
+    };
+
+    enum class EGeneralState
+    {
+        Idle = 0,
+
+        FiringMasterSwitchWrongStateError = 1,
+        FiringUnknownError = 2,
+        Firing = 3,
+        FiringOK = 4,
+
+        Armed = 7,
+
+        CheckingConnection = 8,
+        CheckingConnectionOK = 9,
+        CheckingConnectionError = 10,
+
+        DisarmedMasterSwitchOff = 12,
+    };
+
+    typedef enum
+    {
+        MAINAPP_ECMD_None = 0,
+        MAINAPP_ECMD_Fire,
+        MAINAPP_ECMD_CheckConnections,
+        MAINAPP_ECMD_OutputCalib,
+    } MAINAPP_ECMD;
+
     typedef struct
     {
         uint32_t u32OutputIndex;
@@ -75,7 +76,7 @@ class MainApp
         bool bIsArmed;
         // TickType_t ttArmedTicks;
 
-        MAINAPP_EGENERALSTATE eGeneralState;
+        MainApp::EGeneralState eGeneralState;
         double dProgressOfOne;
     } SState;
 
@@ -93,9 +94,9 @@ class MainApp
 
     SRelay GetRelayState(uint32_t u32OutputIndex);
 
-    MAINAPP_EOUTPUTSTATE GetOutputState(const SRelay* pSRelay);
+    MainApp::EOutputState GetOutputState(const SRelay* pSRelay);
 
-    MAINAPP_EGENERALSTATE GetGeneralState();
+    MainApp::EGeneralState GetGeneralState();
 
     bool IsArmed();
 

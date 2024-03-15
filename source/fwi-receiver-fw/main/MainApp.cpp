@@ -16,7 +16,7 @@
 
 #define TAG "MainApp"
 
-#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MAINAPP_EGENERALSTATE_Idle }
+#define INIT_RELAY(_gpio) { .gpio = _gpio, .isConnected = false, .isFired = false, .eGeneralState = MainApp::Idle }
 
 MainApp g_app;
 
@@ -93,7 +93,7 @@ void MainApp::Run()
         {
             m_sState.bIsArmed = true;
             ESP_LOGI(TAG, "Master switch is armed");
-            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Armed;
+            m_sState.eGeneralState = MainApp::EGeneralState::Armed;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_ArmedReady);
         }
@@ -101,7 +101,7 @@ void MainApp::Run()
         {
             m_sState.bIsArmed = false;
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
-            m_sState.eGeneralState = MAINAPP_EGENERALSTATE_DisarmedMasterSwitchOff;
+            m_sState.eGeneralState = MainApp::EGeneralState::DisarmedMasterSwitchOff;
 
             UIMANAGER_Goto(UIMANAGER_EMENU_Home);
         }
@@ -141,7 +141,7 @@ bool MainApp::StartCheckConnections()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot check connection when the system is armed");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionError;
+        m_sState.eGeneralState = MainApp::EGeneralState::CheckingConnectionError;
         return false;
     }
 
@@ -164,7 +164,7 @@ void MainApp::CheckConnectionsTask(void* pParam)
 {
     MainApp* pMainApp = (MainApp*)pParam;
 
-    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnection;
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::CheckingConnection;
     pMainApp->m_sState.dProgressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
@@ -212,7 +212,7 @@ void MainApp::CheckConnectionsTask(void* pParam)
     }
 
     ESP_LOGI(TAG, "Check connection completed");
-    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_CheckingConnectionOK;
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::CheckingConnectionOK;
     HARDWAREGPIO_ClearRelayBus();
     HARDWAREGPIO_WriteMasterPowerRelay(false);
 
@@ -233,7 +233,7 @@ bool MainApp::StartFire(MAINAPP_SFire sFire)
     if (sFire.u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringUnknownError;
+        m_sState.eGeneralState = MainApp::EGeneralState::FiringUnknownError;
         return false;
     }
 
@@ -242,7 +242,7 @@ bool MainApp::StartFire(MAINAPP_SFire sFire)
     if (!m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        m_sState.eGeneralState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
         return false;
     }
 
@@ -271,7 +271,7 @@ void MainApp::FireTask(void* pParam)
     const uint32_t u32OutputIndex = pFireParam->u32OutputIndex;
 
     HARDWAREGPIO_WriteMasterPowerRelay(false);
-    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_Firing;
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::Firing;
 
     ESP_LOGI(TAG, "Firing in progress: %"PRIu32, u32OutputIndex);
 
@@ -291,7 +291,7 @@ void MainApp::FireTask(void* pParam)
     pSRelay->isEN = false;
     pSRelay->isFired = true;
 
-    pMainApp->m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringOK;
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::FiringOK;
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HARDWAREGPIO_WriteMasterPowerRelay(false);
@@ -313,7 +313,7 @@ bool MainApp::StartFullOutputCalibrationTask()
     if (m_sState.bIsArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.eGeneralState = MAINAPP_EGENERALSTATE_FiringMasterSwitchWrongStateError;
+        m_sState.eGeneralState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
         return false;
     }
 
@@ -414,12 +414,12 @@ void MainApp::UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
     MainApp::SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
 
-    MAINAPP_EOUTPUTSTATE eOutputState = GetOutputState(pSRelay);
-    if (eOutputState == MAINAPP_EOUTPUTSTATE_Enabled)
+    MainApp::EOutputState eOutputState = GetOutputState(pSRelay);
+    if (eOutputState == MainApp::EOutputState::Enabled)
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 0, 200, 0);
-    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Fired) // White for fired
+    else if (eOutputState == MainApp::EOutputState::Fired) // White for fired
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 100, 100, 0);
-    else if (eOutputState == MAINAPP_EOUTPUTSTATE_Connected) // YELLOW for connected
+    else if (eOutputState == MainApp::EOutputState::Connected) // YELLOW for connected
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 200, 200, 0);
     else // minimal white illuminiation
         HARDWAREGPIO_SetOutputRelayStatusColor(u32OutputIndex, 10, 10, 10);
@@ -456,15 +456,15 @@ MainApp::SRelay MainApp::GetRelayState(uint32_t u32OutputIndex)
     return m_sOutputs[u32OutputIndex];
 }
 
-MAINAPP_EOUTPUTSTATE MainApp::GetOutputState(const MainApp::SRelay* pSRelay)
+MainApp::EOutputState MainApp::GetOutputState(const MainApp::SRelay* pSRelay)
 {
     if (pSRelay->isEN)
-        return MAINAPP_EOUTPUTSTATE_Enabled;
+        return MainApp::EOutputState::Enabled;
     if (pSRelay->isFired) // White for fired
-        return MAINAPP_EOUTPUTSTATE_Fired;
+        return MainApp::EOutputState::Fired;
     if (pSRelay->isConnected) // YELLOW for connected
-        return MAINAPP_EOUTPUTSTATE_Connected;
-    return MAINAPP_EOUTPUTSTATE_Idle;
+        return MainApp::EOutputState::Connected;
+    return MainApp::EOutputState::Idle;
 }
 
 bool MainApp::IsArmed()
@@ -472,7 +472,7 @@ bool MainApp::IsArmed()
     return m_sState.bIsArmed;
 }
 
-MAINAPP_EGENERALSTATE MainApp::GetGeneralState()
+MainApp::EGeneralState MainApp::GetGeneralState()
 {
     return m_sState.eGeneralState;
 }

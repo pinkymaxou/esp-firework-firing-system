@@ -588,7 +588,7 @@ static char* GetStatusJSON()
         cJSON* pEntryJSON10 = cJSON_CreateObject();
         cJSON_AddItemToObject(pEntryJSON10, "ix", cJSON_CreateNumber(i));
 
-        const MAINAPP_EOUTPUTSTATE eOutputState = g_app.GetOutputState(&sRelay);
+        const MainApp::EOutputState eOutputState = g_app.GetOutputState(&sRelay);
 
         cJSON_AddItemToObject(pEntryJSON10, "s", cJSON_CreateNumber((int)eOutputState));
         cJSON_AddItemToArray(pOutputs, pEntryJSON10);
