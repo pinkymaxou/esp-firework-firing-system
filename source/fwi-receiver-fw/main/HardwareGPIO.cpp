@@ -195,7 +195,8 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed)
 {
     // Ground driven
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL, isEnabled ? (4095-500) : 4095));
+    const uint32_t u32Value = isEnabled ? (isArmed ? 0 : (4095-500)) : 4095;
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL, u32Value));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL));
 
     if (isArmed)
