@@ -1,30 +1,28 @@
-#include "UIHome.h"
-#include "../main.h"
+#include "UIHome.hpp"
+#include "../main.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "UIManager.h"
+#include "UIManager.hpp"
 
 #define TAG "UIHOME"
 
 static TickType_t m_ttLastChangeTicks = 0;
 static bool m_bIsPublicIP = false;
 
-static void DrawScreen();
-
-void UIHOME_Enter()
+void UIHome::OnEnter()
 {
     m_bIsPublicIP = false;
     m_ttLastChangeTicks = 0;
     DrawScreen();
 }
 
-void UIHOME_Exit()
+void UIHome::OnExit()
 {
 
 }
 
-void UIHOME_Tick()
+void UIHome::OnTick()
 {
     if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(1000) )
     {
@@ -34,13 +32,14 @@ void UIHOME_Tick()
     }
 }
 
-void UIHOME_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UIHome::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
-    if (eBtnEvent == UICORE_EBTNEVENT_Click)
-        UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
+    if (eBtnEvent == UIBase::BTEvent::Click) {
+        g_uiMgr.Goto(UIManager::EMenu::Menu);
+    }
 }
 
-static void DrawScreen()
+void UIHome::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     char szText[128+1] = {0,};
@@ -52,7 +51,6 @@ static void DrawScreen()
     {
         esp_netif_ip_info_t wifiIpSta = {0};
         MAIN_GetWiFiSTAIP(&wifiIpSta);
-
         sprintf(szText, "%s\n"IPSTR,
             szSoftAPSSID,
             IP2STR(&wifiIpSta.ip));
@@ -61,7 +59,6 @@ static void DrawScreen()
     {
         esp_netif_ip_info_t wifiIpAP = {0};
         MAIN_GetWiFiSoftAPIP(&wifiIpAP);
-
         sprintf(szText, "%s\n"IPSTR"\nUser: %"PRId32,
             szSoftAPSSID,
             IP2STR(&wifiIpAP.ip),

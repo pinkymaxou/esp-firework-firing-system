@@ -3,6 +3,10 @@
 
 #include "nvsjson.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
     SETTINGS_EENTRY_ESPNOW_PMK,
@@ -23,5 +27,9 @@ typedef enum
 void SETTINGS_Init();
 
 extern NVSJSON_SHandle g_sSettingHandle;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

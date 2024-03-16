@@ -1,23 +1,21 @@
-#include "UITestConn.h"
+#include "UITestConn.hpp"
 #include "assets/BitmapPotato.h"
-#include "UIManager.h"
-#include "MainApp.h"
+#include "UIManager.hpp"
+#include "MainApp.hpp"
 
 static TickType_t m_ttLastChangeTicks = 0;
 
-static void DrawScreen();
-
-void UITESTCONN_Enter()
+void UITestConn::OnEnter()
 {
     DrawScreen();
 }
 
-void UITESTCONN_Exit()
+void UITestConn::OnExit()
 {
 
 }
 
-void UITESTCONN_Tick()
+void UITestConn::OnTick()
 {
     if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
     {
@@ -26,22 +24,22 @@ void UITESTCONN_Tick()
     }
 }
 
-void UITESTCONN_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UITestConn::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
-    if (eBtnEvent == UICORE_EBTNEVENT_Click)
+    if (eBtnEvent == UIBase::BTEvent::Click)
     {
-        UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
+        g_uiMgr.Goto(UIManager::EMenu::Menu);
     }
 }
 
-static void DrawScreen()
+void UITestConn::DrawScreen()
 {
     // All ignitor slots status
     uint32_t u32ConnCount = 0;
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        const MAINAPP_SRelay sRelay = MAINAPP_GetRelayState(i);
+        const MainApp::SRelay sRelay = g_app.GetRelayState(i);
         if (sRelay.isConnected)
             u32ConnCount++;
     }
@@ -55,7 +53,7 @@ static void DrawScreen()
     SSD1306_DrawString(pss1306Handle, 15, 4, szText);
 
     const int32_t s32Width = 128 - 16*2;
-    const double ofOne = MAINAPP_GetProgress();
+    const double ofOne = g_app.GetProgress();
     if (ofOne > 0.0d && ofOne < 1.0d)
     {
         const int32_t s32BarWidth = (int32_t)(ofOne*s32Width);

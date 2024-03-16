@@ -14,15 +14,15 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "driver/GPIO.h"
-#include "HardwareGPIO.h"
+#include "HardwareGPIO.hpp"
 #include "lwip/apps/netbiosns.h"
 #include "lwip/ip4_addr.h"
 #include "HWConfig.h"
-#include "FWConfig.h"
-#include "webserver/WebServer.h"
-#include "Settings.h"
-#include "MainApp.h"
-#include "main.h"
+#include "FWConfig.hpp"
+#include "webserver/WebServer.hpp"
+#include "Settings.hpp"
+#include "MainApp.hpp"
+#include "main.hpp"
 
 #define TAG "main"
 
@@ -42,9 +42,13 @@ static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int
 static void wifistation_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
-static void example_espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len);
+static void example_espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len);
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len);
+
+extern "C" {
+    void app_main(void);
+}
 
 /* ESPNOW sending or receiving callback function is called in WiFi task.
  * Users should not do lengthy operations from this task. Instead, post
@@ -57,18 +61,18 @@ static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_
     }
 }
 
-static void example_espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len)
+static void example_espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len)
 {
-    if (mac_addr == NULL || data == NULL || len <= 0) {
+    if (esp_now_info->des_addr == NULL || data == NULL || data_len <= 0) {
         ESP_LOGE(TAG, "Receive cb arg error");
         return;
     }
 
     char hexDataString[128+1] = {0};
-    if (len < 64)
-        ToHexString(hexDataString, data, len);
+    if (data_len < 64)
+        ToHexString(hexDataString, data, data_len);
 
-    ESP_LOGI(TAG, "Receiving data: ' %s ', len: %d", (const char*)hexDataString, len);
+    ESP_LOGI(TAG, "Receiving data: ' %s ', len: %d", (const char*)hexDataString, data_len);
 }
 
 static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -186,14 +190,13 @@ static void wifi_init()
 
         wifi_config_t wifi_configSTA = {
             .sta = {
-                .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-
                 .pmf_cfg = {
                     .capable = true,
                     .required = false
                 },
             },
         };
+        wifi_configSTA.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
         size_t staSSIDLength = 32;
         NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WSTASSID, (char*)wifi_configSTA.sta.ssid, &staSSIDLength);
@@ -223,7 +226,7 @@ static esp_err_t espnow_init(void)
     ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)pmks) );
 
     /* Add broadcast peer information to peer list. */
-    esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
+    esp_now_peer_info_t* peer = (esp_now_peer_info_t*)malloc(sizeof(esp_now_peer_info_t));
     if (peer == NULL)
     {
         ESP_LOGE(TAG, "Malloc peer information fail");
@@ -231,7 +234,7 @@ static esp_err_t espnow_init(void)
     }
     memset(peer, 0, sizeof(esp_now_peer_info_t));
     peer->channel = m_u8WiFiChannel;
-    peer->ifidx = ESP_IF_WIFI_AP;
+    peer->ifidx = WIFI_IF_AP;
     peer->encrypt = false;
     memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
     ESP_ERROR_CHECK( esp_now_add_peer(peer) );
@@ -285,7 +288,7 @@ void app_main(void)
     ESP_LOGI(TAG, "WEBSERVER_Init");
     WEBSERVER_Init();
 
-    MAINAPP_Init();
+    g_app.Init();
 
     char* szAllTask = (char*)malloc(4096);
     vTaskList(szAllTask);
@@ -293,9 +296,11 @@ void app_main(void)
     free(szAllTask);
 
     // Just give sometime to display the logo
+    ESP_LOGI(TAG, "Showing logo");
     vTaskDelay(pdMS_TO_TICKS(500));
     // Lock forever
-    MAINAPP_Run();
+    ESP_LOGI(TAG, "Run");
+    g_app.Run();
 }
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)

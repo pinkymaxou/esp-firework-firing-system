@@ -1,7 +1,7 @@
 #include <inttypes.h>
-#include "UISetting.h"
-#include "UIManager.h"
-#include "../Settings.h"
+#include "UISetting.hpp"
+#include "UIManager.hpp"
+#include "../Settings.hpp"
 
 typedef enum
 {
@@ -11,13 +11,11 @@ typedef enum
     ESETTING_ITEM_Count
 } ESETTING_ITEM;
 
-static void DrawScreen();
-
 static ESETTING_ITEM m_eSettingItem = ESETTING_ITEM_PWM;
 static int32_t m_s32FiringPWMPercValue = 5;
 static int32_t m_s32FiringHoldTimeMS = 750;
 
-void UISETTING_Enter()
+void UISetting::OnEnter()
 {
     m_s32FiringPWMPercValue = (int32_t)(NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent) * (int32_t)100);
     m_s32FiringHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
@@ -27,30 +25,30 @@ void UISETTING_Enter()
     DrawScreen();
 }
 
-void UISETTING_Exit()
+void UISetting::OnExit()
 {
     NVSJSON_SetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, (double)m_s32FiringPWMPercValue/100.0d);
     NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS, false, m_s32FiringHoldTimeMS);
     NVSJSON_Save(&g_sSettingHandle);
 }
 
-void UISETTING_Tick()
+void UISetting::OnTick()
 {
 
 }
 
-void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
+void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
 {
     switch(m_eSettingItem)
     {
         case ESETTING_ITEM_PWM:
         {
-            if (eBtnEvent == UICORE_EBTNEVENT_Click)
+            if (eBtnEvent == UIBase::BTEvent::Click)
             {
                 m_eSettingItem = ESETTING_ITEM_HoldTimeMS;
                 DrawScreen();
             }
-            else if (eBtnEvent == UICORE_EBTNEVENT_EncoderClick)
+            else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
             {
                 const int32_t s32Value = m_s32FiringPWMPercValue + s32ClickCount;
                 if (s32Value >= 5 && s32Value <= 100)
@@ -63,9 +61,9 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
         }
         case ESETTING_ITEM_HoldTimeMS:
         {
-            if (eBtnEvent == UICORE_EBTNEVENT_Click)
-                UIMANAGER_Goto(UIMANAGER_EMENU_Menu);
-            else if (eBtnEvent == UICORE_EBTNEVENT_EncoderClick)
+            if (eBtnEvent == UIBase::BTEvent::Click)
+                g_uiMgr.Goto(UIManager::EMenu::Menu);
+            else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
             {
                 const int32_t s32Value = m_s32FiringHoldTimeMS + s32ClickCount*50;
                 if (s32Value >= 50 && s32Value <= 5000)
@@ -78,13 +76,13 @@ void UISETTING_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
         }
         default:
         {
-            UIMANAGER_Goto(UIMANAGER_EMENU_Home);
+            g_uiMgr.Goto(UIManager::EMenu::Home);
             break;
         }
     }
 }
 
-static void DrawScreen()
+void UISetting::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();

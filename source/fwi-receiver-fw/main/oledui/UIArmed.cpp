@@ -1,22 +1,25 @@
-#include "UIArmed.h"
+#include "UIArmed.hpp"
 #include "assets/BitmapPotato.h"
 
 static TickType_t m_ttLastChangeTicks = 0;
 static bool m_bAlernImage = false;
 
-static void DrawScreen();
-
-void UIARMED_Enter()
+void UIArmed::OnEnter(void)
 {
     //DrawScreen();
 }
 
-void UIARMED_Exit()
+void UIArmed::OnExit(void)
 {
 
 }
 
-void UIARMED_Tick()
+void UIArmed::OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount)
+{
+
+}
+
+void UIArmed::OnTick(void)
 {
     if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
     {
@@ -26,12 +29,7 @@ void UIARMED_Tick()
     }
 }
 
-void UIARMED_EncoderMove(UICORE_EBTNEVENT eBtnEvent, int32_t s32ClickCount)
-{
-
-}
-
-static void DrawScreen()
+void UIArmed::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
