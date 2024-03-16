@@ -10,6 +10,10 @@ class UIHome : UIBase
     void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
 
     void OnTick(void) override;
-    
+
     void DrawScreen(void) override;
+
+    private:
+    TickType_t m_ttLastChangeTicks = 0;
+    bool m_bIsPublicIP = false;
 };

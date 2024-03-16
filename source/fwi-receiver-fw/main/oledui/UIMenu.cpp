@@ -6,34 +6,6 @@
 
 #define TAG "UIMenu"
 
-typedef enum
-{
-    UIMENU_EMENUITEM_Exit = 0,
-    UIMENU_EMENUITEM_Settings,
-    UIMENU_EMENUITEM_TestConn,
-    UIMENU_EMENUITEM_Reboot,
-
-    UIMENU_EMENUITEM_Count,
-} UIMENU_EMENUITEM;
-
-typedef struct
-{
-    const char* szName;
-} UIMENU_SMenu;
-
-static bool m_bIsNeedRefresh = false;
-static int32_t m_s32MenuItemIndex = 0;
-static const UIMENU_SMenu m_sMenuItems[] =
-{
-    [UIMENU_EMENUITEM_Exit]         = { .szName = "Exit" },
-    [UIMENU_EMENUITEM_Settings]     = { .szName = "Settings" },
-    [UIMENU_EMENUITEM_TestConn]     = { .szName = "Test conn." },
-    [UIMENU_EMENUITEM_Reboot]       = { .szName = "Reboot" },
-};
-static_assert((int)UIMENU_EMENUITEM_Count == ( sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
-
-static int32_t m_s32EncoderTicks = 0;
-
 void UIMenu::OnEnter()
 {
     m_s32MenuItemIndex = 0;
@@ -73,7 +45,7 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
             }
             else if (m_s32EncoderTicks >= 2)
             {
-                if (m_s32MenuItemIndex + 1 < (int32_t)UIMENU_EMENUITEM_Count)
+                if (m_s32MenuItemIndex + 1 < (int32_t)MenuItem::Count)
                 {
                     m_s32MenuItemIndex++;
                     m_bIsNeedRefresh = true;
@@ -84,19 +56,19 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
         }
         case UIBase::BTEvent::Click:
         {
-            switch((UIMENU_EMENUITEM)m_s32MenuItemIndex)
+            switch((MenuItem)m_s32MenuItemIndex)
             {
-                case UIMENU_EMENUITEM_Exit:
+                case MenuItem::Exit:
                     g_uiMgr.Goto(UIManager::EMenu::Home);
                     break;
-                case UIMENU_EMENUITEM_Settings:
+                case MenuItem::Settings:
                     g_uiMgr.Goto(UIManager::EMenu::Setting);
                     break;
-                case UIMENU_EMENUITEM_TestConn:
+                case MenuItem::TestConn:
                     g_app.ExecCheckConnections();
                     g_uiMgr.Goto(UIManager::EMenu::TestConn);
                     break;
-                case UIMENU_EMENUITEM_Reboot:
+                case MenuItem::Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");
                     esp_restart();
                     // MAINAPP_ExecFullOutputCalibration();
@@ -118,9 +90,9 @@ void UIMenu::DrawScreen()
     // Cursor
     SSD1306_FillRect(pss1306Handle, 0, m_s32MenuItemIndex*15+3, 127, 16, true);
 
-    for(int i = 0; i < UIMENU_EMENUITEM_Count; i++)
+    for(int i = 0; i < (int)MenuItem::Count; i++)
     {
-        const UIMENU_SMenu* psMenuItem = &m_sMenuItems[i];
+        const SMenu* psMenuItem = &m_sMenuItems[i];
 
         SSD1306_SetTextColor(pss1306Handle, (i != m_s32MenuItemIndex));
         SSD1306_DrawString(pss1306Handle, 15, 15*i, psMenuItem->szName);

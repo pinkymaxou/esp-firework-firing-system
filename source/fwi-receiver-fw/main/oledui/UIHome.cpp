@@ -7,9 +7,6 @@
 
 #define TAG "UIHOME"
 
-static TickType_t m_ttLastChangeTicks = 0;
-static bool m_bIsPublicIP = false;
-
 void UIHome::OnEnter()
 {
     m_bIsPublicIP = false;

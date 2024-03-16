@@ -3,8 +3,6 @@
 #include "UIManager.hpp"
 #include "MainApp.hpp"
 
-static TickType_t m_ttLastChangeTicks = 0;
-
 void UITestConn::OnEnter()
 {
     DrawScreen();
