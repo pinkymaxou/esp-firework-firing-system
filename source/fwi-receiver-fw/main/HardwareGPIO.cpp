@@ -125,7 +125,7 @@ void HARDWAREGPIO_Init()
         .speed_mode       = LEDC_LOW_SPEED_MODE,
         .duty_resolution  = LEDC_TIMER_12_BIT,
         .timer_num        = LEDC_TIMER_0,
-        .freq_hz          = 100,  // Set output frequency at 100 Hz
+        .freq_hz          = 200,  // Set output frequency at 200 Hz
         .clk_cfg          = LEDC_AUTO_CLK
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
@@ -133,16 +133,28 @@ void HARDWAREGPIO_Init()
     ESP_LOGI(TAG, "initialize LEDC");
 
     // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t ledc_channel = {
+    ledc_channel_config_t masterpwrm_channel = {
         .gpio_num       = HWCONFIG_MASTERPWR_EN,
         .speed_mode     = LEDC_LOW_SPEED_MODE,
-        .channel        = LEDC_CHANNEL_0,
+        .channel        = HWCONFIG_MASTERPWR_CHANNEL,
         .intr_type      = LEDC_INTR_DISABLE,
         .timer_sel      = LEDC_TIMER_0,
         .duty           = 0, // Set duty to 0%
         .hpoint         = 0
     };
-    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
+    ESP_ERROR_CHECK(ledc_channel_config(&masterpwrm_channel));
+
+    // Prepare and then apply the LEDC PWM channel configuration
+    ledc_channel_config_t sanityled_channel = {
+        .gpio_num       = HWCONFIG_SANITY2_PIN,
+        .speed_mode     = LEDC_LOW_SPEED_MODE,
+        .channel        = HWCONFIG_SANITY2_CHANNEL,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .timer_sel      = LEDC_TIMER_0,
+        .duty           = 0, // Set duty to 0%
+        .hpoint         = 0
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&sanityled_channel));
 
     #if HWCONFIG_ENCODER_ISPRESENT != 0
     // Conf A
@@ -182,7 +194,9 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 
 void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed)
 {
-    gpio_set_level(HWCONFIG_SANITY2_PIN, !isEnabled);
+    // Ground driven
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL, isEnabled ? (4095-500) : 4095));
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL));
 
     if (isArmed)
         led_strip_set_pixel(led_strip, 0, isEnabled ? 200 : 0, 0, 0);
@@ -253,9 +267,9 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
 
     const uint32_t u32Value = bValue ? (4095 * dPercent) : 0;
 
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, u32Value));
     // Update duty to apply the new value
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL, u32Value));
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL));
 }
 
 bool HARDWAREGPIO_ReadMasterPowerSense()
