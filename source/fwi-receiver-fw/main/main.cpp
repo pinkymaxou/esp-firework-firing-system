@@ -7,7 +7,6 @@
 #include "esp_ota_ops.h"
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
-#include "esp_now.h"
 #include "esp_crc.h"
 #include "esp_mac.h"
 #include "esp_netif.h"
@@ -21,6 +20,8 @@
 #include "FWConfig.hpp"
 #include "webserver/WebServer.hpp"
 #include "Settings.hpp"
+#include "esp_now.h"
+#include "ESPNow.hpp"
 #include "MainApp.hpp"
 #include "main.hpp"
 
@@ -33,10 +34,7 @@ static wifi_config_t m_WifiConfigAP = {0};
 static uint8_t m_u8WiFiChannel = 1;
 static volatile int32_t m_s32UserCount = 0;
 
-static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-
 static void wifi_init();
-static esp_err_t espnow_init(void);
 
 static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void wifistation_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
@@ -236,6 +234,7 @@ static esp_err_t espnow_init(void)
     peer->channel = m_u8WiFiChannel;
     peer->ifidx = WIFI_IF_AP;
     peer->encrypt = false;
+    uint8_t s_example_broadcast_mac[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
     memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
     ESP_ERROR_CHECK( esp_now_add_peer(peer) );
     free(peer);
@@ -283,7 +282,8 @@ void app_main(void)
 
     ESP_LOGI(TAG, "wifi_init");
     wifi_init();
-    espnow_init();
+
+    ESPNOW_Init();
 
     ESP_LOGI(TAG, "WEBSERVER_Init");
     WEBSERVER_Init();
@@ -301,10 +301,4 @@ void app_main(void)
     // Lock forever
     ESP_LOGI(TAG, "Run");
     g_app.Run();
-}
-
-static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)
-{
-    for (uint32_t i = 0; i < len; i++)
-        sprintf(dstHexString + (i * 2), "%02X", data[i]);
 }

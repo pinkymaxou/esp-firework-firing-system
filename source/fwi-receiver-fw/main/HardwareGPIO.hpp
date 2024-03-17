@@ -36,8 +36,9 @@ bool HARDWAREGPIO_IsEncoderSwitchON();
 uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex);
 
 int32_t HARDWAREGPIO_GetEncoderCount();
-
+#if HWCONFIG_OLED_ISPRESENT != 0
 SSD1306_handle* GPIO_GetSSD1306Handle();
+#endif
 
 #ifdef __cplusplus
 }

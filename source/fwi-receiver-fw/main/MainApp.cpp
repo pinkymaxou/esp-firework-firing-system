@@ -10,6 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "main.hpp"
+#include "ESPNow.hpp"
 #include "oledui/UIBase.hpp"
 #include "oledui/UIHome.hpp"
 #include "oledui/UIManager.hpp"
@@ -126,6 +127,8 @@ void MainApp::Run()
 
         // Update LEDs
         g_uiMgr.RunTick();
+
+        ESPNOW_RunTick();
 
         vTaskDelay(1);
     }

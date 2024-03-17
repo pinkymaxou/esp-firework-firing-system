@@ -2,6 +2,8 @@
     "files.associations": {
         "uimanager.hpp": "c",
         "settings.hpp": "c",
-        "wswebsocket.hpp": "c"
+        "wswebsocket.hpp": "c",
+        "ESPNow.hpp": "c",
+        "fwi-remote-comm.h": "c"
     }
 }
