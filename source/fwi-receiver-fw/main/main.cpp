@@ -31,7 +31,7 @@ static esp_netif_t* m_pWifiSTA;
 static wifi_config_t m_WifiConfigAP = {0};
 
 static uint8_t m_u8WiFiChannel = 1;
-static volatile int32_t m_s32UserCount = 0;
+static int32_t m_s32UserCount = 0;
 
 static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
@@ -79,12 +79,12 @@ static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
+        ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
                  MAC2STR(event->mac), (int)event->aid);
         m_s32UserCount++;
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d",
+        ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
                  MAC2STR(event->mac), (int)event->aid);
         m_s32UserCount--;
     }

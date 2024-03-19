@@ -48,7 +48,7 @@ void UIHome::DrawScreen()
     {
         esp_netif_ip_info_t wifiIpSta = {0};
         MAIN_GetWiFiSTAIP(&wifiIpSta);
-        sprintf(szText, "%s\n"IPSTR,
+        sprintf(szText, "%s\n" IPSTR,
             szSoftAPSSID,
             IP2STR(&wifiIpSta.ip));
     }
@@ -56,7 +56,7 @@ void UIHome::DrawScreen()
     {
         esp_netif_ip_info_t wifiIpAP = {0};
         MAIN_GetWiFiSoftAPIP(&wifiIpAP);
-        sprintf(szText, "%s\n"IPSTR"\nUser: %"PRId32,
+        sprintf(szText, "%s\n" IPSTR "\nUser: %" PRId32,
             szSoftAPSSID,
             IP2STR(&wifiIpAP.ip),
             MAIN_GetSAPUserCount());

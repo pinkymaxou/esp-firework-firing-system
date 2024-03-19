@@ -247,7 +247,7 @@ bool MainApp::StartFire(MainApp::SFire sFire)
         return false;
     }
 
-    ESP_LOGI(TAG, "Fire command issued for output index: %"PRIu32, sFire.u32OutputIndex);
+    ESP_LOGI(TAG, "Fire command issued for output index: %" PRIu32, sFire.u32OutputIndex);
 
     MainApp::SFire* pCopyFire = (MainApp::SFire*)malloc(sizeof(MainApp::SFire));
     *pCopyFire = sFire;
@@ -274,7 +274,7 @@ void MainApp::FireTask(void* pParam)
     HARDWAREGPIO_WriteMasterPowerRelay(false);
     pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::Firing;
 
-    ESP_LOGI(TAG, "Firing in progress: %"PRIu32, u32OutputIndex);
+    ESP_LOGI(TAG, "Firing in progress: %" PRIu32, u32OutputIndex);
 
     MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[u32OutputIndex];
 
@@ -283,7 +283,7 @@ void MainApp::FireTask(void* pParam)
     // Enable master power
     HARDWAREGPIO_WriteMasterPowerRelay(true);
 
-    ESP_LOGI(TAG, "Firing on output index: %"PRIu32, u32OutputIndex);
+    ESP_LOGI(TAG, "Firing on output index: %" PRIu32, u32OutputIndex);
     const int32_t s32FireHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     HARDWAREGPIO_WriteSingleRelay(u32OutputIndex, true);
     vTaskDelay(pdMS_TO_TICKS(s32FireHoldTimeMS));

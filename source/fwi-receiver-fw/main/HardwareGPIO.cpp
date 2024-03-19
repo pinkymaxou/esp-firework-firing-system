@@ -13,7 +13,7 @@ static led_strip_handle_t led_strip;
 #if HWCONFIG_OLED_ISPRESENT != 0
 static SSD1306_handle m_ssd1306;
 #endif
-static volatile int32_t m_s32EncoderTicks = 0;
+static int32_t m_s32EncoderTicks = 0;
 
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
 {
@@ -173,19 +173,16 @@ void HARDWAREGPIO_Init()
 }
 
 static bool m_lastEncA = false;
-static void IRAM_ATTR gpio_isr_handler(void* arg)
+static void gpio_isr_handler(void* arg)
 {
     bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
     bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
 
-    if (encA != m_lastEncA)
-    {
-        if (encA != encB)
-        {
+    if (encA != m_lastEncA) {
+        if (encA != encB) {
             m_s32EncoderTicks--;
         }
-        else
-        {
+        else {
             m_s32EncoderTicks++;
         }
         m_lastEncA = encA;
