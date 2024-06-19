@@ -16,4 +16,5 @@ class UIHome : UIBase
     private:
     TickType_t m_ttLastChangeTicks = 0;
     bool m_bIsPublicIP = false;
+    bool m_s32IsWifiStationActivated = false;
 };
