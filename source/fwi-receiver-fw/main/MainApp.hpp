@@ -44,6 +44,7 @@ class MainApp
         Fire,
         CheckConnections,
         OutputCalib,
+        LiveCheckContinuity,
     };
 
     struct SFire
@@ -91,6 +92,8 @@ class MainApp
 
     void ExecCheckConnections();
 
+    void ExecLiveCheckContinuity();
+
     void ExecFullOutputCalibration();
 
     SRelay GetRelayState(uint32_t u32OutputIndex);
@@ -112,7 +115,7 @@ class MainApp
     bool StartFire(MainApp::SFire sFire);
     static void FireTask(void* pParam);
 
-    bool StartFullOutputCalibrationTask();
+    bool StartFullOutputCalibration();
     static void FullOutputCalibrationTask(void* pParam);
 
     void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);

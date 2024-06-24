@@ -15,7 +15,7 @@
 #include "cJSON.h"
 #include "Settings.hpp"
 #include "main.hpp"
-#include "HardwareGPIO.hpp"
+#include "HWGPIO.hpp"
 #include "MainApp.hpp"
 #include "HWConfig.h"
 

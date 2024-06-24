@@ -1,4 +1,4 @@
-#include "HardwareGPIO.hpp"
+#include "HWGPIO.hpp"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "esp_log.h"
@@ -45,7 +45,7 @@ static gpio_num_t m_busAreaPins[HWCONFIG_OUTPUTAREA_COUNT] =
 
 static void IRAM_ATTR gpio_isr_handler(void* arg) ;
 
-void HARDWAREGPIO_Init()
+void HWGPIO_Init()
 {
     // Sanity LEDs
     gpio_reset_pin(HWCONFIG_LEDWS2812B_PIN);
@@ -83,7 +83,7 @@ void HARDWAREGPIO_Init()
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
 
     // User input
-    HARDWAREGPIO_ClearRelayBus();
+    HWGPIO_ClearRelayBus();
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
@@ -189,7 +189,7 @@ static void gpio_isr_handler(void* arg)
     }
 }
 
-void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed)
+void HWGPIO_SetSanityLED(bool isEnabled, bool isArmed)
 {
     // Ground driven
     const uint32_t u32Value = isEnabled ? (isArmed ? 0 : (4095-500)) : 4095;
@@ -200,21 +200,21 @@ void HARDWAREGPIO_SetSanityLED(bool isEnabled, bool isArmed)
         led_strip_set_pixel(led_strip, 0, isEnabled ? 200 : 0, 0, 0);
     else
         led_strip_set_pixel(led_strip, 0, 0, isEnabled ? 200 : 0, 0);
-    HARDWAREGPIO_RefreshLEDStrip();
+    HWGPIO_RefreshLEDStrip();
 }
 
-void HARDWAREGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
+void HWGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
 {
     led_strip_set_pixel(led_strip, u32OutputIndex+1, r, g, b);
 }
 
-void HARDWAREGPIO_RefreshLEDStrip()
+void HWGPIO_RefreshLEDStrip()
 {
     /* Refresh the strip to send data */
     led_strip_refresh(led_strip);
 }
 
-void HARDWAREGPIO_ClearRelayBus()
+void HWGPIO_ClearRelayBus()
 {
     // Stop all relay boards
     for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
@@ -232,12 +232,12 @@ void HARDWAREGPIO_ClearRelayBus()
     vTaskDelay(pdMS_TO_TICKS(25));
 }
 
-void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
+void HWGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 {
     if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
         return;
 
-    HARDWAREGPIO_ClearRelayBus();
+    HWGPIO_ClearRelayBus();
 
     // Activate the right area
     const uint32_t u32AreaIndex = u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
@@ -259,7 +259,7 @@ void HARDWAREGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
     }
 }
 
-void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
+void HWGPIO_WriteMasterPowerRelay(bool bValue)
 {
     const double dPercent = NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
 
@@ -270,27 +270,27 @@ void HARDWAREGPIO_WriteMasterPowerRelay(bool bValue)
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL));
 }
 
-bool HARDWAREGPIO_ReadMasterPowerSense()
+bool HWGPIO_ReadMasterPowerSense()
 {
     return gpio_get_level(HWCONFIG_MASTERPWRSENSE_IN) == false;
 }
 
-bool HARDWAREGPIO_ReadConnectionSense()
+bool HWGPIO_ReadConnectionSense()
 {
     return gpio_get_level(HWCONFIG_CONNSENSE_IN) == false;
 }
 
-bool HARDWAREGPIO_IsEncoderSwitchON()
+bool HWGPIO_IsEncoderSwitchON()
 {
     return gpio_get_level(HWCONFIG_ENCODERSW) == false;
 }
 
-uint32_t HARDWAREGPIO_GetRelayArea(uint32_t u32OutputIndex)
+uint32_t HWGPIO_GetRelayArea(uint32_t u32OutputIndex)
 {
     return u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
 }
 
-int32_t HARDWAREGPIO_GetEncoderCount()
+int32_t HWGPIO_GetEncoderCount()
 {
     const int32_t s32Ticks = m_s32EncoderTicks;
     m_s32EncoderTicks = 0;

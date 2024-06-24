@@ -5,6 +5,7 @@
 
 void UITestConn::OnEnter()
 {
+    g_app.ExecCheckConnections();
     DrawScreen();
 }
 

@@ -14,7 +14,7 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "driver/GPIO.h"
-#include "HardwareGPIO.hpp"
+#include "HWGPIO.hpp"
 #include "lwip/apps/netbiosns.h"
 #include "lwip/ip4_addr.h"
 #include "HWConfig.h"
@@ -272,8 +272,8 @@ void app_main(void)
         ret = nvs_flash_init();
     }
 
-    ESP_LOGI(TAG, "HARDWAREGPIO_Init");
-    HARDWAREGPIO_Init();
+    ESP_LOGI(TAG, "HWGPIO_Init");
+    HWGPIO_Init();
 
     ESP_ERROR_CHECK( ret );
     ESP_LOGI(TAG, "SETTINGS_Init");

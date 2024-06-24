@@ -10,6 +10,7 @@ class UIMenu : UIBase
         Exit = 0,
         Settings,
         TestConn,
+        LiveCheckContinuity,
         Reboot,
 
         Count,
@@ -35,10 +36,11 @@ class UIMenu : UIBase
     int32_t m_s32MenuItemIndex = 0;
     const SMenu m_sMenuItems[(int)MenuItem::Count] =
     {
-        [(int)MenuItem::Exit]         = { .szName = "Exit" },
-        [(int)MenuItem::Settings]     = { .szName = "Settings" },
-        [(int)MenuItem::TestConn]     = { .szName = "Test conn." },
-        [(int)MenuItem::Reboot]       = { .szName = "Reboot" },
+        [(int)MenuItem::Exit]            = { .szName = "Exit" },
+        [(int)MenuItem::Settings]        = { .szName = "Settings" },
+        [(int)MenuItem::TestConn]        = { .szName = "Test conn." },
+        [(int)MenuItem::LiveCheckContinuity] = { .szName = "Chk. conn." },
+        [(int)MenuItem::Reboot]          = { .szName = "Reboot" },
     };
     static_assert((int)MenuItem::Count == ( sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
 

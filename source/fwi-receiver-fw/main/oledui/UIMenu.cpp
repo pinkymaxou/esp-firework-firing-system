@@ -65,8 +65,10 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
                     g_uiMgr.Goto(UIManager::EMenu::Setting);
                     break;
                 case MenuItem::TestConn:
-                    g_app.ExecCheckConnections();
                     g_uiMgr.Goto(UIManager::EMenu::TestConn);
+                    break;
+                case MenuItem::LiveCheckContinuity:
+                    g_uiMgr.Goto(UIManager::EMenu::LiveCheckContinuity);
                     break;
                 case MenuItem::Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");
