@@ -11,7 +11,7 @@ void UITestConn::OnEnter()
 
 void UITestConn::OnExit()
 {
-
+    g_app.ExecCancel();
 }
 
 void UITestConn::OnTick()

@@ -15,6 +15,7 @@ const EGeneralState = {
 	CheckingConnection: 8,
 	CheckingConnectionOK: 9,
 	CheckingConnectionError: 10,
+	LiveCheckContinuity: 11,
 	DisarmedMasterSwitchOff: 12
 };
 

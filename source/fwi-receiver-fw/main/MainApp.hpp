@@ -35,6 +35,8 @@ class MainApp
         CheckingConnectionOK = 9,
         CheckingConnectionError = 10,
 
+        LiveCheckContinuity = 11,
+
         DisarmedMasterSwitchOff = 12,
     };
 
@@ -76,7 +78,9 @@ class MainApp
     typedef struct
     {
         bool bIsArmed;
+
         // TickType_t ttArmedTicks;
+        bool bIsContinuityCheckOK;
 
         EGeneralState eGeneralState;
         double dProgressOfOne;
@@ -96,11 +100,15 @@ class MainApp
 
     void ExecFullOutputCalibration();
 
+    void ExecCancel();
+
     SRelay GetRelayState(uint32_t u32OutputIndex);
 
     MainApp::EOutputState GetOutputState(const SRelay* pSRelay);
 
     MainApp::EGeneralState GetGeneralState();
+
+    bool GetContinuityTest();
 
     bool IsArmed();
 
@@ -118,6 +126,9 @@ class MainApp
     bool StartFullOutputCalibration();
     static void FullOutputCalibrationTask(void* pParam);
 
+    bool StartLiveCheckContinuity();
+    static void LiveCheckContinuityTask(void* pParam);
+
     void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
 
     void CheckUserInput();
@@ -128,6 +139,7 @@ class MainApp
 
     // Input commands
     SCmd m_sCmd = { .eCmd = ECmd::None };
+    bool m_isOperationCancelled = false;
 
     // Semaphore
     StaticSemaphore_t m_xSemaphoreCreateMutex;

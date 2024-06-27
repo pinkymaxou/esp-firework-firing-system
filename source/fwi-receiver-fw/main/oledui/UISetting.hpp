@@ -29,4 +29,5 @@ class UISetting : UIBase
     int32_t m_s32FiringPWMPercValue = 5;
     int32_t m_s32FiringHoldTimeMS = 750;
     int32_t m_s32IsWifiStationActivated = false;
+    int32_t m_s32BoolCounter = 0;
 };

@@ -11,12 +11,12 @@ void UILiveCheckContinuity::OnEnter()
 
 void UILiveCheckContinuity::OnExit()
 {
-
+    g_app.ExecCancel();
 }
 
 void UILiveCheckContinuity::OnTick()
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
+    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(200) )
     {
         m_ttLastChangeTicks = xTaskGetTickCount();
         DrawScreen();
@@ -38,7 +38,8 @@ void UILiveCheckContinuity::DrawScreen()
     char szText[64+1];
 
     SSD1306_ClearDisplay(pss1306Handle);
-    sprintf(szText, "Test continuity\noutput #1");
+    sprintf(szText, "Test continuity\n#1: %s",
+        g_app.GetContinuityTest() ? "YES" : "NO");
     SSD1306_DrawString(pss1306Handle, 15, 4, szText);
 
     SSD1306_UpdateDisplay(pss1306Handle);

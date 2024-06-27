@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "UIMenu.hpp"
 #include "UIManager.hpp"
 #include "../MainApp.hpp"
@@ -73,7 +74,6 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
                 case MenuItem::Reboot:
                     ESP_LOGI(TAG, "Rebooting ...");
                     esp_restart();
-                    // MAINAPP_ExecFullOutputCalibration();
                     break;
                 default:
                     break;
@@ -90,14 +90,26 @@ void UIMenu::DrawScreen()
     SSD1306_ClearDisplay(pss1306Handle);
 
     // Cursor
-    SSD1306_FillRect(pss1306Handle, 0, m_s32MenuItemIndex*15+3, 127, 16, true);
+    const int32_t MAX_DISPLAY_ITEM_COUNT = 4;
 
-    for(int i = 0; i < (int)MenuItem::Count; i++)
+    int32_t s32StartMenuIndex = 0;
+    if (m_s32MenuItemIndex > MAX_DISPLAY_ITEM_COUNT - 1) {
+        s32StartMenuIndex = ((m_s32MenuItemIndex + 1) - MAX_DISPLAY_ITEM_COUNT);
+    }
+
+    int32_t s32DrawMenuIndex = 0;
+    for(int32_t i = s32StartMenuIndex; i < (int32_t)MenuItem::Count && s32DrawMenuIndex < MAX_DISPLAY_ITEM_COUNT; i++)
     {
         const SMenu* psMenuItem = &m_sMenuItems[i];
 
-        SSD1306_SetTextColor(pss1306Handle, (i != m_s32MenuItemIndex));
-        SSD1306_DrawString(pss1306Handle, 15, 15*i, psMenuItem->szName);
+        const bool isSelected = (i == m_s32MenuItemIndex);
+        if (isSelected) {
+            SSD1306_FillRect(pss1306Handle, 0, s32DrawMenuIndex*15+3, 127, 16, true);
+        }
+        SSD1306_SetTextColor(pss1306Handle, !isSelected);
+        SSD1306_DrawString(pss1306Handle, 15, 15*s32DrawMenuIndex, psMenuItem->szName);
+
+        s32DrawMenuIndex++;
     }
 
     // Restore ...

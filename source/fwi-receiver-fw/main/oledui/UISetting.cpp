@@ -75,15 +75,18 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
             }
             else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
             {
+                m_s32BoolCounter += s32ClickCount;
+
                 int32_t new_value = m_s32IsWifiStationActivated;
-                if (s32ClickCount < -1) {
+                if (m_s32BoolCounter < -2) {
                     new_value = 0;
                 }
-                else if (s32ClickCount > 1) {
+                else if (m_s32BoolCounter > 2) {
                     new_value = 1;
                 }
                 
                 if (new_value != m_s32IsWifiStationActivated) {
+                    m_s32BoolCounter = 0;
                     m_s32IsWifiStationActivated = new_value;
                     DrawScreen();
                 }

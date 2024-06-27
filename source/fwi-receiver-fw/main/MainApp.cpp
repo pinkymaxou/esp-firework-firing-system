@@ -81,6 +81,9 @@ void MainApp::Run()
             case ECmd::Fire:
                 StartFire(sCmd.uArg.sFire);
                 break;
+            case ECmd::LiveCheckContinuity:
+                StartLiveCheckContinuity();
+                break;
             case ECmd::None:
                 break;
             default:
@@ -165,6 +168,8 @@ void MainApp::CheckConnectionsTask(void* pParam)
 {
     MainApp* pMainApp = (MainApp*)pParam;
 
+    pMainApp->m_isOperationCancelled = false;
+
     pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::CheckingConnection;
     pMainApp->m_sState.dProgressOfOne = 0.0d;
 
@@ -189,6 +194,10 @@ void MainApp::CheckConnectionsTask(void* pParam)
         const bool bIsMasterSwitchON = HWGPIO_ReadMasterPowerSense();
         if (bIsMasterSwitchON) {
             // Abort is the master switch is activated
+            break;
+        }
+
+        if (pMainApp->m_isOperationCancelled) {
             break;
         }
 
@@ -304,6 +313,69 @@ void MainApp::FireTask(void* pParam)
     HWGPIO_WriteMasterPowerRelay(false);
 
     free((void*)pFireParam);
+    pMainApp->m_xHandle = NULL;
+    vTaskDelete(NULL);
+}
+
+bool MainApp::StartLiveCheckContinuity()
+{
+    if (m_xHandle != NULL)
+    {
+        ESP_LOGE(TAG, "Already doing a job");
+        return false;
+    }
+
+    // Should't be able to works when the power is present
+    if (m_sState.bIsArmed)
+    {
+        ESP_LOGE(TAG, "Cannot fire, not ready !");
+        m_sState.eGeneralState = MainApp::EGeneralState::LiveCheckContinuity;
+        return false;
+    }
+
+    ESP_LOGI(TAG, "Live check continuity command issued");
+
+    /* Create the task, storing the handle. */
+    const BaseType_t xReturned = xTaskCreate(
+        LiveCheckContinuityTask,/* Function that implements the task. */
+        "LiveCheckCont",    /* Text name for the task. */
+        4096,                   /* Stack size in words, not bytes. */
+        ( void * )this,    /* Parameter passed into the task. */
+        tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
+        &m_xHandle );           /* Used to pass out the created task's handle. */
+    assert(xReturned == pdPASS);
+    return true;
+}
+
+void MainApp::LiveCheckContinuityTask(void* pParam)
+{
+    MainApp* pMainApp = (MainApp*)&g_app;
+
+    // Master power relay shouln'd be active during check
+    HWGPIO_WriteMasterPowerRelay(false);
+
+    // Clear relay bus
+    HWGPIO_ClearRelayBus();
+
+    pMainApp->m_isOperationCancelled = false;
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::LiveCheckContinuity;
+
+    MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[0];
+    HWGPIO_WriteSingleRelay(pSRelay->u32Index, true);
+
+    do
+    {
+        const bool bIsMasterSwitchON = HWGPIO_ReadMasterPowerSense();
+        if (bIsMasterSwitchON) {
+            break; // Cancel if the switch is on
+        }
+        
+        pMainApp->m_sState.bIsContinuityCheckOK = HWGPIO_ReadConnectionSense();
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    while(!pMainApp->m_isOperationCancelled);
+
+    pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::Idle;
     pMainApp->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
@@ -425,6 +497,13 @@ void MainApp::ExecFire(uint32_t u32OutputIndex)
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
+void MainApp::ExecCancel()
+{
+    xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
+    m_isOperationCancelled = true;
+    xSemaphoreGive(m_xSemaphoreHandle);
+}
+
 void MainApp::UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh)
 {
     MainApp::SRelay* pSRelay = &m_sOutputs[u32OutputIndex];
@@ -490,6 +569,11 @@ bool MainApp::IsArmed()
 MainApp::EGeneralState MainApp::GetGeneralState()
 {
     return m_sState.eGeneralState;
+}
+
+bool MainApp::GetContinuityTest()
+{
+    return m_sState.bIsContinuityCheckOK;
 }
 
 double MainApp::GetProgress()
