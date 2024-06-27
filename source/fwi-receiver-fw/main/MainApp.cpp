@@ -369,11 +369,13 @@ void MainApp::LiveCheckContinuityTask(void* pParam)
         if (bIsMasterSwitchON) {
             break; // Cancel if the switch is on
         }
-        
+
         pMainApp->m_sState.bIsContinuityCheckOK = HWGPIO_ReadConnectionSense();
         vTaskDelay(pdMS_TO_TICKS(50));
     }
     while(!pMainApp->m_isOperationCancelled);
+
+    HWGPIO_WriteSingleRelay(pSRelay->u32Index, false);
 
     pMainApp->m_sState.eGeneralState = MainApp::EGeneralState::Idle;
     pMainApp->m_xHandle = NULL;
