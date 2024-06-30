@@ -2,7 +2,7 @@
 
 #include "UIBase.hpp"
 
-class UITestConn : UIBase
+class UILiveCheckContinuity : UIBase
 {
     void OnEnter(void) override;
     void OnExit(void) override;

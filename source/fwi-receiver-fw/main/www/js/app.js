@@ -39,6 +39,8 @@ var currentApp = new Vue({
 				return "Check connections OK";
 			case EGeneralState.CheckingConnectionError:
 				return "Check connections error";
+			case EGeneralState.LiveCheckContinuity:
+				return "Live check continuity";
 			case EGeneralState.DisarmedMasterSwitchOff:
 				return "Disarmed (automatic, wrong master switch state)";
 		}

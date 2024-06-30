@@ -3,16 +3,15 @@
 #include "UIManager.hpp"
 #include "MainApp.hpp"
 
-static TickType_t m_ttLastChangeTicks = 0;
-
 void UITestConn::OnEnter()
 {
+    g_app.ExecCheckConnections();
     DrawScreen();
 }
 
 void UITestConn::OnExit()
 {
-
+    g_app.ExecCancel();
 }
 
 void UITestConn::OnTick()

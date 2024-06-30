@@ -7,6 +7,7 @@
 #include "UIArmed.hpp"
 #include "UISetting.hpp"
 #include "UIErrorPleaseDisarm.hpp"
+#include "UILiveCheckContinuity.hpp"
 #include "UIMenu.hpp"
 #include "UITestConn.hpp"
 
@@ -24,6 +25,7 @@ class UIManager
         Menu,
         Setting,
         TestConn,
+        LiveCheckContinuity,
 
         Count
     };
@@ -46,6 +48,7 @@ class UIManager
     UIMenu m_sMenu;
     UISetting m_sSetting;
     UITestConn m_sTestConn;
+    UILiveCheckContinuity m_sLiveCheckContinuity;
 
     UIBase* m_psUIHomes[(int)UIManager::EMenu::Count] =
     {
@@ -55,6 +58,7 @@ class UIManager
         [(int)UIManager::EMenu::Menu] = (UIBase*)&m_sMenu,
         [(int)UIManager::EMenu::Setting] = (UIBase*)&m_sSetting,
         [(int)UIManager::EMenu::TestConn] = (UIBase*)&m_sTestConn,
+        [(int)UIManager::EMenu::LiveCheckContinuity] = (UIBase*)&m_sLiveCheckContinuity,
     };
     //static_assert(UIManager::EMenu::Count == (sizeof(m_psUIHomes)/sizeof(m_psUIHomes[0])), "Life cycle doesn't fit");
 

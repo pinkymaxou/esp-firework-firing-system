@@ -12,4 +12,9 @@ class UIArmed : UIBase
     void OnTick(void) override;
 
     void DrawScreen(void) override;
+
+    private:
+    TickType_t m_ttLastChangeTicks = 0;
+    bool m_bAlernImage = false;
+
 };

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "UICore.hpp": "c",
-        "hardwaregpio.hpp": "c"
-    }
+        "HWGPIO.hpp": "c"
+    },
+    "idf.adapterTargetName": "esp32s3"
 }

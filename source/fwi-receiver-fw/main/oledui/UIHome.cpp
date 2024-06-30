@@ -4,16 +4,15 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "UIManager.hpp"
+#include "../Settings.hpp"
 
 #define TAG "UIHOME"
-
-static TickType_t m_ttLastChangeTicks = 0;
-static bool m_bIsPublicIP = false;
 
 void UIHome::OnEnter()
 {
     m_bIsPublicIP = false;
     m_ttLastChangeTicks = 0;
+    m_s32IsWifiStationActivated = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive);
     DrawScreen();
 }
 
@@ -47,11 +46,11 @@ void UIHome::DrawScreen()
 
     MAIN_GetWifiAPSSID(szSoftAPSSID);
 
-    if (m_bIsPublicIP)
+    if (m_bIsPublicIP && m_s32IsWifiStationActivated)
     {
         esp_netif_ip_info_t wifiIpSta = {0};
         MAIN_GetWiFiSTAIP(&wifiIpSta);
-        sprintf(szText, "%s\n"IPSTR,
+        sprintf(szText, "%s\n" IPSTR,
             szSoftAPSSID,
             IP2STR(&wifiIpSta.ip));
     }
@@ -59,7 +58,7 @@ void UIHome::DrawScreen()
     {
         esp_netif_ip_info_t wifiIpAP = {0};
         MAIN_GetWiFiSoftAPIP(&wifiIpAP);
-        sprintf(szText, "%s\n"IPSTR"\nUser: %"PRId32,
+        sprintf(szText, "%s\n" IPSTR "\nUser: %" PRId32,
             szSoftAPSSID,
             IP2STR(&wifiIpAP.ip),
             MAIN_GetSAPUserCount());
