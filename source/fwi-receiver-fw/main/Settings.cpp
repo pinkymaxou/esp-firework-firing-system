@@ -20,8 +20,8 @@ static const NVSJSON_SSettingEntry g_sConfigEntries[SETTINGS_EENTRY_Count] =
     [SETTINGS_EENTRY_WSTASSID]     = NVSJSON_INITSTRING("WSTA.SSID",    "WiFi (SSID)", "", NVSJSON_EFLAGS_NeedsReboot),
     [SETTINGS_EENTRY_WSTAPass]     = NVSJSON_INITSTRING_VAL("WSTA.Pass",    "WiFi password [empty, or > 8 characters]", "", ValidateWifiPassword, (NVSJSON_EFLAGS)(NVSJSON_EFLAGS_None | NVSJSON_EFLAGS_NeedsReboot)),
 
-    [SETTINGS_EENTRY_FiringHoldTimeMS]  = NVSJSON_INITINT32_RNG("FireHoldMS", "How long to hold power (MS)", 750, 50, 5000, NVSJSON_EFLAGS_NeedsReboot),
-    [SETTINGS_EENTRY_FiringPWMPercent]  = NVSJSON_INITDOUBLE_RNG("FirePWM", "Master power PWM percent", 0.25d, 0.05d, 1.0d, NVSJSON_EFLAGS_NeedsReboot),
+    [SETTINGS_EENTRY_FiringHoldTimeMS]  = NVSJSON_INITINT32_RNG("FireHoldMS", "How long to hold power (MS)", 750, SETTINGS_FIRINGHOLDTIMEMS_MIN, SETTINGS_FIRINGHOLDTIMEMS_MAX, NVSJSON_EFLAGS_NeedsReboot),
+    [SETTINGS_EENTRY_FiringPWMPercent]  = NVSJSON_INITINT32_RNG("FirePWM", "Master power PWM percent", 25, SETTINGS_FIRINGPWMPERCENT_MIN, SETTINGS_FIRINGPWMPERCENT_MAX, NVSJSON_EFLAGS_NeedsReboot),
 };
 static_assert(SETTINGS_EENTRY_Count == (sizeof(g_sConfigEntries)/sizeof(g_sConfigEntries[0])), "Config entries doesn't match the enum");
 

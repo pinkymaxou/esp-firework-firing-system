@@ -26,6 +26,12 @@ typedef enum
 
 void SETTINGS_Init();
 
+#define SETTINGS_FIRINGHOLDTIMEMS_MIN (50)
+#define SETTINGS_FIRINGHOLDTIMEMS_MAX (5000)
+
+#define SETTINGS_FIRINGPWMPERCENT_MIN (5)
+#define SETTINGS_FIRINGPWMPERCENT_MAX (100)
+
 extern NVSJSON_SHandle g_sSettingHandle;
 
 #ifdef __cplusplus

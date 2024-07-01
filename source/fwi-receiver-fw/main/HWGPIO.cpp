@@ -261,7 +261,7 @@ void HWGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
 
 void HWGPIO_WriteMasterPowerRelay(bool bValue)
 {
-    const double dPercent = NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
+    const double dPercent = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent)/100.0;
 
     const uint32_t u32Value = bValue ? (4095 * dPercent) : 0;
 
