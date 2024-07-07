@@ -10,6 +10,7 @@
 #include "UILiveCheckContinuity.hpp"
 #include "UIMenu.hpp"
 #include "UITestConn.hpp"
+#include "UIAbout.hpp"
 
 class UIManager
 {
@@ -26,6 +27,7 @@ class UIManager
         Setting,
         TestConn,
         LiveCheckContinuity,
+        About,
 
         Count
     };
@@ -49,6 +51,7 @@ class UIManager
     UISetting m_sSetting;
     UITestConn m_sTestConn;
     UILiveCheckContinuity m_sLiveCheckContinuity;
+    UIAbout m_sAbout;
 
     UIBase* m_psUIHomes[(int)UIManager::EMenu::Count] =
     {
@@ -59,6 +62,7 @@ class UIManager
         [(int)UIManager::EMenu::Setting] = (UIBase*)&m_sSetting,
         [(int)UIManager::EMenu::TestConn] = (UIBase*)&m_sTestConn,
         [(int)UIManager::EMenu::LiveCheckContinuity] = (UIBase*)&m_sLiveCheckContinuity,
+        [(int)UIManager::EMenu::About] = (UIBase*)&m_sAbout,
     };
     //static_assert(UIManager::EMenu::Count == (sizeof(m_psUIHomes)/sizeof(m_psUIHomes[0])), "Life cycle doesn't fit");
 

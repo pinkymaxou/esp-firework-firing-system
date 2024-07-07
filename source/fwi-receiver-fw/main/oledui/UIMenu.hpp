@@ -12,6 +12,7 @@ class UIMenu : UIBase
         TestConn,
         LiveCheckContinuity,
         Reboot,
+        // About,
 
         Count,
     };
@@ -41,6 +42,7 @@ class UIMenu : UIBase
         [(int)MenuItem::TestConn]        = { .szName = "Test conn." },
         [(int)MenuItem::LiveCheckContinuity] = { .szName = "Chk. conn." },
         [(int)MenuItem::Reboot]          = { .szName = "Reboot" },
+        //[(int)MenuItem::About]           = { .szName = "About" },
     };
     static_assert((int)MenuItem::Count == ( sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
 
