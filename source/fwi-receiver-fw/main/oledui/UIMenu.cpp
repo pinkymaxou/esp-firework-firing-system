@@ -75,6 +75,9 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
                     ESP_LOGI(TAG, "Rebooting ...");
                     esp_restart();
                     break;
+                // case MenuItem::About:
+                //     g_uiMgr.Goto(UIManager::EMenu::About);
+                //     break;
                 default:
                     break;
             }

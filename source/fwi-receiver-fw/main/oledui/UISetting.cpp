@@ -5,7 +5,7 @@
 
 void UISetting::OnEnter()
 {
-    m_s32FiringPWMPercValue = (int32_t)(NVSJSON_GetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent) * (int32_t)100);
+    m_s32FiringPWMPercValue = (int32_t)NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
     m_s32FiringHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
     m_s32IsWifiStationActivated = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive);
 
@@ -16,7 +16,7 @@ void UISetting::OnEnter()
 
 void UISetting::OnExit()
 {
-    NVSJSON_SetValueDouble(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, (double)m_s32FiringPWMPercValue/100.0d);
+    NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, m_s32FiringPWMPercValue);
     NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS, false, m_s32FiringHoldTimeMS);
     NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive, false, m_s32IsWifiStationActivated);
     NVSJSON_Save(&g_sSettingHandle);
@@ -41,7 +41,7 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
             else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
             {
                 const int32_t s32Value = m_s32FiringPWMPercValue + s32ClickCount;
-                if (s32Value >= 5 && s32Value <= 100)
+                if (s32Value >= SETTINGS_FIRINGPWMPERCENT_MIN && s32Value <= SETTINGS_FIRINGPWMPERCENT_MAX)
                 {
                     m_s32FiringPWMPercValue = s32Value;
                     DrawScreen();
@@ -59,7 +59,7 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
             else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
             {
                 const int32_t s32Value = m_s32FiringHoldTimeMS + s32ClickCount*50;
-                if (s32Value >= 50 && s32Value <= 5000)
+                if (s32Value >= SETTINGS_FIRINGHOLDTIMEMS_MIN && s32Value <= SETTINGS_FIRINGHOLDTIMEMS_MAX)
                 {
                     m_s32FiringHoldTimeMS = s32Value;
                     DrawScreen();
