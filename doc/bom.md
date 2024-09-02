@@ -3,23 +3,38 @@
 
 | Item | Qty | URL |
 |---|---|---|
-| 16 channels relay (ground driven) | 3 | https://www.amazon.ca/gp/product/B0057OC66U/ |
+| 16 channels relay 12V (ground driven) | 3 | https://www.amazon.ca/gp/product/B0057OC66U/ |
 | ESP32-S3 | 1 | https://www.aliexpress.com/item/1005005225767039.html |
-| WS2812B Leds | 60 | https://www.aliexpress.com/item/32560280169.html
-| OLED 128x64 | 2 | https://www.aliexpress.com/item/1005004146596540.html |
-| Badass switch | 2 | https://www.aliexpress.com/item/10000286439863.html |
-| Momentary switch | 2 | https://www.aliexpress.com/item/10000308383839.html |
-| Optocoupler 817C | 5 | https://www.aliexpress.com/item/4001128373856.html |
-| P-Channel MOSFET FQP47P06 | 3 |  |
-| Relay SRD-05VDC-SL-C | 1 | https://www.aliexpress.com/item/1005004546660648.html |
+| OLED 128x64 | 1 | https://www.aliexpress.com/item/1005004146596540.html |
+| Badass switch | 1 | https://www.aliexpress.com/item/10000286439863.html |
+| Optocoupler 817C | 6 | https://www.aliexpress.com/item/4001128373856.html |
+| P-Channel MOSFET FQP47P06 | 4 |  |
 | Encoder | 1 | https://www.aliexpress.com/item/1005004494417579.html |
-| 12V indicator with USB | 1 | https://www.aliexpress.com/item/1005004641986809.html |
+| L78S05CV, 5V regulator | 1 |  |
 
 # Electric matches
+
+## Formula #1
 
 | Item | Qty | URL |
 |---|---|---|
 | Nichrome ~36 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
+| Matches | N/A | | Buy them at dollarstore
+
+## Formula #2
+
+| Item | Qty | URL |
+|---|---|---|
+| Nichrome ~36 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
+| Matches | N/A | | Buy them at dollarstore
+| Magnesium | N/A | https://www.amazon.ca/The-Coleman-Company-2000014858-Magnesium/dp/B004OZNF6S
+| Arabic Gum powder | N/A | https://www.amazon.ca/McCalls-Gum-Arabic-Powder-60/dp/B01N63TE78
+
+## Formula #3
+
+| Item | Qty | URL |
+|---|---|---|
+| Nichrome ~32 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
 | Matches | N/A | | Buy them at dollarstore
 
 # Alternative igniter
