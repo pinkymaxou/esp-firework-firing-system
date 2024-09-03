@@ -26,16 +26,18 @@
 | Item | Qty | URL |
 |---|---|---|
 | Nichrome ~36 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
-| Matches | N/A | | Buy them at dollarstore
-| Magnesium | N/A | https://www.amazon.ca/The-Coleman-Company-2000014858-Magnesium/dp/B004OZNF6S
-| Arabic Gum powder | N/A | https://www.amazon.ca/McCalls-Gum-Arabic-Powder-60/dp/B01N63TE78
+| Matches | N/A | | Buy them at dollarstore |
+| Magnesium | N/A | https://www.amazon.ca/The-Coleman-Company-2000014858-Magnesium/dp/B004OZNF6S |
+| Arabic Gum powder | N/A | https://www.amazon.ca/McCalls-Gum-Arabic-Powder-60/dp/B01N63TE78 |
 
 ## Formula #3
 
 | Item | Qty | URL |
 |---|---|---|
 | Nichrome ~32 AWG | 3 meters | https://www.aliexpress.com/item/1005004864188893.html |
-| Matches | N/A | | Buy them at dollarstore
+| Matches | N/A | | Buy them at dollarstore |
+| Magnesium | N/A | https://www.amazon.ca/The-Coleman-Company-2000014858-Magnesium/dp/B004OZNF6S |
+| Arabic Gum powder | N/A | https://www.amazon.ca/McCalls-Gum-Arabic-Powder-60/dp/B01N63TE78 |
 
 # Alternative igniter
 
