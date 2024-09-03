@@ -7,7 +7,7 @@ Basically, we destroy a few matches using a pilar and mix the resulting powder w
 ## Prepare wire
 
 - Remove 4 mm of insulation from the fire
-- Bend the cooper at 30 degrees angle relative to each others
+- Bend the cooper at 35 degrees angle relative to each others
 - Put some bridge wire between the two, roll as much as needed around cooper to be sure it hold in place
 
 ## Powder mix instructions
