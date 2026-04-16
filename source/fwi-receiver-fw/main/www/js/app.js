@@ -52,6 +52,16 @@ var g_current_app = new Vue(
         idBtnFireClick(ix)
         {
             sendWS({ cmd: "fire", index: ix });
+        },
+        getOutputClass(output)
+        {
+            switch (output.s)
+            {
+                case EOutputState.Enabled:   return 'button-enabled';
+                case EOutputState.Fired:     return 'button-fired';
+                case EOutputState.Connected: return this.status.is_armed ? 'button-connected-armed' : 'button-connected';
+                default:                     return 'button-idle';
+            }
         }
     }
 });
