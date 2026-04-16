@@ -6,7 +6,8 @@ var g_current_app = new Vue(
         sysinfos: [],
         setting_entries: [],
         edited_values: {},
-        save_status: ''
+        save_status: '',
+        active_desc: null
     },
     methods:
     {

@@ -10,6 +10,7 @@
 #include "esp_netif.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "lwip/ip4_addr.h"
 #include "cJSON.h"
 #include <string.h>
@@ -181,11 +182,12 @@ static char* buildStatusJSON()
     cJSON_AddItemToObject(status, "req", cJSON_CreateNumber(++req_index));
     cJSON_AddItemToObject(status, "is_armed", cJSON_CreateBool(g_app.IsArmed()));
     cJSON_AddItemToObject(status, "general_state", cJSON_CreateNumber((int)g_app.GetGeneralState()));
+    cJSON_AddItemToObject(status, "uptime_s", cJSON_CreateNumber((int)(esp_timer_get_time() / 1000000LL)));
 
     cJSON* outputs = cJSON_AddArrayToObject(status, "outputs");
     for (int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MainApp::SRelay relay = g_app.GetRelayState(i);
+        const MainApp::SRelay relay = g_app.GetRelayState(i);
         cJSON* entry = cJSON_CreateObject();
         cJSON_AddItemToObject(entry, "ix", cJSON_CreateNumber(i));
         cJSON_AddItemToObject(entry, "s", cJSON_CreateNumber((int)g_app.GetOutputState(&relay)));

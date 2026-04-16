@@ -22,6 +22,12 @@ This document outlines the coding style for the `oe-heatgrip-gdo` projects.
 > - **Incorrect**: `bool b_is_active`, `uint32_t u32_count`, `char* sz_name`, `void* p_data`.
 > - **Correct**: `bool is_active`, `uint32_t count`, `char* name`, `void* data`.
 
+## Const Correctness
+
+- Variables that are not modified after initialization **must** be declared `const`.
+  - **Correct**: `const int count = getCount();`, `const MainApp::SRelay relay = g_app.GetRelayState(i);`
+  - **Incorrect**: `int count = getCount();` *(if `count` is never reassigned)*
+
 ## Conditions
 
 - **Yoda conditions**: Place the constant on the left side of comparisons to prevent accidental assignment.

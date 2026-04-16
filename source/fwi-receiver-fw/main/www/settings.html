@@ -13,6 +13,14 @@
         <a href="index.html"><button class="button-action1" type="button">Control</button></a>
     </div>
 	<div id="app">
+        <!-- Info popup -->
+        <div v-if="active_desc" class="info-overlay" @click="active_desc = null">
+            <div class="info-popup" @click.stop>
+                <p>{{ active_desc }}</p>
+                <button class="button-action1" @click="active_desc = null">Close</button>
+            </div>
+        </div>
+
         <!-- Settings -->
         <div class="card">
             <div class="card-header">Settings</div>
@@ -25,12 +33,14 @@
                             <td>Min</td>
                             <td>Max</td>
                             <td>Value</td>
-                            <td>Desc</td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="entry in setting_entries">
-                            <td>{{ entry.key }}</td>
+                            <td>
+                                {{ entry.key }}
+                                <button class="info-btn" @click="active_desc = entry.info.desc" title="Info">?</button>
+                            </td>
                             <td>{{ entry.info.default }}</td>
                             <td>{{ entry.info.min }}</td>
                             <td>{{ entry.info.max }}</td>
@@ -46,7 +56,6 @@
                                     :max="entry.info.max"
                                     v-model.number="edited_values[entry.key]">
                             </td>
-                            <td>{{ entry.info.desc }}</td>
                         </tr>
                     </tbody>
                 </table>
