@@ -3,7 +3,7 @@
 ## Pages
 
 | URL | Page |
-|---|---|
+|-----|------|
 | `http://192.168.4.1/` | Redirects to `/index.html` |
 | `http://192.168.4.1/index.html` | Control page (firing grid) |
 | `http://192.168.4.1/settings.html` | Settings, system info, OTA |
@@ -12,12 +12,12 @@
 
 - Grid of buttons, one per output (32 by default)
 - Button colour reflects output state (see table below)
-- **Check** button runs a continuity scan on all outputs
+- **Test** button runs a continuity scan on all outputs
 - **Settings** button (top-right of navbar) navigates to settings
 - Status bar shows current `EGeneralState` and a request counter
 
 | Button colour | Output state |
-|---|---|
+|---------------|--------------|
 | Dark (off) | Idle — no connection detected |
 | Green | Connected — continuity present, system disarmed |
 | Red (pulsing) | Connected — continuity present, system **armed** |
@@ -94,10 +94,10 @@ Only the listed keys are updated. Keys not included are left unchanged.
     "req": 42,
     "is_armed": false,
     "general_state": 0,
+    "uptime_s": 120,
     "outputs": [
       { "ix": 0, "s": 3 },
-      { "ix": 1, "s": 0 },
-      ...
+      { "ix": 1, "s": 0 }
     ]
   }
 }
@@ -106,23 +106,23 @@ Only the listed keys are updated. Keys not included are left unchanged.
 `general_state` values:
 
 | Value | Meaning |
-|---|---|
+|-------|---------|
 | 0 | Idle |
 | 1 | Master switch wrong state error |
 | 2 | Unknown firing error |
 | 3 | Firing |
 | 4 | Firing OK |
 | 7 | Armed and ready |
-| 8 | Checking connections |
-| 9 | Check connections OK |
-| 10 | Check connections error |
-| 11 | Live check continuity |
+| 8 | Testing connections |
+| 9 | Test connections OK |
+| 10 | Test connections error |
+| 11 | Live continuity check |
 | 12 | Disarmed (master switch moved) |
 
 Output `s` values:
 
 | Value | Meaning |
-|---|---|
+|-------|---------|
 | 0 | Idle |
 | 1 | Enabled (being fired) |
 | 2 | Fired |
@@ -144,8 +144,7 @@ Output `s` values:
         "type": "int32",
         "flag_reboot": 1
       }
-    },
-    ...
+    }
   ]
 }
 ```
@@ -155,16 +154,16 @@ Output `s` values:
 {
   "type": "sysinfo",
   "infos": [
-    { "name": "Chip",        "value": "ESP32-S3" },
-    { "name": "Firmware",    "value": "0.1.0" },
-    { "name": "Compile Time","value": "Apr  1 2026 12:00:00" },
-    { "name": "SHA256",      "value": "ABCDEF..." },
-    { "name": "IDF",         "value": "v6.1-dev-..." },
-    { "name": "WiFi.STA",    "value": "AA:BB:CC:DD:EE:FF" },
-    { "name": "WiFi.AP",     "value": "AA:BB:CC:DD:EE:FF" },
-    { "name": "WiFi.BT",     "value": "AA:BB:CC:DD:EE:FF" },
-    { "name": "Memory",      "value": "234512 / 327680" },
-    { "name": "WiFi (STA)",  "value": "0.0.0.0" },
+    { "name": "Chip",           "value": "ESP32-S3" },
+    { "name": "Firmware",       "value": "0.1.0" },
+    { "name": "Compile Time",   "value": "Apr  1 2026 12:00:00" },
+    { "name": "SHA256",         "value": "ABCDEF..." },
+    { "name": "IDF",            "value": "v6.1-dev-..." },
+    { "name": "WiFi.STA",       "value": "AA:BB:CC:DD:EE:FF" },
+    { "name": "WiFi.AP",        "value": "AA:BB:CC:DD:EE:FF" },
+    { "name": "WiFi.BT",        "value": "AA:BB:CC:DD:EE:FF" },
+    { "name": "Memory",         "value": "234512 / 327680" },
+    { "name": "WiFi (STA)",     "value": "0.0.0.0" },
     { "name": "WiFi (Soft-AP)", "value": "192.168.4.1" }
   ]
 }
