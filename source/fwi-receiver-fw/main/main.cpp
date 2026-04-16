@@ -120,7 +120,7 @@ static void wifi_init()
     esp_read_mac(macAddr, ESP_MAC_WIFI_SOFTAP);
 
     sprintf((char*)m_WifiConfigAP.ap.ssid, FWCONFIG_STAAP_WIFI_SSID, macAddr[3], macAddr[4], macAddr[5]);
-    int n = strlen((const char*)m_WifiConfigAP.ap.ssid);
+    const int n = strlen((const char*)m_WifiConfigAP.ap.ssid);
     m_WifiConfigAP.ap.ssid_len = n;
 
     size_t staPassLength = 64;

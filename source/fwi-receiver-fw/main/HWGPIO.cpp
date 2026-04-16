@@ -183,8 +183,8 @@ void HWGPIO_Init()
 static bool m_lastEncA = false;
 static void gpio_isr_handler(void* arg)
 {
-    bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
-    bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
+    const bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
+    const bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
 
     if (encA != m_lastEncA)
     {

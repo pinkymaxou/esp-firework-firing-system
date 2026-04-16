@@ -187,7 +187,7 @@ static char* buildStatusJSON()
     cJSON* outputs = cJSON_AddArrayToObject(status, "outputs");
     for (int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MainApp::SRelay relay = g_app.GetRelayState(i);
+        const MainApp::SRelay relay = g_app.GetRelayState(i);
         cJSON* entry = cJSON_CreateObject();
         cJSON_AddItemToObject(entry, "ix", cJSON_CreateNumber(i));
         cJSON_AddItemToObject(entry, "s", cJSON_CreateNumber((int)g_app.GetOutputState(&relay)));
