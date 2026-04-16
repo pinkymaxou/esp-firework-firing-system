@@ -15,7 +15,7 @@ extern "C" {
 
 void HWGPIO_Init();
 
-void HWGPIO_SetSanityLED(bool isEnabled, bool isArmed);
+void HWGPIO_SetSanityLED(bool is_enabled, bool is_armed);
 
 void HWGPIO_ClearRelayBus();
 
@@ -37,7 +37,7 @@ uint32_t HWGPIO_GetRelayArea(uint32_t output_index);
 
 int32_t HWGPIO_GetEncoderCount();
 
-SSD1306_handle* GPIO_GetSSD1306Handle();
+SSD1306_handle* HWGPIO_GetSSD1306Handle();
 
 #ifdef __cplusplus
 }

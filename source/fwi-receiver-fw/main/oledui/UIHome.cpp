@@ -11,7 +11,7 @@
 void UIHome::OnEnter()
 {
     m_isPublicIP = false;
-    m_ttLastChangeTicks = 0;
+    m_last_change_ticks = 0;
     m_isWifiStationActivated = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive);
     DrawScreen();
 }
@@ -23,9 +23,9 @@ void UIHome::OnExit()
 
 void UIHome::OnTick()
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(1000) )
+    if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(1000) )
     {
-        m_ttLastChangeTicks = xTaskGetTickCount();
+        m_last_change_ticks = xTaskGetTickCount();
         DrawScreen();
         m_isPublicIP = !m_isPublicIP;
     }
@@ -49,25 +49,25 @@ void UIHome::DrawScreen()
 
     if (m_isPublicIP && m_isWifiStationActivated)
     {
-        esp_netif_ip_info_t wifiIpSta = {0};
-        MAIN_GetWiFiSTAIP(&wifiIpSta);
+        esp_netif_ip_info_t wifi_ip_sta = {0};
+        MAIN_GetWiFiSTAIP(&wifi_ip_sta);
         sprintf(text, "%s\n" IPSTR,
             ssid,
-            IP2STR(&wifiIpSta.ip));
+            IP2STR(&wifi_ip_sta.ip));
     }
     else
     {
-        esp_netif_ip_info_t wifiIpAP = {0};
-        MAIN_GetWiFiSoftAPIP(&wifiIpAP);
+        esp_netif_ip_info_t wifi_ip_ap = {0};
+        MAIN_GetWiFiSoftAPIP(&wifi_ip_ap);
         sprintf(text, "%s\n" IPSTR "\nUser: %" PRId32,
             ssid,
-            IP2STR(&wifiIpAP.ip),
+            IP2STR(&wifi_ip_ap.ip),
             MAIN_GetSAPUserCount());
     }
 
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, text);
-    SSD1306_UpdateDisplay(pss1306Handle);
+    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
+    SSD1306_ClearDisplay(display);
+    SSD1306_DrawString(display, 0, 0, text);
+    SSD1306_UpdateDisplay(display);
     #endif
 }

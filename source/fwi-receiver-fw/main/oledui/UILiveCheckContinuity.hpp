@@ -14,5 +14,5 @@ class UILiveCheckContinuity : UIBase
     void DrawScreen(void) override;
 
     private:
-    TickType_t m_ttLastChangeTicks = 0;
+    TickType_t m_last_change_ticks = 0;
 };

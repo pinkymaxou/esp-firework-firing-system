@@ -18,9 +18,9 @@ void UIArmed::OnEncoderMove(BTEvent btn_event, int32_t click_count)
 
 void UIArmed::OnTick(void)
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
+    if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(500) )
     {
-        m_ttLastChangeTicks = xTaskGetTickCount();
+        m_last_change_ticks = xTaskGetTickCount();
         DrawScreen();
         m_alternImage = !m_alternImage;
     }
@@ -29,13 +29,13 @@ void UIArmed::OnTick(void)
 void UIArmed::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    //SSD1306_ClearDisplay(pss1306Handle);
+    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
+    //SSD1306_ClearDisplay(display);
     if (m_alternImage)
-        memcpy(pss1306Handle->buffer, m_u8AlertDatas, m_u32AlertDataLen);
+        memcpy(display->buffer, m_u8AlertDatas, m_u32AlertDataLen);
     else
-        memcpy(pss1306Handle->buffer, m_u8FireworkDatas, m_u32FireworkDataLen);
-    SSD1306_DrawString(pss1306Handle, 60, 15, "ARMED");
-    SSD1306_UpdateDisplay(pss1306Handle);
+        memcpy(display->buffer, m_u8FireworkDatas, m_u32FireworkDataLen);
+    SSD1306_DrawString(display, 60, 15, "ARMED");
+    SSD1306_UpdateDisplay(display);
     #endif
 }

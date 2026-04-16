@@ -34,11 +34,11 @@ var g_current_app = new Vue(
                 case EGeneralState.ArmingSystemOK:
                     return "System armed and ready";
                 case EGeneralState.CheckingConnection:
-                    return "Checking connections";
+                    return "Testing connections";
                 case EGeneralState.CheckingConnectionOK:
-                    return "Check connections OK";
+                    return "Test connections OK";
                 case EGeneralState.CheckingConnectionError:
-                    return "Check connections error";
+                    return "Test connections error";
                 case EGeneralState.LiveCheckContinuity:
                     return "Live check continuity";
                 case EGeneralState.DisarmedMasterSwitchOff:

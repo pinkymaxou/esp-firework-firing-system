@@ -29,18 +29,18 @@ void MainApp::Init()
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MainApp::SRelay* pSRelay = &m_sOutputs[i];
-        pSRelay->index = i;
-        pSRelay->isConnected = false;
-        pSRelay->isFired = false;
-        pSRelay->isEN = false;
+        MainApp::SRelay* relay = &m_outputs[i];
+        relay->index = i;
+        relay->isConnected = false;
+        relay->isFired = false;
+        relay->isEN = false;
     }
 }
 
 void MainApp::Run()
 {
     bool sanity_on = false;
-    TickType_t ttSanityTicks = 0;
+    TickType_t sanity_ticks = 0;
 
     // Wait until it get disarmed before starting the program.
     if (HWGPIO_ReadMasterPowerSense())
@@ -57,28 +57,28 @@ void MainApp::Run()
 
     // Force reset ...
     ESP_LOGI(TAG, "Going to home");
-    m_sCmd.eCmd = ECmd::None;
+    m_cmd.cmd = ECmd::None;
     g_uiMgr.Goto(UIManager::EMenu::Home);
 
     while (true)
     {
         xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-        SCmd sCmd = m_sCmd;
-        m_sCmd.eCmd = ECmd::None;
+        const SCmd cmd = m_cmd;
+        m_cmd.cmd = ECmd::None;
         xSemaphoreGive(m_xSemaphoreHandle);
 
         // Command from another thread
-        switch (sCmd.eCmd)
+        switch (cmd.cmd)
         {
-            case ECmd::CheckConnections:
-                // Cannot check connection while armed
-                StartCheckConnections();
+            case ECmd::TestConnections:
+                // Cannot test connection while armed
+                StartTestConnections();
                 break;
             case ECmd::OutputCalib:
                 StartFullOutputCalibration();
                 break;
             case ECmd::Fire:
-                StartFire(sCmd.uArg.sFire);
+                StartFire(cmd.arg.fire);
                 break;
             case ECmd::LiveCheckContinuity:
                 StartLiveCheckContinuity();
@@ -92,28 +92,28 @@ void MainApp::Run()
         // Check for disarming condition
         const bool is_master_switch_on = HWGPIO_ReadMasterPowerSense();
 
-        if (!m_sState.isArmed && is_master_switch_on)
+        if (!m_state.isArmed && is_master_switch_on)
         {
-            m_sState.isArmed = true;
+            m_state.isArmed = true;
             ESP_LOGI(TAG, "Master switch is armed");
-            m_sState.generalState = EGeneralState::Armed;
+            m_state.generalState = EGeneralState::Armed;
 
             g_uiMgr.Goto(UIManager::EMenu::ArmedReady);
         }
-        else if (m_sState.isArmed && !is_master_switch_on)
+        else if (m_state.isArmed && !is_master_switch_on)
         {
-            m_sState.isArmed = false;
+            m_state.isArmed = false;
             ESP_LOGI(TAG, "Automatic disarming, master power switch as been deactivated");
-            m_sState.generalState = EGeneralState::DisarmedMasterSwitchOff;
+            m_state.generalState = EGeneralState::DisarmedMasterSwitchOff;
 
             g_uiMgr.Goto(UIManager::EMenu::Home);
         }
 
         // Sanity blink ...
-        if ( (xTaskGetTickCount() - ttSanityTicks) > pdMS_TO_TICKS(m_sState.isArmed ? 100 : 500))
+        if ( (xTaskGetTickCount() - sanity_ticks) > pdMS_TO_TICKS(m_state.isArmed ? 250 : 500))
         {
-            ttSanityTicks = xTaskGetTickCount();
-            HWGPIO_SetSanityLED(sanity_on, m_sState.isArmed);
+            sanity_ticks = xTaskGetTickCount();
+            HWGPIO_SetSanityLED(sanity_on, m_state.isArmed);
             sanity_on = !sanity_on;
         }
 
@@ -133,7 +133,7 @@ void MainApp::Run()
     }
 }
 
-bool MainApp::StartCheckConnections()
+bool MainApp::StartTestConnections()
 {
     if (NULL != m_xHandle)
     {
@@ -141,36 +141,36 @@ bool MainApp::StartCheckConnections()
         return false;
     }
 
-    if (m_sState.isArmed)
+    if (m_state.isArmed)
     {
-        ESP_LOGE(TAG, "Cannot check connection when the system is armed");
-        m_sState.generalState = MainApp::EGeneralState::CheckingConnectionError;
+        ESP_LOGE(TAG, "Cannot test connection when the system is armed");
+        m_state.generalState = MainApp::EGeneralState::CheckingConnectionError;
         return false;
     }
 
-    ESP_LOGI(TAG, "Checking connections ...");
+    ESP_LOGI(TAG, "Testing connections ...");
 
     /* Create the task, storing the handle. */
-    const BaseType_t xReturned = xTaskCreate(
-        CheckConnectionsTask,   /* Function that implements the task. */
-        "CheckConnections",     /* Text name for the task. */
+    const BaseType_t x_returned = xTaskCreate(
+        TestConnectionsTask,    /* Function that implements the task. */
+        "TestConnections",      /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
         ( void * )this,           /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
 
-    assert(xReturned == pdPASS);
+    assert(pdPASS == x_returned);
     return true;
 }
 
-void MainApp::CheckConnectionsTask(void* pParam)
+void MainApp::TestConnectionsTask(void* param)
 {
-    MainApp* pMainApp = (MainApp*)pParam;
+    MainApp* main_app = (MainApp*)param;
 
-    pMainApp->m_isOperationCancelled = false;
+    main_app->m_isOperationCancelled = false;
 
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::CheckingConnection;
-    pMainApp->m_sState.progressOfOne = 0.0d;
+    main_app->m_state.generalState = MainApp::EGeneralState::CheckingConnection;
+    main_app->m_state.progressOfOne = 0.0d;
 
     // Master power relay shouln'd be active during check
     HWGPIO_WriteMasterPowerRelay(false);
@@ -183,12 +183,12 @@ void MainApp::CheckConnectionsTask(void* pParam)
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[i];
+        MainApp::SRelay* relay = &main_app->m_outputs[i];
 
         const uint32_t area_index = HWGPIO_GetRelayArea(i);
 
-        pSRelay->isFired = false;
-        pSRelay->isConnected = false;
+        relay->isFired = false;
+        relay->isConnected = false;
 
         const bool is_master_switch_on = HWGPIO_ReadMasterPowerSense();
         if (is_master_switch_on)
@@ -197,25 +197,25 @@ void MainApp::CheckConnectionsTask(void* pParam)
             break;
         }
 
-        if (pMainApp->m_isOperationCancelled)
+        if (main_app->m_isOperationCancelled)
         {
             break;
         }
 
         // Activate the relay ...
-        HWGPIO_WriteSingleRelay(pSRelay->index, true);
+        HWGPIO_WriteSingleRelay(relay->index, true);
         // Give it some time to detect
         // go to the next one if the return current is detected or wait maximum 200ms
-        int ticksMax = 8;
+        int ticks_max = 8;
         vTaskDelay(pdMS_TO_TICKS(200));
         do
         {
-            pSRelay->isConnected = HWGPIO_ReadConnectionSense();
+            relay->isConnected = HWGPIO_ReadConnectionSense();
             vTaskDelay(pdMS_TO_TICKS(10));
-            ticksMax--;
-        } while (!pSRelay->isConnected && ticksMax > 0);
+            ticks_max--;
+        } while (!relay->isConnected && ticks_max > 0);
 
-        HWGPIO_WriteSingleRelay(pSRelay->index, false);
+        HWGPIO_WriteSingleRelay(relay->index, false);
 
         // Give it some time when it change area to be sure no ghost detection happens
         if (last_area_index != area_index)
@@ -225,21 +225,21 @@ void MainApp::CheckConnectionsTask(void* pParam)
             last_area_index = area_index;
         }
 
-        pMainApp->m_sState.progressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
+        main_app->m_state.progressOfOne = (double)(i+1)/(double)HWCONFIG_OUTPUT_COUNT;
     }
 
-    ESP_LOGI(TAG, "Check connection completed");
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::CheckingConnectionOK;
+    ESP_LOGI(TAG, "Test connections completed");
+    main_app->m_state.generalState = MainApp::EGeneralState::CheckingConnectionOK;
     HWGPIO_ClearRelayBus();
     HWGPIO_WriteMasterPowerRelay(false);
 
-    pMainApp->m_sState.progressOfOne = 1.0d;
+    main_app->m_state.progressOfOne = 1.0d;
 
-    pMainApp->m_xHandle = NULL;
+    main_app->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
-bool MainApp::StartFire(MainApp::SFire sFire)
+bool MainApp::StartFire(MainApp::SFire fire)
 {
     if (NULL != m_xHandle)
     {
@@ -247,54 +247,54 @@ bool MainApp::StartFire(MainApp::SFire sFire)
         return false;
     }
 
-    if (sFire.outputIndex >= HWCONFIG_OUTPUT_COUNT)
+    if (fire.outputIndex >= HWCONFIG_OUTPUT_COUNT)
     {
         ESP_LOGE(TAG, "Output index is invalid !");
-        m_sState.generalState = MainApp::EGeneralState::FiringUnknownError;
+        m_state.generalState = MainApp::EGeneralState::FiringUnknownError;
         return false;
     }
 
     // If it's in dry-run mode, power shouldn't be present
     // if it's armed, power should be present.
-    if (!m_sState.isArmed)
+    if (!m_state.isArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.generalState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
+        m_state.generalState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
         return false;
     }
 
-    ESP_LOGI(TAG, "Fire command issued for output index: %" PRIu32, sFire.outputIndex);
+    ESP_LOGI(TAG, "Fire command issued for output index: %" PRIu32, fire.outputIndex);
 
-    MainApp::SFire* pCopyFire = (MainApp::SFire*)malloc(sizeof(MainApp::SFire));
-    *pCopyFire = sFire;
+    MainApp::SFire* fire_param = (MainApp::SFire*)malloc(sizeof(MainApp::SFire));
+    *fire_param = fire;
 
     /* Create the task, storing the handle. */
-    const BaseType_t xReturned = xTaskCreate(
+    const BaseType_t x_returned = xTaskCreate(
         FireTask,               /* Function that implements the task. */
         "Fire",                 /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
-        ( void * )pCopyFire,    /* Parameter passed into the task. */
+        ( void * )fire_param,   /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
-    assert(xReturned == pdPASS);
+    assert(pdPASS == x_returned);
     return true;
 }
 
-void MainApp::FireTask(void* pParam)
+void MainApp::FireTask(void* param)
 {
-    MainApp* pMainApp = (MainApp*)&g_app;
+    MainApp* main_app = (MainApp*)&g_app;
 
-    const MainApp::SFire* pFireParam = (const MainApp::SFire*)pParam;
-    const uint32_t output_index = pFireParam->outputIndex;
+    const MainApp::SFire* fire_param = (const MainApp::SFire*)param;
+    const uint32_t output_index = fire_param->outputIndex;
 
     HWGPIO_WriteMasterPowerRelay(false);
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::Firing;
+    main_app->m_state.generalState = MainApp::EGeneralState::Firing;
 
     ESP_LOGI(TAG, "Firing in progress: %" PRIu32, output_index);
 
-    MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[output_index];
+    MainApp::SRelay* relay = &main_app->m_outputs[output_index];
 
-    pSRelay->isEN = true;
+    relay->isEN = true;
 
     // Enable master power
     HWGPIO_WriteMasterPowerRelay(true);
@@ -305,16 +305,16 @@ void MainApp::FireTask(void* pParam)
     vTaskDelay(pdMS_TO_TICKS(fire_hold_ms));
     HWGPIO_WriteSingleRelay(output_index, false);
 
-    pSRelay->isEN = false;
-    pSRelay->isFired = true;
+    relay->isEN = false;
+    relay->isFired = true;
 
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::FiringOK;
+    main_app->m_state.generalState = MainApp::EGeneralState::FiringOK;
     ESP_LOGI(TAG, "Firing is done");
     // Master power relay shouln'd be active during check
     HWGPIO_WriteMasterPowerRelay(false);
 
-    free((void*)pFireParam);
-    pMainApp->m_xHandle = NULL;
+    free((void*)fire_param);
+    main_app->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
@@ -327,30 +327,30 @@ bool MainApp::StartLiveCheckContinuity()
     }
 
     // Should't be able to works when the power is present
-    if (m_sState.isArmed)
+    if (m_state.isArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.generalState = MainApp::EGeneralState::LiveCheckContinuity;
+        m_state.generalState = MainApp::EGeneralState::LiveCheckContinuity;
         return false;
     }
 
     ESP_LOGI(TAG, "Live check continuity command issued");
 
     /* Create the task, storing the handle. */
-    const BaseType_t xReturned = xTaskCreate(
+    const BaseType_t x_returned = xTaskCreate(
         LiveCheckContinuityTask,/* Function that implements the task. */
         "LiveCheckCont",    /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
         ( void * )this,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
-    assert(xReturned == pdPASS);
+    assert(pdPASS == x_returned);
     return true;
 }
 
-void MainApp::LiveCheckContinuityTask(void* pParam)
+void MainApp::LiveCheckContinuityTask(void* param)
 {
-    MainApp* pMainApp = (MainApp*)&g_app;
+    MainApp* main_app = (MainApp*)&g_app;
 
     // Master power relay shouln'd be active during check
     HWGPIO_WriteMasterPowerRelay(false);
@@ -358,11 +358,11 @@ void MainApp::LiveCheckContinuityTask(void* pParam)
     // Clear relay bus
     HWGPIO_ClearRelayBus();
 
-    pMainApp->m_isOperationCancelled = false;
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::LiveCheckContinuity;
+    main_app->m_isOperationCancelled = false;
+    main_app->m_state.generalState = MainApp::EGeneralState::LiveCheckContinuity;
 
-    MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[0];
-    HWGPIO_WriteSingleRelay(pSRelay->index, true);
+    MainApp::SRelay* relay = &main_app->m_outputs[0];
+    HWGPIO_WriteSingleRelay(relay->index, true);
 
     do
     {
@@ -372,15 +372,15 @@ void MainApp::LiveCheckContinuityTask(void* pParam)
             break; // Cancel if the switch is on
         }
 
-        pMainApp->m_sState.isContinuityCheckOK = HWGPIO_ReadConnectionSense();
+        main_app->m_state.isContinuityCheckOK = HWGPIO_ReadConnectionSense();
         vTaskDelay(pdMS_TO_TICKS(50));
     }
-    while(!pMainApp->m_isOperationCancelled);
+    while(!main_app->m_isOperationCancelled);
 
-    HWGPIO_WriteSingleRelay(pSRelay->index, false);
+    HWGPIO_WriteSingleRelay(relay->index, false);
 
-    pMainApp->m_sState.generalState = MainApp::EGeneralState::Idle;
-    pMainApp->m_xHandle = NULL;
+    main_app->m_state.generalState = MainApp::EGeneralState::Idle;
+    main_app->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
@@ -393,30 +393,30 @@ bool MainApp::StartFullOutputCalibration()
     }
 
     // Should't be able to works when the power is present
-    if (m_sState.isArmed)
+    if (m_state.isArmed)
     {
         ESP_LOGE(TAG, "Cannot fire, not ready !");
-        m_sState.generalState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
+        m_state.generalState = MainApp::EGeneralState::FiringMasterSwitchWrongStateError;
         return false;
     }
 
     ESP_LOGI(TAG, "Ouput calibration command issued");
 
     /* Create the task, storing the handle. */
-    const BaseType_t xReturned = xTaskCreate(
+    const BaseType_t x_returned = xTaskCreate(
         FullOutputCalibrationTask,/* Function that implements the task. */
         "OutputCalibration",    /* Text name for the task. */
         4096,                   /* Stack size in words, not bytes. */
         ( void * )this,    /* Parameter passed into the task. */
         tskIDLE_PRIORITY+10,    /* Priority at which the task is created. */
         &m_xHandle );           /* Used to pass out the created task's handle. */
-    assert(xReturned == pdPASS);
+    assert(pdPASS == x_returned);
     return true;
 }
 
-void MainApp::FullOutputCalibrationTask(void* pParam)
+void MainApp::FullOutputCalibrationTask(void* param)
 {
-    MainApp* pMainApp = (MainApp*)pParam;
+    MainApp* main_app = (MainApp*)param;
 
     // Master power relay shouln'd be active during check
     HWGPIO_WriteMasterPowerRelay(false);
@@ -427,25 +427,25 @@ void MainApp::FullOutputCalibrationTask(void* pParam)
     // Scan the bus to find connected
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        MainApp::SRelay* pSRelay = &pMainApp->m_sOutputs[i];
+        MainApp::SRelay* relay = &main_app->m_outputs[i];
 
-        HWGPIO_WriteSingleRelay(pSRelay->index, true);
+        HWGPIO_WriteSingleRelay(relay->index, true);
         // Ensure the jumper is not there yet
         bool is_detect = HWGPIO_ReadConnectionSense();
         while(is_detect)
         {
-            ESP_LOGI(TAG, "Waiting for jumper on output %" PRIu32 " to get disconnected ... ", pSRelay->index+1);
+            ESP_LOGI(TAG, "Waiting for jumper on output %" PRIu32 " to get disconnected ... ", relay->index+1);
             vTaskDelay(pdMS_TO_TICKS(250));
             is_detect = HWGPIO_ReadConnectionSense();
         }
         ESP_LOGI(TAG, "Jumper is disconnected");
         // Give some time to insert it
-        HWGPIO_WriteSingleRelay(pSRelay->index, false);
+        HWGPIO_WriteSingleRelay(relay->index, false);
 
         vTaskDelay(pdMS_TO_TICKS(500));
 
         uint32_t count = 0;
-        HWGPIO_WriteSingleRelay(pSRelay->index, true);
+        HWGPIO_WriteSingleRelay(relay->index, true);
 
         // Ensure the jumper is connected
         bool is_detect2 = HWGPIO_ReadConnectionSense();
@@ -456,48 +456,48 @@ void MainApp::FullOutputCalibrationTask(void* pParam)
             is_detect2 = HWGPIO_ReadConnectionSense();
         }
 
-        HWGPIO_WriteSingleRelay(pSRelay->index, false);
+        HWGPIO_WriteSingleRelay(relay->index, false);
 
-        ESP_LOGI(TAG, "Output %" PRIu32 ", count: %" PRIu32 " ms", pSRelay->index+1, (uint32_t)pdTICKS_TO_MS(count));
+        ESP_LOGI(TAG, "Output %" PRIu32 ", count: %" PRIu32 " ms", relay->index+1, (uint32_t)pdTICKS_TO_MS(count));
     }
 
     // Ensure the power if really off
     HWGPIO_ClearRelayBus();
     HWGPIO_WriteMasterPowerRelay(false);
 
-    pMainApp->m_xHandle = NULL;
+    main_app->m_xHandle = NULL;
     vTaskDelete(NULL);
 }
 
-void MainApp::ExecCheckConnections()
+void MainApp::ExecTestConnections()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::CheckConnections };
-    m_sCmd = sCmd;
+    const MainApp::SCmd cmd = { .cmd = MainApp::ECmd::TestConnections };
+    m_cmd = cmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
 void MainApp::ExecLiveCheckContinuity()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::LiveCheckContinuity };
-    m_sCmd = sCmd;
+    const MainApp::SCmd cmd = { .cmd = MainApp::ECmd::LiveCheckContinuity };
+    m_cmd = cmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
 void MainApp::ExecFullOutputCalibration()
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::OutputCalib };
-    m_sCmd = sCmd;
+    const MainApp::SCmd cmd = { .cmd = MainApp::ECmd::OutputCalib };
+    m_cmd = cmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
 void MainApp::ExecFire(uint32_t output_index)
 {
     xSemaphoreTake(m_xSemaphoreHandle, portMAX_DELAY);
-    const MainApp::SCmd sCmd = { .eCmd = MainApp::ECmd::Fire, .uArg = { .sFire = { .outputIndex = output_index } } };
-    m_sCmd = sCmd;
+    const MainApp::SCmd cmd = { .cmd = MainApp::ECmd::Fire, .arg = { .fire = { .outputIndex = output_index } } };
+    m_cmd = cmd;
     xSemaphoreGive(m_xSemaphoreHandle);
 }
 
@@ -510,14 +510,14 @@ void MainApp::ExecCancel()
 
 void MainApp::UpdateLED(uint32_t output_index, bool force_refresh)
 {
-    MainApp::SRelay* pSRelay = &m_sOutputs[output_index];
+    MainApp::SRelay* relay = &m_outputs[output_index];
 
-    MainApp::EOutputState eOutputState = GetOutputState(pSRelay);
-    if (MainApp::EOutputState::Enabled == eOutputState)
+    const MainApp::EOutputState output_state = GetOutputState(relay);
+    if (MainApp::EOutputState::Enabled == output_state)
         HWGPIO_SetOutputRelayStatusColor(output_index, 0, 200, 0);
-    else if (MainApp::EOutputState::Fired == eOutputState) // White for fired
+    else if (MainApp::EOutputState::Fired == output_state) // White for fired
         HWGPIO_SetOutputRelayStatusColor(output_index, 100, 100, 0);
-    else if (MainApp::EOutputState::Connected == eOutputState) // YELLOW for connected
+    else if (MainApp::EOutputState::Connected == output_state) // YELLOW for connected
         HWGPIO_SetOutputRelayStatusColor(output_index, 200, 200, 0);
     else // minimal white illuminiation
         HWGPIO_SetOutputRelayStatusColor(output_index, 10, 10, 10);
@@ -529,19 +529,19 @@ void MainApp::UpdateLED(uint32_t output_index, bool force_refresh)
 void MainApp::CheckUserInput()
 {
     // Encoder move
-    static TickType_t ttEncoderSwitchTicks = 0;
-    if ( !HWGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks != 0 )
+    static TickType_t encoder_switch_ticks = 0;
+    if ( !HWGPIO_IsEncoderSwitchON() && encoder_switch_ticks != 0 )
     {
         // 100 ms check maximum ...
-        if ( (xTaskGetTickCount() - ttEncoderSwitchTicks) > pdMS_TO_TICKS(100) )
+        if ( (xTaskGetTickCount() - encoder_switch_ticks) > pdMS_TO_TICKS(100) )
         {
             g_uiMgr.EncoderMove(UIBase::BTEvent::Click, 0);
         }
-        ttEncoderSwitchTicks = 0;
+        encoder_switch_ticks = 0;
     }
-    else if (HWGPIO_IsEncoderSwitchON() && ttEncoderSwitchTicks == 0)
+    else if (HWGPIO_IsEncoderSwitchON() && 0 == encoder_switch_ticks)
     {
-        ttEncoderSwitchTicks = xTaskGetTickCount();
+        encoder_switch_ticks = xTaskGetTickCount();
     }
 
     const int32_t count = HWGPIO_GetEncoderCount();
@@ -551,36 +551,36 @@ void MainApp::CheckUserInput()
 
 MainApp::SRelay MainApp::GetRelayState(uint32_t output_index)
 {
-    return m_sOutputs[output_index];
+    return m_outputs[output_index];
 }
 
-MainApp::EOutputState MainApp::GetOutputState(const MainApp::SRelay* pSRelay)
+MainApp::EOutputState MainApp::GetOutputState(const MainApp::SRelay* relay)
 {
-    if (pSRelay->isEN)
+    if (relay->isEN)
         return MainApp::EOutputState::Enabled;
-    if (pSRelay->isFired) // White for fired
+    if (relay->isFired) // White for fired
         return MainApp::EOutputState::Fired;
-    if (pSRelay->isConnected) // YELLOW for connected
+    if (relay->isConnected) // YELLOW for connected
         return MainApp::EOutputState::Connected;
     return MainApp::EOutputState::Idle;
 }
 
 bool MainApp::IsArmed()
 {
-    return m_sState.isArmed;
+    return m_state.isArmed;
 }
 
 MainApp::EGeneralState MainApp::GetGeneralState()
 {
-    return m_sState.generalState;
+    return m_state.generalState;
 }
 
 bool MainApp::GetContinuityTest()
 {
-    return m_sState.isContinuityCheckOK;
+    return m_state.isContinuityCheckOK;
 }
 
 double MainApp::GetProgress()
 {
-    return m_sState.progressOfOne;
+    return m_state.progressOfOne;
 }

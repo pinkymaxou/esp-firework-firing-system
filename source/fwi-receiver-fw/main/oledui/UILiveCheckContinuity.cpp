@@ -16,9 +16,9 @@ void UILiveCheckContinuity::OnExit()
 
 void UILiveCheckContinuity::OnTick()
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(200) )
+    if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(200) )
     {
-        m_ttLastChangeTicks = xTaskGetTickCount();
+        m_last_change_ticks = xTaskGetTickCount();
         DrawScreen();
     }
 }
@@ -34,14 +34,14 @@ void UILiveCheckContinuity::OnEncoderMove(UIBase::BTEvent btn_event, int32_t cli
 void UILiveCheckContinuity::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
     char text[65];
 
-    SSD1306_ClearDisplay(pss1306Handle);
-    sprintf(text, "Test continuity\n#1: %s",
+    SSD1306_ClearDisplay(display);
+    sprintf(text, "Test single\n#1: %s",
         g_app.GetContinuityTest() ? "YES" : "NO");
-    SSD1306_DrawString(pss1306Handle, 15, 4, text);
+    SSD1306_DrawString(display, 15, 4, text);
 
-    SSD1306_UpdateDisplay(pss1306Handle);
+    SSD1306_UpdateDisplay(display);
     #endif
 }

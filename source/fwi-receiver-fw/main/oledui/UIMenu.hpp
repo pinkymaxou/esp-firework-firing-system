@@ -33,18 +33,18 @@ class UIMenu : UIBase
 
     private:
 
-    bool m_isNeedRefresh = false;
-    int32_t m_menuItemIndex = 0;
-    const SMenu m_sMenuItems[(int)MenuItem::Count] =
+    bool m_is_need_refresh = false;
+    int32_t m_menu_item_index = 0;
+    const SMenu m_menu_items[(int)MenuItem::Count] =
     {
         [(int)MenuItem::Exit]            = { .name = "Exit" },
         [(int)MenuItem::Settings]        = { .name = "Settings" },
         [(int)MenuItem::TestConn]        = { .name = "Test conn." },
-        [(int)MenuItem::LiveCheckContinuity] = { .name = "Chk. conn." },
+        [(int)MenuItem::LiveCheckContinuity] = { .name = "Test single" },
         [(int)MenuItem::Reboot]          = { .name = "Reboot" },
         //[(int)MenuItem::About]           = { .name = "About" },
     };
-    static_assert((int)MenuItem::Count == (sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
+    static_assert((int)MenuItem::Count == (sizeof(m_menu_items)/sizeof(m_menu_items[0])), "Menu items doesn't match");
 
-    int32_t m_encoderTicks = 0;
+    int32_t m_encoder_ticks = 0;
 };

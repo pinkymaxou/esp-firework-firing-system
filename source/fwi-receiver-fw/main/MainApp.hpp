@@ -44,7 +44,7 @@ class MainApp
     {
         None = 0,
         Fire,
-        CheckConnections,
+        TestConnections,
         OutputCalib,
         LiveCheckContinuity,
     };
@@ -56,13 +56,13 @@ class MainApp
 
     union UArg
     {
-        SFire sFire;
+        SFire fire;
     };
 
     struct SCmd
     {
-        MainApp::ECmd eCmd;
-        UArg uArg;
+        MainApp::ECmd cmd;
+        UArg arg;
     } ;
 
     struct SRelay
@@ -94,7 +94,7 @@ class MainApp
 
     void ExecFire(uint32_t output_index);
 
-    void ExecCheckConnections();
+    void ExecTestConnections();
 
     void ExecLiveCheckContinuity();
 
@@ -104,7 +104,7 @@ class MainApp
 
     SRelay GetRelayState(uint32_t output_index);
 
-    MainApp::EOutputState GetOutputState(const SRelay* pSRelay);
+    MainApp::EOutputState GetOutputState(const SRelay* relay);
 
     MainApp::EGeneralState GetGeneralState();
 
@@ -117,28 +117,28 @@ class MainApp
     private:
 
     // Firing related
-    bool StartCheckConnections();
-    static void CheckConnectionsTask(void* pParam);
+    bool StartTestConnections();
+    static void TestConnectionsTask(void* param);
 
-    bool StartFire(MainApp::SFire sFire);
-    static void FireTask(void* pParam);
+    bool StartFire(MainApp::SFire fire);
+    static void FireTask(void* param);
 
     bool StartFullOutputCalibration();
-    static void FullOutputCalibrationTask(void* pParam);
+    static void FullOutputCalibrationTask(void* param);
 
     bool StartLiveCheckContinuity();
-    static void LiveCheckContinuityTask(void* pParam);
+    static void LiveCheckContinuityTask(void* param);
 
     void UpdateLED(uint32_t output_index, bool force_refresh);
 
     void CheckUserInput();
 
     private:
-    SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-    SState m_sState = { .isArmed = false/*, .ttArmedTicks = 0*/, .progressOfOne = 0.0d };
+    SRelay m_outputs[HWCONFIG_OUTPUT_COUNT];
+    SState m_state = { .isArmed = false/*, .ttArmedTicks = 0*/, .progressOfOne = 0.0d };
 
     // Input commands
-    SCmd m_sCmd = { .eCmd = ECmd::None };
+    SCmd m_cmd = { .cmd = ECmd::None };
     bool m_isOperationCancelled = false;
 
     // Semaphore

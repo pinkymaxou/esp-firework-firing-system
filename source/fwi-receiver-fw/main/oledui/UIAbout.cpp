@@ -28,13 +28,13 @@ void UIAbout::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 void UIAbout::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
     char text[65];
 
-    SSD1306_ClearDisplay(pss1306Handle);
+    SSD1306_ClearDisplay(display);
     sprintf(text, "coucou");
-    SSD1306_DrawString(pss1306Handle, 15, 4, text);
+    SSD1306_DrawString(display, 15, 4, text);
 
-    SSD1306_UpdateDisplay(pss1306Handle);
+    SSD1306_UpdateDisplay(display);
     #endif
 }

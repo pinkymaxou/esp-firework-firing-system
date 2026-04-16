@@ -1,7 +1,7 @@
 #include "Settings.hpp"
 #include <string.h>
 
-static bool validateWifiPassword(const NVSJSON_SSettingEntry* pSettingEntry, const char* value);
+static bool validateWifiPassword(const NVSJSON_SSettingEntry* setting_entry, const char* value);
 
 NVSJSON_SHandle g_settingHandle;
 
@@ -31,8 +31,8 @@ void SETTINGS_Init()
     NVSJSON_Load(&g_settingHandle);
 }
 
-static bool validateWifiPassword(const NVSJSON_SSettingEntry* pSettingEntry, const char* value)
+static bool validateWifiPassword(const NVSJSON_SSettingEntry* setting_entry, const char* value)
 {
     const size_t n = strlen(value);
-    return n > 8 || n == 0;
+    return n > 8 || 0 == n;
 }

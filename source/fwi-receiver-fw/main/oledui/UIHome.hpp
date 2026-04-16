@@ -14,7 +14,7 @@ class UIHome : UIBase
     void DrawScreen(void) override;
 
     private:
-    TickType_t m_ttLastChangeTicks = 0;
+    TickType_t m_last_change_ticks = 0;
     bool m_isPublicIP = false;
     bool m_isWifiStationActivated = false;
 };

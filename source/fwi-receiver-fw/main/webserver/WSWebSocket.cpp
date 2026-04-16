@@ -135,7 +135,7 @@ static esp_err_t handleCommand(httpd_req_t* req, const cJSON* root)
     }
     else if (0 == strcmp(cmd_str, "checkconnections"))
     {
-        g_app.ExecCheckConnections();
+        g_app.ExecTestConnections();
         return ESP_OK;
     }
     else if (0 == strcmp(cmd_str, "setsettings"))
