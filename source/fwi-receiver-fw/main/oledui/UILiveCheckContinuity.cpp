@@ -3,27 +3,27 @@
 #include "UIManager.hpp"
 #include "MainApp.hpp"
 
-void UILiveCheckContinuity::OnEnter()
+void UILiveCheckContinuity::onEnter()
 {
     g_app.ExecLiveCheckContinuity();
-    DrawScreen();
+    drawScreen();
 }
 
-void UILiveCheckContinuity::OnExit()
+void UILiveCheckContinuity::onExit()
 {
     g_app.ExecCancel();
 }
 
-void UILiveCheckContinuity::OnTick()
+void UILiveCheckContinuity::onTick()
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(200) )
+    if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(200) )
     {
-        m_ttLastChangeTicks = xTaskGetTickCount();
-        DrawScreen();
+        m_last_change_ticks = xTaskGetTickCount();
+        drawScreen();
     }
 }
 
-void UILiveCheckContinuity::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UILiveCheckContinuity::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     if (UIBase::BTEvent::Click == btn_event)
     {
@@ -31,17 +31,17 @@ void UILiveCheckContinuity::OnEncoderMove(UIBase::BTEvent btn_event, int32_t cli
     }
 }
 
-void UILiveCheckContinuity::DrawScreen()
+void UILiveCheckContinuity::drawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    SSD1306* display = HWGPIO::getSSD1306Handle();
     char text[65];
 
-    SSD1306_ClearDisplay(pss1306Handle);
-    sprintf(text, "Test continuity\n#1: %s",
+    display->clearDisplay();
+    sprintf(text, "Test single\n#1: %s",
         g_app.GetContinuityTest() ? "YES" : "NO");
-    SSD1306_DrawString(pss1306Handle, 15, 4, text);
+    display->drawString( 15, 4, text);
 
-    SSD1306_UpdateDisplay(pss1306Handle);
+    display->updateDisplay();
     #endif
 }

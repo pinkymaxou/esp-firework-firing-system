@@ -3,27 +3,27 @@
 #include "UIManager.hpp"
 #include "MainApp.hpp"
 
-void UITestConn::OnEnter()
+void UITestConn::onEnter()
 {
-    g_app.ExecCheckConnections();
-    DrawScreen();
+    g_app.ExecTestConnections();
+    drawScreen();
 }
 
-void UITestConn::OnExit()
+void UITestConn::onExit()
 {
     g_app.ExecCancel();
 }
 
-void UITestConn::OnTick()
+void UITestConn::onTick()
 {
-    if ( (xTaskGetTickCount() - m_ttLastChangeTicks) > pdMS_TO_TICKS(500) )
+    if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(500) )
     {
-        m_ttLastChangeTicks = xTaskGetTickCount();
-        DrawScreen();
+        m_last_change_ticks = xTaskGetTickCount();
+        drawScreen();
     }
 }
 
-void UITestConn::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UITestConn::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     if (UIBase::BTEvent::Click == btn_event)
     {
@@ -31,34 +31,34 @@ void UITestConn::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
     }
 }
 
-void UITestConn::DrawScreen()
+void UITestConn::drawScreen()
 {
     // All ignitor slots status
     uint32_t conn_count = 0;
 
     for(int i = 0; i < HWCONFIG_OUTPUT_COUNT; i++)
     {
-        const MainApp::SRelay sRelay = g_app.GetRelayState(i);
-        if (sRelay.isConnected)
+        const MainApp::SRelay relay = g_app.GetRelayState(i);
+        if (relay.isConnected)
             conn_count++;
     }
 
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    SSD1306* display = HWGPIO::getSSD1306Handle();
     char text[65];
 
-    SSD1306_ClearDisplay(pss1306Handle);
+    display->clearDisplay();
     sprintf(text, "Testing. conn\n%" PRIu32 " / %" PRIu32, conn_count, (uint32_t)HWCONFIG_OUTPUT_COUNT);
-    SSD1306_DrawString(pss1306Handle, 15, 4, text);
+    display->drawString( 15, 4, text);
 
     const int32_t width = 128 - 16*2;
     const double of_one = g_app.GetProgress();
     if (of_one > 0.0d && of_one < 1.0d)
     {
         const int32_t bar_width = (int32_t)(of_one*width);
-        SSD1306_FillRect(pss1306Handle, 16, 64 - 16, bar_width, 16, true);
-        SSD1306_DrawRect(pss1306Handle, 16, 64 - 16, width, 16, true);
+        display->fillRect( 16, 64 - 16, bar_width, 16, true);
+        display->drawRect( 16, 64 - 16, width, 16, true);
     }
-    SSD1306_UpdateDisplay(pss1306Handle);
+    display->updateDisplay();
     #endif
 }

@@ -1,16 +1,8 @@
-#ifndef _WSWEBSOCKET_H_
-#define _WSWEBSOCKET_H_
+#pragma once
 
 #include <esp_http_server.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-esp_err_t wsHandler(httpd_req_t* req);
-
-#ifdef __cplusplus
+namespace WSWebSocket
+{
+    esp_err_t handler(httpd_req_t* req);
 }
-#endif
-
-#endif

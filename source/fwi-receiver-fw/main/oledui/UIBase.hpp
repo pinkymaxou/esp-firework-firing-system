@@ -6,29 +6,29 @@
 class UIBase
 {
     public:
-    enum BTEvent
+    enum class BTEvent
     {
         Click,
         EncoderClick
     };
 
-    virtual void OnEnter(void)
+    virtual void onEnter(void)
     {
     }
 
-    virtual void OnExit(void)
+    virtual void onExit(void)
     {
     }
 
-    virtual void OnEncoderMove(BTEvent btn_event, int32_t click_count)
+    virtual void onEncoderMove(BTEvent btn_event, int32_t click_count)
     {
     }
 
-    virtual void OnTick(void)
+    virtual void onTick(void)
     {
     }
 
-    virtual void DrawScreen(void)
+    virtual void drawScreen(void)
     {
     }
 };

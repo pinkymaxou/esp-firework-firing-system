@@ -1,39 +1,31 @@
-#ifndef _SETTING_H_
-#define _SETTING_H_
+#pragma once
 
 #include "nvsjson.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef enum
+namespace Settings
 {
-    SETTINGS_EENTRY_WiFiChannel,
-    SETTINGS_EENTRY_WAPPass,
+    enum EEntry
+    {
+        WiFiChannel,
+        WAPPass,
 
-    SETTINGS_EENTRY_WSTAIsActive,
-    SETTINGS_EENTRY_WSTASSID,
-    SETTINGS_EENTRY_WSTAPass,
+        WSTAIsActive,
+        WSTASSID,
+        WSTAPass,
 
-    SETTINGS_EENTRY_FiringHoldTimeMS,
-    SETTINGS_EENTRY_FiringPWMPercent,
+        FiringHoldTimeMS,
+        FiringPWMPercent,
 
-    SETTINGS_EENTRY_Count
-} SETTINGS_EENTRY;
+        Count
+    };
 
-void SETTINGS_Init();
+    void init();
 
-#define SETTINGS_FIRINGHOLDTIMEMS_MIN (50)
-#define SETTINGS_FIRINGHOLDTIMEMS_MAX (5000)
+    constexpr int32_t FIRINGHOLDTIMEMS_MIN = 50;
+    constexpr int32_t FIRINGHOLDTIMEMS_MAX = 5000;
 
-#define SETTINGS_FIRINGPWMPERCENT_MIN (5)
-#define SETTINGS_FIRINGPWMPERCENT_MAX (100)
+    constexpr int32_t FIRINGPWMPERCENT_MIN = 5;
+    constexpr int32_t FIRINGPWMPERCENT_MAX = 100;
 
-extern NVSJSON_SHandle g_settingHandle;
-
-#ifdef __cplusplus
+    extern NVSJSON_SHandle g_handle;
 }
-#endif
-
-#endif

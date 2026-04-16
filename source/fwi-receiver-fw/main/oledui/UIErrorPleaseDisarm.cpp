@@ -1,32 +1,33 @@
 #include "UIErrorPleaseDisarm.hpp"
 #include "assets/BitmapPotato.h"
+#include <string.h>
 
-void UIErrorPleaseDisarm::OnEnter()
+void UIErrorPleaseDisarm::onEnter()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
+    SSD1306* display = HWGPIO::getSSD1306Handle();
     char text[129] = {0,};
 
     sprintf(text, "PLEASE\nDISARM");
 
-    SSD1306_ClearDisplay(pss1306Handle);
-    memcpy(pss1306Handle->buffer, m_u8AlertDatas, m_u32AlertDataLen);
-    SSD1306_DrawString(pss1306Handle, 55, 0, text);
-    SSD1306_UpdateDisplay(pss1306Handle);
+    display->clearDisplay();
+    memcpy(display->m_buffer, g_alert_data, g_alert_data_len);
+    display->drawString( 55, 0, text);
+    display->updateDisplay();
     #endif
 }
 
-void UIErrorPleaseDisarm::OnExit()
+void UIErrorPleaseDisarm::onExit()
 {
 
 }
 
-void UIErrorPleaseDisarm::OnTick()
+void UIErrorPleaseDisarm::onTick()
 {
 
 }
 
-void UIErrorPleaseDisarm::OnEncoderMove(BTEvent btn_event, int32_t click_count)
+void UIErrorPleaseDisarm::onEncoderMove(BTEvent btn_event, int32_t click_count)
 {
 
 }

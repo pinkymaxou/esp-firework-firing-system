@@ -1,46 +1,38 @@
-#ifndef HWGPIO_H_
-#define HWGPIO_H_
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c_master.h"
-#include "SSD1306.h"
+#include "SSD1306.hpp"
 #include "HWConfig.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace HWGPIO
+{
+    void init();
 
-void HWGPIO_Init();
+    void setSanityLED(bool is_enabled, bool is_armed);
 
-void HWGPIO_SetSanityLED(bool isEnabled, bool isArmed);
+    void clearRelayBus();
 
-void HWGPIO_ClearRelayBus();
+    void writeSingleRelay(uint32_t output_index, bool value);
 
-void HWGPIO_WriteSingleRelay(uint32_t output_index, bool value);
+    void writeMasterPowerRelay(bool value);
 
-void HWGPIO_WriteMasterPowerRelay(bool value);
+    bool readMasterPowerSense();
 
-bool HWGPIO_ReadMasterPowerSense();
+    bool readConnectionSense();
 
-bool HWGPIO_ReadConnectionSense();
+    void refreshLEDStrip();
 
-void HWGPIO_RefreshLEDStrip();
+    void setOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b);
 
-void HWGPIO_SetOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b);
+    bool isEncoderSwitchON();
 
-bool HWGPIO_IsEncoderSwitchON();
+    uint32_t getRelayArea(uint32_t output_index);
 
-uint32_t HWGPIO_GetRelayArea(uint32_t output_index);
+    int32_t getEncoderCount();
 
-int32_t HWGPIO_GetEncoderCount();
-
-SSD1306_handle* GPIO_GetSSD1306Handle();
-
-#ifdef __cplusplus
+    SSD1306* getSSD1306Handle();
 }
-#endif
-
-#endif
