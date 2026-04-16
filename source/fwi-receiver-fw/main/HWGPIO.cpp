@@ -1,6 +1,7 @@
 #include "HWGPIO.hpp"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+#include "driver/i2c_master.h"
 #include "esp_log.h"
 #include "Settings.hpp"
 #include "assets/BitmapPotato.h"
@@ -97,22 +98,29 @@ void HWGPIO_Init()
     /* Set all LED off to clear all pixels */
     led_strip_clear(led_strip);
 
-	const i2c_port_t i2c_master_port = HWCONFIG_I2C_MASTER_NUM;
-    i2c_config_t conf;
-    memset(&conf, 0, sizeof(conf));
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = HWCONFIG_I2C_SDA;
-    conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = HWCONFIG_I2C_SCL;
-    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.master.clk_speed = HWCONFIG_I2C_MASTER_FREQ_HZ;
-    i2c_param_config(i2c_master_port, &conf);
-	ESP_ERROR_CHECK(i2c_driver_install(i2c_master_port, conf.mode, HWCONFIG_I2C_MASTER_RX_BUF_DISABLE, HWCONFIG_I2C_MASTER_TX_BUF_DISABLE, 0));
+    i2c_master_bus_config_t i2c_bus_config = {
+        .i2c_port = HWCONFIG_I2C_MASTER_NUM,
+        .sda_io_num = HWCONFIG_I2C_SDA,
+        .scl_io_num = HWCONFIG_I2C_SCL,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags = { .enable_internal_pullup = true },
+    };
+    i2c_master_bus_handle_t i2c_bus_handle;
+    ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_config, &i2c_bus_handle));
 
     #if HWCONFIG_OLED_ISPRESENT != 0
+    i2c_device_config_t oled_dev_config = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = HWCONFIG_OLED_I2CADDR,
+        .scl_speed_hz = HWCONFIG_I2C_MASTER_FREQ_HZ,
+    };
+    i2c_master_dev_handle_t oled_dev_handle;
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c_bus_handle, &oled_dev_config, &oled_dev_handle));
+
     static SSD1306_config cfgSSD1306 = SSD1306_CONFIG_DEFAULT_128x64;
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
-    SSD1306_Init(&m_ssd1306, i2c_master_port, &cfgSSD1306);
+    SSD1306_Init(&m_ssd1306, oled_dev_handle, &cfgSSD1306);
     SSD1306_ClearDisplay(&m_ssd1306);
     memcpy(m_ssd1306.u8Buffer, m_u8LogoDatas, m_u32LogoDataLen);
     assert(m_u32LogoDataLen == m_ssd1306.u32BufferLen); // , "Bitmap and buffer doesn't match"

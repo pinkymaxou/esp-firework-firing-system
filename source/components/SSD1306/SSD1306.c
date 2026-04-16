@@ -1,4 +1,7 @@
 #include "SSD1306.h"
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 // Fonts
 #include "fonts/FreeMono12pt7b.h"
 #include "fonts/FreeMono9pt7b.h"
@@ -16,17 +19,16 @@ typedef enum
 } ControlByte;
 
 static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value);
-static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int n);
+static bool sendCommand(SSD1306_handle* pHandle, const uint8_t* value, int n);
 
-static bool sendData1(SSD1306_handle* pHandle, uint8_t value);
-static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int n);
-static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length);
+static bool sendData(SSD1306_handle* pHandle, const uint8_t* value, int n);
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, const uint8_t* value, int length);
 
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y);
 
-bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig)
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_master_dev_handle_t i2c_dev, SSD1306_config* pconfig)
 {
-    pHandle->i2c_port = i2c_port;
+    pHandle->i2c_dev = i2c_dev;
     pHandle->sConfig = *pconfig;
 
     pHandle->u32Width = 128;
@@ -307,45 +309,28 @@ static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value)
     return writeI2C(pHandle, ControlByte_Command, &value, 1);
 }
 
-static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendCommand(SSD1306_handle* pHandle, const uint8_t* value, int length)
 {
     return writeI2C(pHandle, ControlByte_Command, value, length);
 }
 
-static bool sendData1(SSD1306_handle* pHandle, uint8_t value)
-{
-    return writeI2C(pHandle, ControlByte_Data, &value, 1);
-}
-
-static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendData(SSD1306_handle* pHandle, const uint8_t* value, int length)
 {
     return writeI2C(pHandle, ControlByte_Data, value, length);
 }
 
-static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length)
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, const uint8_t* value, int length)
 {
-    bool retF = true;
-
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-
-	// Write sampling command
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_start(cmd));
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (pHandle->sConfig.i2cAddress<<1), true));
-    // CO = 0, D/C = 0 (Data = 1, Command = 0)
-    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (uint8_t)controlByte, true));  // Data mode (bit 6)
-    for(int i = 0; i < length; i++)
-    {
-	    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, *(value + i), true));
-    }
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_stop(cmd));
-
-	const esp_err_t ret = i2c_master_cmd_begin(pHandle->i2c_port, cmd, pdMS_TO_TICKS(1000));
-	if (ret != ESP_OK)
+    uint8_t* buf = malloc(length + 1);
+    if (!buf) return false;
+    buf[0] = (uint8_t)controlByte;
+    memcpy(buf + 1, value, length);
+    const esp_err_t ret = i2c_master_transmit(pHandle->i2c_dev, buf, length + 1, 1000);
+    free(buf);
+    if (ret != ESP_OK)
     {
         ESP_ERROR_CHECK_WITHOUT_ABORT(ret);
-        retF = false;
+        return false;
     }
-
-	i2c_cmd_link_delete(cmd);
-    return retF;
+    return true;
 }

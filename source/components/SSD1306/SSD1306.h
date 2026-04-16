@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "driver/i2c.h"
+#include "driver/i2c_master.h"
 #include "esp_log.h"
 #include <string.h>
 #include "gfxfont.h"
@@ -80,7 +80,7 @@ typedef struct
 
 typedef struct
 {
-    i2c_port_t i2c_port;
+    i2c_master_dev_handle_t i2c_dev;
     SSD1306_config sConfig;
 
     uint8_t* u8Buffer;
@@ -89,7 +89,7 @@ typedef struct
     uint32_t u32Width;
     uint32_t u32Height;
 
-    GFXfont* font;
+    const GFXfont* font;
     uint32_t u32BaselineY;
 
     bool bTextColor;
@@ -97,7 +97,7 @@ typedef struct
     bool bIsInit;
 } SSD1306_handle;
 
-bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig);
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_master_dev_handle_t i2c_dev, SSD1306_config* pconfig);
 
 void SSD1306_Uninit(SSD1306_handle* pHandle);
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2022-2023 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2022-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -8,11 +8,7 @@
 #include <stdint.h>
 #include "esp_err.h"
 #include "led_strip_rmt.h"
-#include "esp_idf_version.h"
-
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 0)
 #include "led_strip_spi.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,8 +56,8 @@ esp_err_t led_strip_set_pixel_rgbw(led_strip_handle_t strip, uint32_t index, uin
  * @param strip: LED strip
  * @param index: index of pixel to set
  * @param hue: hue part of color (0 - 360)
- * @param saturation: saturation part of color (0 - 255)
- * @param value: value part of color (0 - 255)
+ * @param saturation: saturation part of color (0 - 255, rescaled from 0 - 1. e.g. saturation = 0.5, rescaled to 127)
+ * @param value: value part of color (0 - 255, rescaled from 0 - 1. e.g. value = 0.5, rescaled to 127)
  *
  * @return
  *      - ESP_OK: Set HSV color for a specific pixel successfully
@@ -69,6 +65,22 @@ esp_err_t led_strip_set_pixel_rgbw(led_strip_handle_t strip, uint32_t index, uin
  *      - ESP_FAIL: Set HSV color for a specific pixel failed because other error occurred
  */
 esp_err_t led_strip_set_pixel_hsv(led_strip_handle_t strip, uint32_t index, uint16_t hue, uint8_t saturation, uint8_t value);
+
+/**
+ * @brief Set HSV for a specific pixel in 16-bit resolution
+ *
+ * @param strip: LED strip
+ * @param index: index of pixel to set
+ * @param hue: hue part of color (0 - 360)
+ * @param saturation: saturation part of color (0 - 65535, rescaled from 0 - 1. e.g. saturation = 0.5, rescaled to 32767)
+ * @param value: value part of color (0 - 65535, rescaled from 0 - 1. e.g. value = 0.5, rescaled to 32767)
+ *
+ * @return
+ *      - ESP_OK: Set HSV color for a specific pixel successfully
+ *      - ESP_ERR_INVALID_ARG: Set HSV color for a specific pixel failed because of an invalid argument
+ *      - ESP_FAIL: Set HSV color for a specific pixel failed because other error occurred
+ */
+esp_err_t led_strip_set_pixel_hsv_16(led_strip_handle_t strip, uint32_t index, uint16_t hue, uint16_t saturation, uint16_t value);
 
 /**
  * @brief Refresh memory colors to LEDs

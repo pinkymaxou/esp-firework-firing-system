@@ -633,6 +633,8 @@ static const char* GetESPChipId(esp_chip_model_t eChipid)
             return "ESP32C6";
         case CHIP_POSIX_LINUX:
             return "POSIX_LINUX";
+        default:
+            return "Unknown";
     }
     return "";
 }

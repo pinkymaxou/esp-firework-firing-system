@@ -13,7 +13,7 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
-#include "driver/GPIO.h"
+#include "driver/gpio.h"
 #include "HWGPIO.hpp"
 #include "lwip/apps/netbiosns.h"
 #include "lwip/ip4_addr.h"
@@ -41,7 +41,7 @@ static esp_err_t espnow_init(void);
 static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void wifistation_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
-static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status);
+static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status);
 static void example_espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len);
 
 static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len);
@@ -53,9 +53,9 @@ extern "C" {
 /* ESPNOW sending or receiving callback function is called in WiFi task.
  * Users should not do lengthy operations from this task. Instead, post
  * necessary data to a queue and handle it from a lower priority task. */
-static void example_espnow_send_cb(const uint8_t *mac_addr, esp_now_send_status_t status)
+static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
 {
-    if (mac_addr == NULL) {
+    if (tx_info == NULL) {
         ESP_LOGE(TAG, "Send cb arg error");
         return;
     }
