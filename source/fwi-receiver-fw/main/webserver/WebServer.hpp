@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-void WEBSERVER_Init();
+void webServerInit();
 
 #ifdef __cplusplus
 }

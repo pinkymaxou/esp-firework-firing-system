@@ -105,7 +105,7 @@ static void wifistation_event_handler(void* arg, esp_event_base_t event_base, in
         /*if (!m_bIsWebServerInit)
         {
             m_bIsWebServerInit = true;
-            WEBSERVER_Init();
+            webServerInit();
         }*/
     }
 }
@@ -286,7 +286,7 @@ void app_main(void)
     espnow_init();
 
     ESP_LOGI(TAG, "WEBSERVER_Init");
-    WEBSERVER_Init();
+    webServerInit();
 
     g_app.Init();
 

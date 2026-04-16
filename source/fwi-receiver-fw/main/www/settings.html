@@ -6,65 +6,91 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
         <link rel="stylesheet" type="text/css" href="css/content.css">
-        <title>Firework OTA</title>
+        <title>Firing system — Settings</title>
     </head>
-    <body onload="AppLoaded()">
+    <body onload="appLoaded()">
+    <div class="navbar">
+        <a href="index.html"><button class="button-action1" type="button">Control</button></a>
+    </div>
 	<div id="app">
-        <!-- Setting / Entries -->
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <td><b>Key</b></td>
-                        <td><b>Default</b></td>
-                        <td><b>Min</b></td>
-                        <td><b>Max</b></td>
-                        <td><b>Value</b></td>
-                        <td><b>Desc</b></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="entry in setting_entries">
-                        <td>{{ entry.key }}</td>
-                        <td>{{ entry.info.default }}</td>
-                        <td>{{ entry.info.min }}</td>
-                        <td>{{ entry.info.max }}</td>
-                        <td><b>{{ entry.value }}</b></td>
-                        <td>{{ entry.info.desc }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Settings -->
+        <div class="card">
+            <div class="card-header">Settings</div>
+            <div class="card-body" style="padding: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Key</td>
+                            <td>Default</td>
+                            <td>Min</td>
+                            <td>Max</td>
+                            <td>Value</td>
+                            <td>Desc</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="entry in setting_entries">
+                            <td>{{ entry.key }}</td>
+                            <td>{{ entry.info.default }}</td>
+                            <td>{{ entry.info.min }}</td>
+                            <td>{{ entry.info.max }}</td>
+                            <td>
+                                <input v-if="entry.info.type === 'string'"
+                                    type="text"
+                                    class="setting-input"
+                                    v-model="edited_values[entry.key]">
+                                <input v-else
+                                    type="number"
+                                    class="setting-input"
+                                    :min="entry.info.min"
+                                    :max="entry.info.max"
+                                    v-model.number="edited_values[entry.key]">
+                            </td>
+                            <td>{{ entry.info.desc }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-body" style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border);">
+                <button class="button-27" @click="idBtnSaveClick">Save</button>
+                <span v-if="save_status" class="save-status">{{ save_status }}</span>
+                <span v-if="needsReboot()" class="reboot-warn">Reboot required for some settings</span>
+            </div>
         </div>
-        <br>
-        <!-- OTA -->
-        <div>
-            <table>
-                <tr>
-                    <td>File</td>
-                    <td><input type="file" id="idFile"></td>
-                </tr>
-            </table>
-            <button id="idBtnUpload" class="button-27" @click="idBtnUpload_Click">Upload</button>
+
+        <!-- OTA Firmware Update -->
+        <div class="card">
+            <div class="card-header">Firmware Update (OTA)</div>
+            <div class="card-body">
+                <div class="ota-row">
+                    <input type="file" id="idFile">
+                    <button id="idBtnUpload" class="button-27" @click="idBtnUploadClick">Upload</button>
+                </div>
+            </div>
         </div>
-        <br>
-        <!-- System infos -->
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <td><b>Name</b></td>
-                        <td><b>Value</b></td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="sysinfo in sysinfos">
-                        <td>{{ sysinfo.name }}</td>
-                        <td style="overflow-wrap: anywhere;"><b>{{ sysinfo.value }}</b></td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <!-- System Info -->
+        <div class="card">
+            <div class="card-header">System Info</div>
+            <div class="card-body" style="padding: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Name</td>
+                            <td>Value</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="sysinfo in sysinfos">
+                            <td>{{ sysinfo.name }}</td>
+                            <td style="overflow-wrap: anywhere;"><b>{{ sysinfo.value }}</b></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
     <!-- JS -->
     <script type="text/javascript" src="js/vue.min.js"></script>
     <script type="text/javascript" src="js/common-app.js"></script>

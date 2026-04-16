@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-esp_err_t WSWEBSOCKET_Handler(httpd_req_t *req);
+esp_err_t wsHandler(httpd_req_t* req);
 
 #ifdef __cplusplus
 }
