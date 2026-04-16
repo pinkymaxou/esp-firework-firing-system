@@ -28,7 +28,7 @@ An ESP32-S3 based remote firework ignition controller. Up to 32 outputs (expanda
 | Input | Rotary encoder with push button (optional) |
 | Power | 12–18 V DC |
 
-PCB design files and schematic are in [`cad/`](cad/).
+**Only hardware revision 2.1 is supported.** PCB design files and schematic are in [`cad/hw2.1/`](cad/hw2.1/).
 
 ## Quick Start
 
@@ -71,15 +71,6 @@ See [doc/building.md](doc/building.md) for full instructions including OTA updat
 
 ## Known Issues
 
-### Encoder conflicts with UART0 (all PCB versions)
+### Encoder conflicts with UART0 (hw2.1)
 
 The rotary encoder uses GPIOs 43 and 44, which are also UART0 TX/RX (the ESP32-S3 USB-serial programming and debug interface). With the encoder connected, serial flashing may fail and the serial monitor output will be corrupted. **Disconnect the encoder before flashing over serial.** OTA update is unaffected.
-
-## PCB Errata — v1.0
-
-PCB v1.0 has two errors fixed in v1.1:
-
-- **GPIO 0 sanity LED**: On v1.0 the LED is 3.3 V-driven instead of ground-driven, creating a pull-down that prevents booting. Leave it unconnected on v1.0.
-- **Pins 47/48 swapped**: On v1.0, SDA (I2C) and the WS2812B LED ring are swapped. Swap the wires:
-  - GPIO 47 → LED ring
-  - GPIO 48 → SDA
