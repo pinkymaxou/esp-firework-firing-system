@@ -321,6 +321,19 @@ static char* buildSysInfoJSON()
         cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
         cJSON_AddItemToArray(infos, entry);
     }
+    // WiFi STA IPv6
+    {
+        esp_ip6_addr_t ip6[3];
+        const int count = Main::getWiFiSTAIP6(ip6, 3);
+        for (int j = 0; j < count; j++)
+        {
+            cJSON* entry = cJSON_CreateObject();
+            cJSON_AddItemToObject(entry, "name", cJSON_CreateString("WiFi (STA) IPv6"));
+            sprintf(buff, IPV6STR, IPV62STR(ip6[j]));
+            cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
+            cJSON_AddItemToArray(infos, entry);
+        }
+    }
     // WiFi Soft-AP IP
     {
         cJSON* entry = cJSON_CreateObject();
@@ -330,6 +343,19 @@ static char* buildSysInfoJSON()
         sprintf(buff, IPSTR, IP2STR(&ip_info.ip));
         cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
         cJSON_AddItemToArray(infos, entry);
+    }
+    // WiFi Soft-AP IPv6
+    {
+        esp_ip6_addr_t ip6[3];
+        const int count = Main::getWiFiSoftAPIP6(ip6, 3);
+        for (int j = 0; j < count; j++)
+        {
+            cJSON* entry = cJSON_CreateObject();
+            cJSON_AddItemToObject(entry, "name", cJSON_CreateString("WiFi (Soft-AP) IPv6"));
+            sprintf(buff, IPV6STR, IPV62STR(ip6[j]));
+            cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
+            cJSON_AddItemToArray(infos, entry);
+        }
     }
 
     char* str = cJSON_PrintUnformatted(root);

@@ -7,10 +7,11 @@
 namespace Main
 {
     void getWiFiSTAIP(esp_netif_ip_info_t* ip);
-
     void getWiFiSoftAPIP(esp_netif_ip_info_t* ip);
 
-    void getWifiAPSSID(char ssid[32]);
+    int getWiFiSTAIP6(esp_ip6_addr_t ip6[], int max_count);
+    int getWiFiSoftAPIP6(esp_ip6_addr_t ip6[], int max_count);
 
+    void getWifiAPSSID(char ssid[32]);
     int32_t getSAPUserCount();
 }

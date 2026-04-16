@@ -42,7 +42,11 @@ extern "C" {
 
 static void wifiSoftAPEventHandler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (WIFI_EVENT_AP_STACONNECTED == event_id)
+    if (WIFI_EVENT_AP_START == event_id)
+    {
+        esp_netif_create_ip6_linklocal(m_wifi_soft_ap);
+    }
+    else if (WIFI_EVENT_AP_STACONNECTED == event_id)
     {
         const wifi_event_ap_staconnected_t* event = (const wifi_event_ap_staconnected_t*) event_data;
         ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
@@ -74,6 +78,7 @@ static void wifiStationEventHandler(void* arg, esp_event_base_t event_base, int3
     {
         const ip_event_got_ip_t* event = (const ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        esp_netif_create_ip6_linklocal(m_wifi_sta);
     }
 }
 
@@ -183,6 +188,18 @@ static void wifiInit()
 void Main::getWiFiSTAIP(esp_netif_ip_info_t* ip)
 {
     esp_netif_get_ip_info(m_wifi_sta, ip);
+}
+
+int Main::getWiFiSTAIP6(esp_ip6_addr_t ip6[], int max_count)
+{
+    if (NULL == m_wifi_sta)
+        return 0;
+    return esp_netif_get_all_ip6(m_wifi_sta, ip6);
+}
+
+int Main::getWiFiSoftAPIP6(esp_ip6_addr_t ip6[], int max_count)
+{
+    return esp_netif_get_all_ip6(m_wifi_soft_ap, ip6);
 }
 
 void Main::getWiFiSoftAPIP(esp_netif_ip_info_t* ip)
