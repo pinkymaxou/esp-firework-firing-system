@@ -80,6 +80,15 @@ The WS2812B ring on GPIO 48 provides visual feedback:
 
 ## PCB Errata
 
+### All versions — Encoder shares UART0 pins
+
+**GPIOs 43 and 44 are used for the rotary encoder (channel A and B), but these are also UART0 TX/RX on the ESP32-S3 — the same pins used for USB-serial flashing and debug output.**
+
+Consequences:
+- Serial monitor output is corrupted when the encoder is physically connected.
+- Flashing over UART may fail or be unreliable with the encoder connected.
+- Workaround: disconnect the encoder before flashing or monitoring via serial. OTA update is unaffected.
+
 ### v1.0
 
 1. **GPIO 0 sanity LED** — 3.3 V driven instead of ground driven, creating a pull-down that prevents booting. Leave unconnected.
@@ -89,4 +98,4 @@ The WS2812B ring on GPIO 48 provides visual feedback:
 
 ### v1.1
 
-Both issues above are fixed.
+Both v1.0 issues above are fixed. The encoder/UART0 conflict is present on all PCB versions.

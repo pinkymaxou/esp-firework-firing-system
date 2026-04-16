@@ -5,7 +5,7 @@
 ```
 fwi-receiver-fw/
 ├── main/
-│   ├── main.cpp            Boot sequence, Wi-Fi init, ESP-NOW init
+│   ├── main.cpp            Boot sequence, Wi-Fi init
 │   ├── MainApp.cpp/hpp     Core state machine and firing logic
 │   ├── HWGPIO.cpp/hpp      Hardware abstraction (GPIO, I2C, PWM, LEDs)
 │   ├── HWConfig.h          All GPIO and peripheral constants
@@ -26,7 +26,7 @@ fwi-receiver-fw/
 │   │   └── EmbeddedFiles.c Pre-packed web assets (HTML/CSS/JS)
 │   └── www/                Web source files (packed by embeddedgen.py)
 └── components/
-    ├── SSD1306/            I2C OLED driver
+    ├── SSD1306/            I2C OLED driver (C++ class)
     ├── nvsjson/            NVS + JSON settings library
     └── misc-formula/       Utility macros
 ```
@@ -36,37 +36,36 @@ fwi-receiver-fw/
 ```
 app_main()
   ├── nvs_flash_init()
-  ├── HWGPIO_Init()          GPIO, I2C, LED strip (RMT), LEDC PWM, encoder ISR
-  ├── SETTINGS_Init()        Load NVS config, apply defaults
+  ├── HWGPIO::init()         GPIO, I2C, LED strip (RMT), LEDC PWM, encoder ISR
+  ├── Settings::init()       Load NVS config, apply defaults
   ├── wifi_init()            SoftAP (192.168.4.1), optional STA
-  ├── espnow_init()          ESP-NOW (stub, broadcast peer)
-  ├── webServerInit()        HTTP + WebSocket server on port 80
-  └── g_app.Init() → g_app.Run()
+  ├── WebServer::init()      HTTP + WebSocket server on port 80
+  └── g_app.init() → g_app.run()
 ```
 
-## Main Loop (MainApp::Run)
+## Main Loop (MainApp::run)
 
 The main loop runs on the main task at 1 ms ticks:
 
-1. Read master switch → update `bIsArmed`
+1. Read master switch → update `is_armed`
 2. If armed state changed → update LED blink rate and UI
-3. Process any pending command (fire, check connections, calibrate)
+3. Process any pending command (fire, test connections, calibrate)
 4. Update RGB LED strip for all outputs
-5. Blink sanity LED (100 ms armed / 500 ms disarmed)
-6. Call `g_uiMgr.RunTick()` (OLED + encoder)
+5. Fade sanity LED (200 ms armed / 450 ms disarmed)
+6. Call `g_ui_mgr.runTick()` (OLED + encoder)
 
 ## State Machine
 
 `EGeneralState` values:
 
 | Value | Name | Description |
-|---|---|---|
+|-------|------|-------------|
 | 0 | Idle | No operation in progress |
 | 1 | FiringMasterSwitchWrongStateError | Fired while master switch off |
 | 2 | FiringUnknownError | Unexpected firing error |
 | 3 | Firing | Relay energised |
 | 4 | FiringOK | Firing completed |
-| 7 | ArmingSystemOK | System armed, ready to fire |
+| 7 | Armed | System armed, ready to fire |
 | 8 | CheckingConnection | Scanning outputs for continuity |
 | 9 | CheckingConnectionOK | Scan complete, results ready |
 | 10 | CheckingConnectionError | Scan failed |
@@ -77,26 +76,26 @@ The main loop runs on the main task at 1 ms ticks:
 
 ```
 ExecFire(index)
-  ├── Guard: bIsArmed && index < OUTPUT_COUNT
+  ├── Guard: is_armed && index < OUTPUT_COUNT
   ├── Select relay area: MOSA pins → relay board 0 or 1
   ├── Enable master power relay (PWM, FirePWM% duty)
   ├── Set relay data line high
   ├── vTaskDelay(FireHoldTimeMS)
   ├── Clear relay data line
   ├── Disable master power relay
-  └── Mark relay.isFired = true
+  └── Mark relay.is_fired = true
 ```
 
-## Connection Check Sequence
+## Connection Test Sequence
 
 ```
-StartCheckConnections()
+StartTestConnections()
   For each output 0 → OUTPUT_COUNT-1:
     ├── Select relay area (MOSA pins)
     ├── Set data line
     ├── Wait 200 ms (capacitor charge)
     ├── Poll HWCONFIG_CONNSENSE_IN (max 1 s total)
-    ├── relay.isConnected = sense result
+    ├── relay.is_connected = sense result
     └── Clear data line
   → EGeneralState::CheckingConnectionOK
 ```
@@ -106,15 +105,15 @@ StartCheckConnections()
 All browser ↔ firmware communication goes through a single WebSocket at `/ws`.
 
 ```
-Browser  ──JSON cmd──►  wsHandler()
+Browser  ──JSON cmd──►  WSWebSocket::handler()
                            └── handleCommand()
-                                 ├── "getstatus"       → buildStatusJSON()
-                                 ├── "getsettings"     → buildSettingsJSON()
-                                 ├── "getsysinfo"      → buildSysInfoJSON()
-                                 ├── "fire"            → g_app.ExecFire()
-                                 ├── "checkconnections"→ g_app.ExecCheckConnections()
-                                 ├── "setsettings"     → NVSJSON_ImportJSON()
-                                 └── "reboot"          → esp_restart()
+                                 ├── "getstatus"        → buildStatusJSON()
+                                 ├── "getsettings"      → buildSettingsJSON()
+                                 ├── "getsysinfo"       → buildSysInfoJSON()
+                                 ├── "fire"             → g_app.ExecFire()
+                                 ├── "checkconnections" → g_app.ExecTestConnections()
+                                 ├── "setsettings"      → NVSJSON_ImportJSON()
+                                 └── "reboot"           → esp_restart()
 ```
 
 See [webinterface.md](webinterface.md) for the full JSON protocol.
@@ -128,12 +127,12 @@ class UIBase {
     virtual void onEnter();
     virtual void onExit();
     virtual void onTick();
-    virtual void onEncoderMove(EEncoderEvent, int count);
+    virtual void onEncoderMove(BTEvent event, int32_t count);
     virtual void drawScreen();
 };
 ```
 
-`UIManager` owns an array of `UIBase*` instances (one per menu) and routes ticks and encoder events to the active one. Transitions happen via `g_uiMgr.Goto(EMenu)`.
+`UIManager` owns an array of `UIBase*` instances (one per menu) and routes ticks and encoder events to the active one. Transitions happen via `g_ui_mgr.goTo(EMenu)`.
 
 ## Settings Library (nvsjson)
 
@@ -150,7 +149,7 @@ NVSJSON_GetValueString(key, ...)  Read a single string value
 ## Partition Layout
 
 | Name | Type | Size | Purpose |
-|---|---|---|---|
+|------|------|------|---------|
 | nvs | data/nvs | 16 KB | Settings storage |
 | otadata | data/ota | 8 KB | OTA slot metadata |
 | phy_init | data/phy | 4 KB | Wi-Fi PHY calibration |
