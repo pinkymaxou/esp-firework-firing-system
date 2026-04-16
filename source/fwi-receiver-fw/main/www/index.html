@@ -9,9 +9,9 @@
         <title>Firing system control</title>
     </head>
     <body onload="appLoaded()">
-	<div id="app">
+	<div id="app" :class="{ armed: status.is_armed }">
         <div class="navbar">
-            <button id="idBtnCheckIgnition" class="button-action1" :disabled="!is_connected" @click="idBtnCheckIgnitionClick">Check</button>
+            <button id="idBtnCheckIgnition" class="button-action1" :disabled="!is_connected || !status.is_armed" @click="idBtnCheckIgnitionClick">Check</button>
             <p>{{ translateGeneralState(status.general_state) }} [<b>{{ status.req }}</b>]</p>
             <div style="flex: 1;"></div>
             <a href="settings.html"><button class="button-action1" type="button">Settings</button></a>
@@ -20,9 +20,13 @@
         <div class="slotContainer">
             <div v-for="output in status.outputs" track-by="ix" class="slotButtonDiv">
                 <button :class="getOutputClass(output)"
-                    @click="idBtnFireClick(output.ix)" :disabled="!is_connected">{{ output.ix+1 }}
+                    @click="idBtnFireClick(output.ix)" :disabled="!is_connected || !status.is_armed">{{ output.ix+1 }}
                 </button>
             </div>
+        </div>
+
+        <div class="uptime-bar">
+            Uptime: {{ formatUptime(status.uptime_s) }}
         </div>
     </div>
 
