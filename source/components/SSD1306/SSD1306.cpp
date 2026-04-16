@@ -6,11 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 // Fonts
-#include "fonts/FreeMono12pt7b.h"
-#include "fonts/FreeMono9pt7b.h"
-#include "fonts/Tiny3x3a2pt7b.h"
-#include "fonts/FreeSerif9pt7b.h"
-#include "fonts/Picopixel.h"
+#include "fonts/FreeSans9pt7b.h"
 
 #define TAG "SSD1306"
 
@@ -65,7 +61,7 @@ bool SSD1306::init(i2c_master_dev_handle_t i2c_dev, const Config& config)
     sendCommand1(0x2e);
     sendCommand1(SSD1306_DISPLAYON);
 
-    m_font = &FreeSerif9pt7b;
+    m_font = &FreeSans9pt7b;
     m_baseline_y = 0;
     for (int i = 0; i < (m_font->last - m_font->first); i++)
     {
