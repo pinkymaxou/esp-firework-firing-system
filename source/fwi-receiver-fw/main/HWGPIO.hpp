@@ -19,9 +19,9 @@ void HWGPIO_SetSanityLED(bool isEnabled, bool isArmed);
 
 void HWGPIO_ClearRelayBus();
 
-void HWGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue);
+void HWGPIO_WriteSingleRelay(uint32_t output_index, bool value);
 
-void HWGPIO_WriteMasterPowerRelay(bool bValue);
+void HWGPIO_WriteMasterPowerRelay(bool value);
 
 bool HWGPIO_ReadMasterPowerSense();
 
@@ -29,11 +29,11 @@ bool HWGPIO_ReadConnectionSense();
 
 void HWGPIO_RefreshLEDStrip();
 
-void HWGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b);
+void HWGPIO_SetOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b);
 
 bool HWGPIO_IsEncoderSwitchON();
 
-uint32_t HWGPIO_GetRelayArea(uint32_t u32OutputIndex);
+uint32_t HWGPIO_GetRelayArea(uint32_t output_index);
 
 int32_t HWGPIO_GetEncoderCount();
 

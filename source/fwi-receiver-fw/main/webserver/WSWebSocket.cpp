@@ -154,7 +154,7 @@ static esp_err_t handleCommand(httpd_req_t* req, const cJSON* root)
         if (NULL == json_str)
             return ESP_FAIL;
 
-        bool ok = NVSJSON_ImportJSON(&g_sSettingHandle, json_str);
+        bool ok = NVSJSON_ImportJSON(&g_settingHandle, json_str);
         free(json_str);
         return ok ? ESP_OK : ESP_FAIL;
     }
@@ -207,7 +207,7 @@ static char* buildSettingsJSON()
 
     cJSON_AddItemToObject(root, "type", cJSON_CreateString("settings"));
 
-    char* exported = NVSJSON_ExportJSON(&g_sSettingHandle);
+    char* exported = NVSJSON_ExportJSON(&g_settingHandle);
     if (NULL != exported)
     {
         cJSON* parsed = cJSON_Parse(exported);

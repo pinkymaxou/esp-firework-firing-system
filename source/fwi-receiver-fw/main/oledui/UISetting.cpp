@@ -5,9 +5,9 @@
 
 void UISetting::OnEnter()
 {
-    m_s32FiringPWMPercValue = (int32_t)NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent);
-    m_s32FiringHoldTimeMS = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    m_s32IsWifiStationActivated = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive);
+    m_firingPWMPercValue = (int32_t)NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent);
+    m_firingHoldTimeMS = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
+    m_isWifiStationActivated = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive);
 
     m_eSettingItem = Item::PWM;
 
@@ -16,10 +16,10 @@ void UISetting::OnEnter()
 
 void UISetting::OnExit()
 {
-    NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, m_s32FiringPWMPercValue);
-    NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringHoldTimeMS, false, m_s32FiringHoldTimeMS);
-    NVSJSON_SetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive, false, m_s32IsWifiStationActivated);
-    NVSJSON_Save(&g_sSettingHandle);
+    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, m_firingPWMPercValue);
+    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringHoldTimeMS, false, m_firingHoldTimeMS);
+    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive, false, m_isWifiStationActivated);
+    NVSJSON_Save(&g_settingHandle);
 }
 
 void UISetting::OnTick()
@@ -27,23 +27,23 @@ void UISetting::OnTick()
 
 }
 
-void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
+void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     switch(m_eSettingItem)
     {
         case Item::PWM:
         {
-            if (eBtnEvent == UIBase::BTEvent::Click)
+            if (UIBase::BTEvent::Click == btn_event)
             {
                 m_eSettingItem = Item::HoldTimeMS;
                 DrawScreen();
             }
-            else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
+            else if (UIBase::BTEvent::EncoderClick == btn_event)
             {
-                const int32_t s32Value = m_s32FiringPWMPercValue + s32ClickCount;
-                if (s32Value >= SETTINGS_FIRINGPWMPERCENT_MIN && s32Value <= SETTINGS_FIRINGPWMPERCENT_MAX)
+                const int32_t value = m_firingPWMPercValue + click_count;
+                if (value >= SETTINGS_FIRINGPWMPERCENT_MIN && value <= SETTINGS_FIRINGPWMPERCENT_MAX)
                 {
-                    m_s32FiringPWMPercValue = s32Value;
+                    m_firingPWMPercValue = value;
                     DrawScreen();
                 }
             }
@@ -51,17 +51,17 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
         }
         case Item::HoldTimeMS:
         {
-            if (eBtnEvent == UIBase::BTEvent::Click)
+            if (UIBase::BTEvent::Click == btn_event)
             {
                 m_eSettingItem = Item::WiFiStation;
                 DrawScreen();
             }
-            else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
+            else if (UIBase::BTEvent::EncoderClick == btn_event)
             {
-                const int32_t s32Value = m_s32FiringHoldTimeMS + s32ClickCount*50;
-                if (s32Value >= SETTINGS_FIRINGHOLDTIMEMS_MIN && s32Value <= SETTINGS_FIRINGHOLDTIMEMS_MAX)
+                const int32_t value = m_firingHoldTimeMS + click_count*50;
+                if (value >= SETTINGS_FIRINGHOLDTIMEMS_MIN && value <= SETTINGS_FIRINGHOLDTIMEMS_MAX)
                 {
-                    m_s32FiringHoldTimeMS = s32Value;
+                    m_firingHoldTimeMS = value;
                     DrawScreen();
                 }
             }
@@ -69,25 +69,28 @@ void UISetting::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
         }
         case Item::WiFiStation:
         {
-            if (eBtnEvent == UIBase::BTEvent::Click)
+            if (UIBase::BTEvent::Click == btn_event)
             {
                 g_uiMgr.Goto(UIManager::EMenu::Menu);
             }
-            else if (eBtnEvent == UIBase::BTEvent::EncoderClick)
+            else if (UIBase::BTEvent::EncoderClick == btn_event)
             {
-                m_s32BoolCounter += s32ClickCount;
+                m_boolCounter += click_count;
 
-                int32_t new_value = m_s32IsWifiStationActivated;
-                if (m_s32BoolCounter < -2) {
+                int32_t new_value = m_isWifiStationActivated;
+                if (m_boolCounter < -2)
+                {
                     new_value = 0;
                 }
-                else if (m_s32BoolCounter > 2) {
+                else if (m_boolCounter > 2)
+                {
                     new_value = 1;
                 }
-                
-                if (new_value != m_s32IsWifiStationActivated) {
-                    m_s32BoolCounter = 0;
-                    m_s32IsWifiStationActivated = new_value;
+
+                if (new_value != m_isWifiStationActivated)
+                {
+                    m_boolCounter = 0;
+                    m_isWifiStationActivated = new_value;
                     DrawScreen();
                 }
             }
@@ -105,25 +108,25 @@ void UISetting::DrawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     SSD1306_handle* pss1306Handle = GPIO_GetSSD1306Handle();
-    char szText[128+1] = {0,};
+    char text[129] = {0,};
 
-    if (m_eSettingItem == Item::PWM)
+    if (Item::PWM == m_eSettingItem)
     {
-        sprintf(szText, "SETTINGS\nPWM\n%" PRId32 "%%",
-            m_s32FiringPWMPercValue);
+        sprintf(text, "SETTINGS\nPWM\n%" PRId32 "%%",
+            m_firingPWMPercValue);
     }
-    else if (m_eSettingItem == Item::HoldTimeMS)
+    else if (Item::HoldTimeMS == m_eSettingItem)
     {
-        sprintf(szText, "SETTINGS\nHold time\n%" PRId32 " ms",
-            m_s32FiringHoldTimeMS);
+        sprintf(text, "SETTINGS\nHold time\n%" PRId32 " ms",
+            m_firingHoldTimeMS);
     }
-    else if (m_eSettingItem == Item::WiFiStation)
+    else if (Item::WiFiStation == m_eSettingItem)
     {
-        sprintf(szText, "SETTINGS\nWi-Fi STA\n%s",
-            (m_s32IsWifiStationActivated ? "YES" : "NO"));
+        sprintf(text, "SETTINGS\nWi-Fi STA\n%s",
+            (m_isWifiStationActivated ? "YES" : "NO"));
     }
     SSD1306_ClearDisplay(pss1306Handle);
-    SSD1306_DrawString(pss1306Handle, 0, 0, szText);
+    SSD1306_DrawString(pss1306Handle, 0, 0, text);
     SSD1306_UpdateDisplay(pss1306Handle);
     #endif
 }

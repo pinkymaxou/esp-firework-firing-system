@@ -34,7 +34,7 @@ class UIManager
 
     void Goto(EMenu eMenu);
 
-    void EncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount);
+    void EncoderMove(UIBase::BTEvent btn_event, int32_t click_count);
 
     void RunTick();
 

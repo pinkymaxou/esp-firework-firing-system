@@ -7,8 +7,6 @@
 #include "esp_ota_ops.h"
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
-#include "esp_now.h"
-#include "esp_crc.h"
 #include "esp_mac.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
@@ -30,83 +28,52 @@ static esp_netif_t* m_pWifiSoftAP;
 static esp_netif_t* m_pWifiSTA;
 static wifi_config_t m_WifiConfigAP = {0};
 
-static uint8_t m_u8WiFiChannel = 1;
-static int32_t m_s32UserCount = 0;
-
-static uint8_t s_example_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t m_wifiChannel = 1;
+static int32_t m_userCount = 0;
 
 static void wifi_init();
-static esp_err_t espnow_init(void);
 
 static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 static void wifistation_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-
-static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status);
-static void example_espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len);
-
-static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len);
 
 extern "C" {
     void app_main(void);
 }
 
-/* ESPNOW sending or receiving callback function is called in WiFi task.
- * Users should not do lengthy operations from this task. Instead, post
- * necessary data to a queue and handle it from a lower priority task. */
-static void example_espnow_send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
-{
-    if (tx_info == NULL) {
-        ESP_LOGE(TAG, "Send cb arg error");
-        return;
-    }
-}
-
-static void example_espnow_recv_cb(const esp_now_recv_info_t *esp_now_info, const uint8_t *data, int data_len)
-{
-    if (esp_now_info->des_addr == NULL || data == NULL || data_len <= 0) {
-        ESP_LOGE(TAG, "Receive cb arg error");
-        return;
-    }
-
-    char hexDataString[128+1] = {0};
-    if (data_len < 64)
-        ToHexString(hexDataString, data, data_len);
-
-    ESP_LOGI(TAG, "Receiving data: ' %s ', len: %d", (const char*)hexDataString, data_len);
-}
-
 static void wifisoftap_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+    if (WIFI_EVENT_AP_STACONNECTED == event_id)
+    {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
         ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
                  MAC2STR(event->mac), (int)event->aid);
-        m_s32UserCount++;
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        m_userCount++;
+    }
+    else if (WIFI_EVENT_AP_STADISCONNECTED == event_id)
+    {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
         ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
                  MAC2STR(event->mac), (int)event->aid);
-        m_s32UserCount--;
+        m_userCount--;
     }
 }
 
 static void wifistation_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
 {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+    if (WIFI_EVENT == event_base && WIFI_EVENT_STA_START == event_id)
+    {
         esp_wifi_connect();
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+    }
+    else if (WIFI_EVENT == event_base && WIFI_EVENT_STA_DISCONNECTED == event_id)
+    {
         esp_wifi_connect();
         ESP_LOGI(TAG, "retry to connect to the AP");
         ESP_LOGI(TAG,"connect to the AP fail");
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+    }
+    else if (IP_EVENT == event_base && IP_EVENT_STA_GOT_IP == event_id)
+    {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-
-        /*if (!m_bIsWebServerInit)
-        {
-            m_bIsWebServerInit = true;
-            webServerInit();
-        }*/
     }
 }
 
@@ -117,7 +84,7 @@ static void wifi_init()
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    const bool isWiFiSTA = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WSTAIsActive) == 1;
+    const bool isWiFiSTA = (1 == NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive));
     if (isWiFiSTA)
     {
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA) );
@@ -146,7 +113,7 @@ static void wifi_init()
 
     memset(m_WifiConfigAP.ap.ssid, 0, sizeof(m_WifiConfigAP.ap.ssid));
     m_WifiConfigAP.ap.ssid_len = 0;
-    m_WifiConfigAP.ap.channel = m_u8WiFiChannel;
+    m_WifiConfigAP.ap.channel = m_wifiChannel;
     m_WifiConfigAP.ap.max_connection = 5;
 
     uint8_t macAddr[6];
@@ -157,13 +124,14 @@ static void wifi_init()
     m_WifiConfigAP.ap.ssid_len = n;
 
     size_t staPassLength = 64;
-    NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WAPPass, (char*)m_WifiConfigAP.ap.password, &staPassLength);
+    NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WAPPass, (char*)m_WifiConfigAP.ap.password, &staPassLength);
 
-    if (strlen((const char*)m_WifiConfigAP.ap.password) == 0)
+    if (0 == strlen((const char*)m_WifiConfigAP.ap.password))
     {
         m_WifiConfigAP.ap.authmode = WIFI_AUTH_OPEN;
     }
-    else {
+    else
+    {
         m_WifiConfigAP.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
     }
 
@@ -199,10 +167,10 @@ static void wifi_init()
         wifi_configSTA.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
         size_t staSSIDLength = 32;
-        NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WSTASSID, (char*)wifi_configSTA.sta.ssid, &staSSIDLength);
+        NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WSTASSID, (char*)wifi_configSTA.sta.ssid, &staSSIDLength);
 
         size_t staPassLength = 64;
-        NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_WSTAPass, (char*)wifi_configSTA.sta.password, &staPassLength);
+        NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WSTAPass, (char*)wifi_configSTA.sta.password, &staPassLength);
 
         ESP_LOGI(TAG, "STA mode is active, attempt to connect to ssid: %s", wifi_configSTA.sta.ssid);
 
@@ -210,37 +178,6 @@ static void wifi_init()
     }
 
     ESP_ERROR_CHECK( esp_wifi_start());
-}
-
-static esp_err_t espnow_init(void)
-{
-    /* Initialize ESPNOW and register sending and receiving callback function. */
-    ESP_ERROR_CHECK( esp_now_init() );
-    ESP_ERROR_CHECK( esp_now_register_send_cb(example_espnow_send_cb) );
-    ESP_ERROR_CHECK( esp_now_register_recv_cb(example_espnow_recv_cb) );
-
-    /* Set primary master key. */
-    uint8_t pmks[16];
-    size_t length = sizeof(pmks);
-    NVSJSON_GetValueString(&g_sSettingHandle, SETTINGS_EENTRY_ESPNOW_PMK, (char*)pmks, &length);
-    ESP_ERROR_CHECK( esp_now_set_pmk((uint8_t *)pmks) );
-
-    /* Add broadcast peer information to peer list. */
-    esp_now_peer_info_t* peer = (esp_now_peer_info_t*)malloc(sizeof(esp_now_peer_info_t));
-    if (peer == NULL)
-    {
-        ESP_LOGE(TAG, "Malloc peer information fail");
-        return ESP_FAIL;
-    }
-    memset(peer, 0, sizeof(esp_now_peer_info_t));
-    peer->channel = m_u8WiFiChannel;
-    peer->ifidx = WIFI_IF_AP;
-    peer->encrypt = false;
-    memcpy(peer->peer_addr, s_example_broadcast_mac, ESP_NOW_ETH_ALEN);
-    ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-    free(peer);
-
-    return ESP_OK;
 }
 
 void MAIN_GetWiFiSTAIP(esp_netif_ip_info_t* ip)
@@ -255,19 +192,20 @@ void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip)
 
 int32_t MAIN_GetSAPUserCount()
 {
-    return m_s32UserCount;
+    return m_userCount;
 }
 
-void MAIN_GetWifiAPSSID(char szSoftAPSSID[32])
+void MAIN_GetWifiAPSSID(char ssid[32])
 {
-    strncpy(szSoftAPSSID, (char*)m_WifiConfigAP.ap.ssid, 32);
+    strncpy(ssid, (char*)m_WifiConfigAP.ap.ssid, 32);
 }
 
 void app_main(void)
 {
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (ESP_ERR_NVS_NO_FREE_PAGES == ret || ESP_ERR_NVS_NEW_VERSION_FOUND == ret)
+    {
         ESP_ERROR_CHECK( nvs_flash_erase() );
         ret = nvs_flash_init();
     }
@@ -279,11 +217,10 @@ void app_main(void)
     ESP_LOGI(TAG, "SETTINGS_Init");
     SETTINGS_Init();
 
-    m_u8WiFiChannel = (uint8_t)NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_WiFiChannel);
+    m_wifiChannel = (uint8_t)NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WiFiChannel);
 
     ESP_LOGI(TAG, "wifi_init");
     wifi_init();
-    espnow_init();
 
     ESP_LOGI(TAG, "WEBSERVER_Init");
     webServerInit();
@@ -301,10 +238,4 @@ void app_main(void)
     // Lock forever
     ESP_LOGI(TAG, "Run");
     g_app.Run();
-}
-
-static void ToHexString(char *dstHexString, const uint8_t* data, uint8_t len)
-{
-    for (uint32_t i = 0; i < len; i++)
-        sprintf(dstHexString + (i * 2), "%02X", data[i]);
 }

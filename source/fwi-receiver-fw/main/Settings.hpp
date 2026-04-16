@@ -9,8 +9,6 @@ extern "C" {
 
 typedef enum
 {
-    SETTINGS_EENTRY_ESPNOW_PMK,
-
     SETTINGS_EENTRY_WiFiChannel,
     SETTINGS_EENTRY_WAPPass,
 
@@ -32,7 +30,7 @@ void SETTINGS_Init();
 #define SETTINGS_FIRINGPWMPERCENT_MIN (5)
 #define SETTINGS_FIRINGPWMPERCENT_MAX (100)
 
-extern NVSJSON_SHandle g_sSettingHandle;
+extern NVSJSON_SHandle g_settingHandle;
 
 #ifdef __cplusplus
 }

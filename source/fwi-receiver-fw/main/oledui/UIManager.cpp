@@ -5,12 +5,12 @@ UIManager g_uiMgr;
 void UIManager::Goto(EMenu eMenu)
 {
     UIBase* pLC = GetMenuLC(eMenu);
-    if (pLC == NULL)
+    if (NULL == pLC)
         return;
     if (m_eCurrentMenu == eMenu) // Already there
         return;
     UIBase* pOldLC = GetMenuLC(m_eCurrentMenu);
-    if (pOldLC != NULL)
+    if (NULL != pOldLC)
     {
         pOldLC->OnExit();
         m_eCurrentMenu = EMenu::None;
@@ -22,22 +22,22 @@ void UIManager::Goto(EMenu eMenu)
 void UIManager::RunTick()
 {
     UIBase* pLC = GetMenuLC(m_eCurrentMenu);
-    if (pLC == NULL)
+    if (NULL == pLC)
         return;
     pLC->OnTick();
 }
 
-void UIManager::EncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
+void UIManager::EncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     UIBase* pLC = GetMenuLC(m_eCurrentMenu);
-    if (pLC == NULL)
+    if (NULL == pLC)
         return;
-    pLC->OnEncoderMove(eBtnEvent, s32ClickCount);
+    pLC->OnEncoderMove(btn_event, click_count);
 }
 
 UIBase* UIManager::GetMenuLC(EMenu eMenu)
 {
-    if ((int32_t)eMenu < 0 || (int32_t)eMenu >= (int32_t)UIManager::EMenu::Count)
+    if (0 > (int32_t)eMenu || (int32_t)eMenu >= (int32_t)UIManager::EMenu::Count)
         return NULL;
     return m_psUIHomes[(int32_t)eMenu];
 }

@@ -10,11 +10,11 @@
 
 #define TAG "HardwareGPIO"
 
-static led_strip_handle_t led_strip;
+static led_strip_handle_t m_ledStrip;
 #if HWCONFIG_OLED_ISPRESENT != 0
 static SSD1306_handle m_ssd1306;
 #endif
-static int32_t m_s32EncoderTicks = 0;
+static int32_t m_encoderTicks = 0;
 
 static gpio_num_t m_busPins[HWCONFIG_OUTPUTBUS_COUNT] =
 {
@@ -94,9 +94,9 @@ void HWGPIO_Init()
     led_strip_rmt_config_t rmt_config = {
         .resolution_hz = 10 * 1000 * 1000, // 10MHz
     };
-    ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
+    ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &m_ledStrip));
     /* Set all LED off to clear all pixels */
-    led_strip_clear(led_strip);
+    led_strip_clear(m_ledStrip);
 
     i2c_master_bus_config_t i2c_bus_config = {
         .i2c_port = HWCONFIG_I2C_MASTER_NUM,
@@ -122,8 +122,8 @@ void HWGPIO_Init()
 	//cfgSSD1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
     SSD1306_Init(&m_ssd1306, oled_dev_handle, &cfgSSD1306);
     SSD1306_ClearDisplay(&m_ssd1306);
-    memcpy(m_ssd1306.u8Buffer, m_u8LogoDatas, m_u32LogoDataLen);
-    assert(m_u32LogoDataLen == m_ssd1306.u32BufferLen); // , "Bitmap and buffer doesn't match"
+    memcpy(m_ssd1306.buffer, m_u8LogoDatas, m_u32LogoDataLen);
+    assert(m_u32LogoDataLen == m_ssd1306.bufferLen); // , "Bitmap and buffer doesn't match"
     SSD1306_UpdateDisplay(&m_ssd1306);
     #endif
 
@@ -186,12 +186,15 @@ static void gpio_isr_handler(void* arg)
     bool encA = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
     bool encB = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
 
-    if (encA != m_lastEncA) {
-        if (encA != encB) {
-            m_s32EncoderTicks--;
+    if (encA != m_lastEncA)
+    {
+        if (encA != encB)
+        {
+            m_encoderTicks--;
         }
-        else {
-            m_s32EncoderTicks++;
+        else
+        {
+            m_encoderTicks++;
         }
         m_lastEncA = encA;
     }
@@ -200,26 +203,26 @@ static void gpio_isr_handler(void* arg)
 void HWGPIO_SetSanityLED(bool isEnabled, bool isArmed)
 {
     // Ground driven
-    const uint32_t u32Value = isEnabled ? (isArmed ? 0 : (4095-500)) : 4095;
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL, u32Value));
+    const uint32_t value = isEnabled ? (isArmed ? 0 : (4095-500)) : 4095;
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL, value));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_SANITY2_CHANNEL));
 
     if (isArmed)
-        led_strip_set_pixel(led_strip, 0, isEnabled ? 200 : 0, 0, 0);
+        led_strip_set_pixel(m_ledStrip, 0, isEnabled ? 200 : 0, 0, 0);
     else
-        led_strip_set_pixel(led_strip, 0, 0, isEnabled ? 200 : 0, 0);
+        led_strip_set_pixel(m_ledStrip, 0, 0, isEnabled ? 200 : 0, 0);
     HWGPIO_RefreshLEDStrip();
 }
 
-void HWGPIO_SetOutputRelayStatusColor(uint32_t u32OutputIndex, uint8_t r, uint8_t g, uint8_t b)
+void HWGPIO_SetOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b)
 {
-    led_strip_set_pixel(led_strip, u32OutputIndex+1, r, g, b);
+    led_strip_set_pixel(m_ledStrip, output_index+1, r, g, b);
 }
 
 void HWGPIO_RefreshLEDStrip()
 {
     /* Refresh the strip to send data */
-    led_strip_refresh(led_strip);
+    led_strip_refresh(m_ledStrip);
 }
 
 void HWGPIO_ClearRelayBus()
@@ -240,22 +243,22 @@ void HWGPIO_ClearRelayBus()
     vTaskDelay(pdMS_TO_TICKS(25));
 }
 
-void HWGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
+void HWGPIO_WriteSingleRelay(uint32_t output_index, bool value)
 {
-    if (u32OutputIndex >= HWCONFIG_OUTPUT_COUNT)
+    if (output_index >= HWCONFIG_OUTPUT_COUNT)
         return;
 
     HWGPIO_ClearRelayBus();
 
     // Activate the right area
-    const uint32_t u32AreaIndex = u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
-    const gpio_num_t gpioArea = m_busAreaPins[u32AreaIndex];
-    gpio_set_level(gpioArea, bValue);
+    const uint32_t area_index = output_index / HWCONFIG_OUTPUTBUS_COUNT;
+    const gpio_num_t gpioArea = m_busAreaPins[area_index];
+    gpio_set_level(gpioArea, value);
 
-    const uint32_t u32BusPinIndex = u32OutputIndex % HWCONFIG_OUTPUTBUS_COUNT;
-    const gpio_num_t gpioRelay = m_busPins[u32BusPinIndex];
+    const uint32_t bus_pin_index = output_index % HWCONFIG_OUTPUTBUS_COUNT;
+    const gpio_num_t gpioRelay = m_busPins[bus_pin_index];
 
-    if (bValue)
+    if (value)
     {
         gpio_set_direction(gpioRelay, GPIO_MODE_OUTPUT);
         gpio_set_level(gpioRelay, false);
@@ -267,14 +270,14 @@ void HWGPIO_WriteSingleRelay(uint32_t u32OutputIndex, bool bValue)
     }
 }
 
-void HWGPIO_WriteMasterPowerRelay(bool bValue)
+void HWGPIO_WriteMasterPowerRelay(bool value)
 {
-    const double dPercent = NVSJSON_GetValueInt32(&g_sSettingHandle, SETTINGS_EENTRY_FiringPWMPercent)/100.0;
+    const double percent = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent)/100.0;
 
-    const uint32_t u32Value = bValue ? (4095 * dPercent) : 0;
+    const uint32_t duty = value ? (4095 * percent) : 0;
 
     // Update duty to apply the new value
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL, u32Value));
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL, duty));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL));
 }
 
@@ -293,16 +296,16 @@ bool HWGPIO_IsEncoderSwitchON()
     return gpio_get_level(HWCONFIG_ENCODERSW) == false;
 }
 
-uint32_t HWGPIO_GetRelayArea(uint32_t u32OutputIndex)
+uint32_t HWGPIO_GetRelayArea(uint32_t output_index)
 {
-    return u32OutputIndex / HWCONFIG_OUTPUTBUS_COUNT;
+    return output_index / HWCONFIG_OUTPUTBUS_COUNT;
 }
 
 int32_t HWGPIO_GetEncoderCount()
 {
-    const int32_t s32Ticks = m_s32EncoderTicks;
-    m_s32EncoderTicks = 0;
-    return s32Ticks;
+    const int32_t ticks = m_encoderTicks;
+    m_encoderTicks = 0;
+    return ticks;
 }
 
 #if HWCONFIG_OLED_ISPRESENT != 0

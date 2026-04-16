@@ -12,12 +12,23 @@ class UIBase
         EncoderClick
     };
 
-    virtual void OnEnter(void) { };
-    virtual void OnExit(void) { };
+    virtual void OnEnter(void)
+    {
+    }
 
-    virtual void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) { };
+    virtual void OnExit(void)
+    {
+    }
 
-    virtual void OnTick(void) { };
+    virtual void OnEncoderMove(BTEvent btn_event, int32_t click_count)
+    {
+    }
 
-    virtual void DrawScreen(void) { };
+    virtual void OnTick(void)
+    {
+    }
+
+    virtual void DrawScreen(void)
+    {
+    }
 };
