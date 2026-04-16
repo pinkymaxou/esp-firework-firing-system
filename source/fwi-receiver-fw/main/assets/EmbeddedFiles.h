@@ -19,7 +19,7 @@ typedef struct
 
 typedef enum
 {
-    EF_EFILE_INDEX_HTML = 0,    /*!< @brief File: index.html (size: 1 KB) */
+    EF_EFILE_INDEX_HTML = 0,    /*!< @brief File: index.html (size: 2 KB) */
     EF_EFILE_SETTINGS_HTML = 1,    /*!< @brief File: settings.html (size: 4 KB) */
     EF_EFILE_FONT_ORBITRON_REGULAR_WOFF = 2,    /*!< @brief File: font/Orbitron-Regular.woff (size: 176 KB) */
     EF_EFILE_FONT_SQUARED_TTF = 3,    /*!< @brief File: font/Squared.ttf (size: 13 KB) */
@@ -28,7 +28,7 @@ typedef enum
     EF_EFILE_JS_VUE_MIN_JS = 6,    /*!< @brief File: js/vue.min.js (size: 92 KB) */
     EF_EFILE_JS_APP_JS = 7,    /*!< @brief File: js/app.js (size: 3 KB) */
     EF_EFILE_JS_COMMON_APP_JS = 8,    /*!< @brief File: js/common-app.js (size: 2 KB) */
-    EF_EFILE_CSS_CONTENT_CSS = 9,    /*!< @brief File: css/content.css (size: 7 KB) */
+    EF_EFILE_CSS_CONTENT_CSS = 9,    /*!< @brief File: css/content.css (size: 10 KB) */
     EF_EFILE_COUNT = 10
 } EF_EFILE;
 
