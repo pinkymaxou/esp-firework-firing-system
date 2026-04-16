@@ -13,7 +13,7 @@ void MAIN_GetWiFiSTAIP(esp_netif_ip_info_t* ip);
 
 void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip);
 
-void MAIN_GetWifiAPSSID(char szSoftAPSSID[32]);
+void MAIN_GetWifiAPSSID(char ssid[32]);
 
 int32_t MAIN_GetSAPUserCount();
 

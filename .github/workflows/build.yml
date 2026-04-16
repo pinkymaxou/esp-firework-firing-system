@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+      - 'feature/**'
+      - 'bugfix/**'
+  pull_request:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    name: Build firmware (ESP32-S3)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v6.1-dev
+          target: esp32s3
+          path: source/fwi-receiver-fw
+          command: >-
+            python3 ../tools/embeddedgen.py
+            -i main/www
+            -o main/assets
+            && idf.py build
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: |
+            source/fwi-receiver-fw/build/fwi-receiver-fw.bin
+            source/fwi-receiver-fw/build/bootloader/bootloader.bin
+            source/fwi-receiver-fw/build/partition_table/partition-table.bin
+            source/fwi-receiver-fw/build/flasher_args.json
+          retention-days: 30

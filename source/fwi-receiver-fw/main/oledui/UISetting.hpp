@@ -17,7 +17,7 @@ class UISetting : UIBase
     void OnEnter(void) override;
     void OnExit(void) override;
 
-    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
+    void OnEncoderMove(BTEvent btn_event, int32_t click_count) override;
 
     void OnTick(void) override;
 
@@ -26,8 +26,8 @@ class UISetting : UIBase
     private:
 
     Item m_eSettingItem = Item::PWM;
-    int32_t m_s32FiringPWMPercValue = 5;
-    int32_t m_s32FiringHoldTimeMS = 750;
-    int32_t m_s32IsWifiStationActivated = false;
-    int32_t m_s32BoolCounter = 0;
+    int32_t m_firingPWMPercValue = 5;
+    int32_t m_firingHoldTimeMS = 750;
+    int32_t m_isWifiStationActivated = false;
+    int32_t m_boolCounter = 0;
 };

@@ -1,4 +1,7 @@
 #include "SSD1306.h"
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 // Fonts
 #include "fonts/FreeMono12pt7b.h"
 #include "fonts/FreeMono9pt7b.h"
@@ -16,28 +19,27 @@ typedef enum
 } ControlByte;
 
 static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value);
-static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int n);
+static bool sendCommand(SSD1306_handle* pHandle, const uint8_t* value, int n);
 
-static bool sendData1(SSD1306_handle* pHandle, uint8_t value);
-static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int n);
-static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length);
+static bool sendData(SSD1306_handle* pHandle, const uint8_t* value, int n);
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, const uint8_t* value, int length);
 
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y);
 
-bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig)
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_master_dev_handle_t i2c_dev, SSD1306_config* pconfig)
 {
-    pHandle->i2c_port = i2c_port;
+    pHandle->i2c_dev = i2c_dev;
     pHandle->sConfig = *pconfig;
 
-    pHandle->u32Width = 128;
-    pHandle->u32Height = 64;
+    pHandle->width = 128;
+    pHandle->height = 64;
 
-    pHandle->bTextColor = true;
+    pHandle->textColor = true;
 
-    pHandle->u32BufferLen = (pHandle->u32Height * pHandle->u32Width) / 8;
-    pHandle->u8Buffer = malloc(sizeof(uint8_t) * pHandle->u32BufferLen);
+    pHandle->bufferLen = (pHandle->height * pHandle->width) / 8;
+    pHandle->buffer = malloc(sizeof(uint8_t) * pHandle->bufferLen);
 
-    pHandle->bIsInit = false;
+    pHandle->isInit = false;
 
     // Clear screen
     SSD1306_ClearDisplay(pHandle);
@@ -59,7 +61,7 @@ bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
     sendCommand1(pHandle, SSD1306_SETDISPLAYCLOCKDIV);
     sendCommand1(pHandle, 0xF0); // Increase speed of the display max ~96Hz
     sendCommand1(pHandle, SSD1306_SETMULTIPLEX);
-    sendCommand1(pHandle, pHandle->u32Height - 1);
+    sendCommand1(pHandle, pHandle->height - 1);
     sendCommand1(pHandle, SSD1306_SETDISPLAYOFFSET);
     sendCommand1(pHandle, 0x00);
 
@@ -79,7 +81,7 @@ bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
     sendCommand1(pHandle, SSD1306_SETPRECHARGE);
     sendCommand1(pHandle, 0xF1);
     sendCommand1(pHandle, SSD1306_SETVCOMDETECT); //0xDB, (additionally needed to lower the contrast)
-    sendCommand1(pHandle, 0x40);	        //0x40 default, to lower the contrast, put 0
+    sendCommand1(pHandle, 0x40);        //0x40 default, to lower the contrast, put 0
     sendCommand1(pHandle, SSD1306_DISPLAYALLON_RESUME);
     sendCommand1(pHandle, SSD1306_NORMALDISPLAY);
     sendCommand1(pHandle, 0x2e);            // stop scroll
@@ -91,15 +93,15 @@ bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
     //pHandle->font = &Picopixel;
     pHandle->font = &FreeSerif9pt7b;
     // Find the baseline
-    pHandle->u32BaselineY = 0;
+    pHandle->baselineY = 0;
 
     for(int i = 0; i < (pHandle->font->last - pHandle->font->first); i++)
     {
-        if (pHandle->u32BaselineY < pHandle->font->glyph[i].height)
-            pHandle->u32BaselineY = pHandle->font->glyph[i].height;
+        if (pHandle->baselineY < pHandle->font->glyph[i].height)
+            pHandle->baselineY = pHandle->font->glyph[i].height;
     }
 
-    pHandle->bIsInit = true;
+    pHandle->isInit = true;
     // Sometime to help initialization ..
     vTaskDelay(pdMS_TO_TICKS(10)+1);
     return true;
@@ -107,37 +109,37 @@ bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* 
 
 void SSD1306_Uninit(SSD1306_handle* pHandle)
 {
-    pHandle->bIsInit = false;
-    if (pHandle->u8Buffer != NULL)
+    pHandle->isInit = false;
+    if (NULL != pHandle->buffer)
     {
-        free(pHandle->u8Buffer);
+        free(pHandle->buffer);
     }
 }
 
 void SSD1306_ClearDisplay(SSD1306_handle* pHandle)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
-    memset(pHandle->u8Buffer, 0, pHandle->u32BufferLen);
+    memset(pHandle->buffer, 0, pHandle->bufferLen);
 }
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
     const uint8_t displayInit[] = {
       SSD1306_PAGEADDR,
       0,                      // Page start address
       0xFF,                   // Page end (not really, but works here)
-      SSD1306_COLUMNADDR, 0, pHandle->u32Width - 1}; // Column start address
+      SSD1306_COLUMNADDR, 0, pHandle->width - 1}; // Column start address
 
     sendCommand(pHandle, displayInit, sizeof(displayInit));
-    sendData(pHandle, pHandle->u8Buffer, pHandle->u32BufferLen);
+    sendData(pHandle, pHandle->buffer, pHandle->bufferLen);
 }
 
 void SSD1306_DisplayState(SSD1306_handle* pHandle, bool isActive)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
     if (isActive)
         sendCommand1(pHandle, SSD1306_DISPLAYON);
@@ -147,40 +149,40 @@ void SSD1306_DisplayState(SSD1306_handle* pHandle, bool isActive)
 
 void SSD1306_InvertDisplay(SSD1306_handle* pHandle)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
     sendCommand1(pHandle, SSD1306_INVERTDISPLAY);
 }
 
 void SSD1306_NormalDisplay(SSD1306_handle* pHandle)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
     sendCommand1(pHandle, SSD1306_NORMALDISPLAY);
 }
 
 void SSD1306_SetPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    if (!pHandle->bIsInit || !IsXYValid(pHandle, x, y))
+    if (!pHandle->isInit || !IsXYValid(pHandle, x, y))
         return;
-    pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] |=  (1 << (y & 7));
+    pHandle->buffer[x + (y >> 3) * pHandle->width] |=  (1 << (y & 7));
 }
 
 void SSD1306_ClearPixel(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    if (!pHandle->bIsInit || !IsXYValid(pHandle, x, y))
+    if (!pHandle->isInit || !IsXYValid(pHandle, x, y))
         return;
-    pHandle->u8Buffer[x + (y >> 3) * pHandle->u32Width] &=  ~(1 << (y & 7));
+    pHandle->buffer[x + (y >> 3) * pHandle->width] &=  ~(1 << (y & 7));
 }
 
-/*void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* pU8BitmapDatas, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height)
+/*void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* bitmapDatas, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
 
 }
 */
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return 0;
     // Character is not supported by the font
     if (c < pHandle->font->first || c > pHandle->font->last)
@@ -199,14 +201,14 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
     for(int i = 0; i < bitsize; i++)
     {
         const int x1 = i % glyph->width + x + glyph->xOffset;
-        const int y1 = i / glyph->width + y + (pHandle->u32BaselineY + glyph->yOffset);
+        const int y1 = i / glyph->width + y + (pHandle->baselineY + glyph->yOffset);
 
         if (i % 8 == 0)
             byte = pMap[i / 8];
 
         if (byte & 0x80)
         {
-            if (pHandle->bTextColor)
+            if (pHandle->textColor)
                 SSD1306_SetPixel(pHandle, x1, y1);
             else
                 SSD1306_ClearPixel(pHandle, x1, y1);
@@ -217,17 +219,17 @@ int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned c
     return glyph->xAdvance;
 }
 
-void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer)
+void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* str)
 {
-    if (!pHandle->bIsInit)
+    if (!pHandle->isInit)
         return;
 
-    const int len = strlen(buffer);
+    const int len = strlen(str);
     int x1 = x, y1 = y;
 
     for(int i = 0; i < len; i++)
     {
-        const unsigned char c = (unsigned char)buffer[i];
+        const unsigned char c = (unsigned char)str[i];
         if (c == '\r' || c == '\n')
         {
             y1 += pHandle->font->yAdvance;
@@ -241,65 +243,65 @@ void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const c
     }
 }
 
-void SSD1306_SetTextColor(SSD1306_handle* pHandle, bool bTextColor)
+void SSD1306_SetTextColor(SSD1306_handle* pHandle, bool textColor)
 {
-    pHandle->bTextColor = bTextColor;
+    pHandle->textColor = textColor;
 }
 
-void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor)
+void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t x, uint32_t y, uint32_t width, uint32_t height, bool color)
 {
-    const uint32_t u32Right = MIN(u32X + u32Width, pHandle->u32Width - 1);
-    const uint32_t u32Bottom = MIN(u32Y + u32Height, pHandle->u32Height - 1);
+    const uint32_t right = MIN(x + width, pHandle->width - 1);
+    const uint32_t bottom = MIN(y + height, pHandle->height - 1);
 
-    for(uint32_t y = u32Y; y < u32Bottom; y++)
+    for(uint32_t py = y; py < bottom; py++)
     {
-        for(uint32_t x = u32X; x < u32Right; x++)
+        for(uint32_t px = x; px < right; px++)
         {
-            if (bColor)
-                SSD1306_SetPixel(pHandle, x, y);
+            if (color)
+                SSD1306_SetPixel(pHandle, px, py);
             else
-                SSD1306_ClearPixel(pHandle, x, y);
+                SSD1306_ClearPixel(pHandle, px, py);
         }
     }
 }
 
-void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor)
+void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t x, uint32_t y, uint32_t width, uint32_t height, bool color)
 {
-    const uint32_t u32Right = MIN(u32X + u32Width, pHandle->u32Width - 1);
-    const uint32_t u32Bottom = MIN(u32Y + u32Height, pHandle->u32Height - 1);
+    const uint32_t right = MIN(x + width, pHandle->width - 1);
+    const uint32_t bottom = MIN(y + height, pHandle->height - 1);
 
-    for(uint32_t y = u32Y; y < u32Bottom; y++)
+    for(uint32_t py = y; py < bottom; py++)
     {
-        if (bColor)
+        if (color)
         {
-            SSD1306_SetPixel(pHandle, u32X, y);
-            SSD1306_SetPixel(pHandle, u32Right, y);
+            SSD1306_SetPixel(pHandle, x, py);
+            SSD1306_SetPixel(pHandle, right, py);
         }
         else
         {
-            SSD1306_ClearPixel(pHandle, u32X, y);
-            SSD1306_ClearPixel(pHandle, u32Right, y);
+            SSD1306_ClearPixel(pHandle, x, py);
+            SSD1306_ClearPixel(pHandle, right, py);
         }
     }
 
-    for(uint32_t x = u32X; x < u32Right; x++)
+    for(uint32_t px = x; px < right; px++)
     {
-        if (bColor)
+        if (color)
         {
-            SSD1306_SetPixel(pHandle, x, u32Y);
-            SSD1306_SetPixel(pHandle, x, u32Bottom);
+            SSD1306_SetPixel(pHandle, px, y);
+            SSD1306_SetPixel(pHandle, px, bottom);
         }
         else
         {
-            SSD1306_ClearPixel(pHandle, x, u32Y);
-            SSD1306_ClearPixel(pHandle, x, u32Bottom);
+            SSD1306_ClearPixel(pHandle, px, y);
+            SSD1306_ClearPixel(pHandle, px, bottom);
         }
     }
 }
 
 static bool IsXYValid(SSD1306_handle* pHandle, uint16_t x, uint16_t y)
 {
-    return (x < pHandle->u32Width) && (y < pHandle->u32Height);
+    return (x < pHandle->width) && (y < pHandle->height);
 }
 
 static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value)
@@ -307,45 +309,28 @@ static bool sendCommand1(SSD1306_handle* pHandle, uint8_t value)
     return writeI2C(pHandle, ControlByte_Command, &value, 1);
 }
 
-static bool sendCommand(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendCommand(SSD1306_handle* pHandle, const uint8_t* value, int length)
 {
     return writeI2C(pHandle, ControlByte_Command, value, length);
 }
 
-static bool sendData1(SSD1306_handle* pHandle, uint8_t value)
-{
-    return writeI2C(pHandle, ControlByte_Data, &value, 1);
-}
-
-static bool sendData(SSD1306_handle* pHandle, uint8_t* value, int length)
+static bool sendData(SSD1306_handle* pHandle, const uint8_t* value, int length)
 {
     return writeI2C(pHandle, ControlByte_Data, value, length);
 }
 
-static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, uint8_t* value, int length)
+static bool writeI2C(SSD1306_handle* pHandle, ControlByte controlByte, const uint8_t* value, int length)
 {
-    bool retF = true;
-
-	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-
-	// Write sampling command
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_start(cmd));
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (pHandle->sConfig.i2cAddress<<1), true));
-    // CO = 0, D/C = 0 (Data = 1, Command = 0)
-    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, (uint8_t)controlByte, true));  // Data mode (bit 6)
-    for(int i = 0; i < length; i++)
-    {
-	    ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_write_byte(cmd, *(value + i), true));
-    }
-	ESP_ERROR_CHECK_WITHOUT_ABORT(i2c_master_stop(cmd));
-
-	const esp_err_t ret = i2c_master_cmd_begin(pHandle->i2c_port, cmd, pdMS_TO_TICKS(1000));
-	if (ret != ESP_OK)
+    uint8_t* buf = malloc(length + 1);
+    if (!buf) return false;
+    buf[0] = (uint8_t)controlByte;
+    memcpy(buf + 1, value, length);
+    const esp_err_t ret = i2c_master_transmit(pHandle->i2c_dev, buf, length + 1, 1000);
+    free(buf);
+    if (ESP_OK != ret)
     {
         ESP_ERROR_CHECK_WITHOUT_ABORT(ret);
-        retF = false;
+        return false;
     }
-
-	i2c_cmd_link_delete(cmd);
-    return retF;
+    return true;
 }

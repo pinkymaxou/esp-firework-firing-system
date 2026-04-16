@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "driver/i2c.h"
+#include "driver/i2c_master.h"
 #include "esp_log.h"
 #include <string.h>
 #include "gfxfont.h"
@@ -80,24 +80,24 @@ typedef struct
 
 typedef struct
 {
-    i2c_port_t i2c_port;
+    i2c_master_dev_handle_t i2c_dev;
     SSD1306_config sConfig;
 
-    uint8_t* u8Buffer;
-    uint32_t u32BufferLen;
+    uint8_t* buffer;
+    uint32_t bufferLen;
 
-    uint32_t u32Width;
-    uint32_t u32Height;
+    uint32_t width;
+    uint32_t height;
 
-    GFXfont* font;
-    uint32_t u32BaselineY;
+    const GFXfont* font;
+    uint32_t baselineY;
 
-    bool bTextColor;
+    bool textColor;
 
-    bool bIsInit;
+    bool isInit;
 } SSD1306_handle;
 
-bool SSD1306_Init(SSD1306_handle* pHandle, i2c_port_t i2c_port, SSD1306_config* pconfig);
+bool SSD1306_Init(SSD1306_handle* pHandle, i2c_master_dev_handle_t i2c_dev, SSD1306_config* pconfig);
 
 void SSD1306_Uninit(SSD1306_handle* pHandle);
 
@@ -113,11 +113,11 @@ void SSD1306_NormalDisplay(SSD1306_handle* pHandle);
 
 int SSD1306_DrawChar(SSD1306_handle* pHandle, uint16_t x, uint16_t y, unsigned char c);
 
-void SSD1306_SetTextColor(SSD1306_handle* pHandle, bool bTextColor);
-void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* buffer);
-//void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* pU8BitmapDatas, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height);
-void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor);
-void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t u32X, uint32_t u32Y, uint32_t u32Width, uint32_t u32Height, bool bColor);
+void SSD1306_SetTextColor(SSD1306_handle* pHandle, bool textColor);
+void SSD1306_DrawString(SSD1306_handle* pHandle, uint16_t x, uint16_t y, const char* str);
+//void SSD1306_DrawBitmap(SSD1306_handle* pHandle, const uint8_t* bitmapDatas, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+void SSD1306_FillRect(SSD1306_handle* pHandle, uint32_t x, uint32_t y, uint32_t width, uint32_t height, bool color);
+void SSD1306_DrawRect(SSD1306_handle* pHandle, uint32_t x, uint32_t y, uint32_t width, uint32_t height, bool color);
 
 void SSD1306_UpdateDisplay(SSD1306_handle* pHandle);
 

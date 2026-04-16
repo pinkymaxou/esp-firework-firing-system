@@ -1,70 +1,72 @@
-
-var currentApp = new Vue({
+var g_current_app = new Vue(
+{
     el: '#app',
     data:
     {
-      sysinfos: [],
-      setting_entries: []
+        sysinfos: [],
+        setting_entries: [],
+        edited_values: {},
+        save_status: ''
     },
-    methods: {
-        idBtnUpload_Click(event)
+    methods:
+    {
+        idBtnUploadClick()
         {
-            console.log("idBtnUpload_Click");
+            const firmware_file = document.getElementById("idFile").files[0];
+            if (!firmware_file)
+                return;
 
-            var xhr = new XMLHttpRequest();
+            const xhr = new XMLHttpRequest();
             xhr.open('POST', '/ota/upload', true);
 
-            let firmwareFile = document.getElementById("idFile").files[0];
+            xhr.upload.onprogress = (e) => { console.log("upload progress", e); };
+            xhr.upload.onerror    = (e) => { console.error("upload error", e); };
+            xhr.upload.onabort    = (e) => { console.warn("upload aborted", e); };
 
-            // Listen to the upload progress.
-            xhr.upload.onprogress = function(e)
-            {
-                console.log("upload in onprogress", e);
-            };
-
-            xhr.upload.loadstart = function(e)
-            {
-                console.log("upload started", e);
-            };
-
-            xhr.upload.loadend = function(e)
-            {
-                console.log("upload ended", e);
-            };
-
-            xhr.upload.load  = function(e)
-            {
-                console.log("upload succeeded!", e);
-            };
-
-            xhr.upload.error = function(e)
-            {
-                console.log("upload error", e);
-            };
-
-            xhr.upload.abort = function(e)
-            {
-                console.log("upload aborted", e);
-            };
-
-            xhr.send(firmwareFile);
+            xhr.send(firmware_file);
+        },
+        idBtnSaveClick()
+        {
+            const entries = this.setting_entries.map(e => ({
+                key: e.key,
+                value: this.edited_values[e.key]
+            }));
+            sendWS({ cmd: "setsettings", entries: entries });
+            this.save_status = 'Saved';
+            setTimeout(() => { this.save_status = ''; }, 2000);
+        },
+        needsReboot()
+        {
+            return this.setting_entries.some(e =>
+                e.info.flag_reboot &&
+                String(this.edited_values[e.key]) !== String(e.value)
+            );
         }
     }
 });
 
-function AppLoaded()
+function appLoaded()
 {
-	fetch('./api/getsysinfo')
-		.then((response) => response.json())
-		.then((data) =>
-		{
-			currentApp.sysinfos = data.infos;
-		});
-        
-	fetch('./api/getsettingsjson')
-		.then((response) => response.json())
-		.then((data) =>
-		{
-			currentApp.setting_entries = data.entries;
-		});
+    g_wsMessageHandler = (msg) =>
+    {
+        if ("settings" === msg.type)
+        {
+            g_current_app.setting_entries = msg.entries || [];
+            const ev = {};
+            (msg.entries || []).forEach(e => { ev[e.key] = e.value; });
+            g_current_app.edited_values = ev;
+        }
+        else if ("sysinfo" === msg.type)
+        {
+            g_current_app.sysinfos = msg.infos || [];
+        }
+    };
+
+    g_wsOpenHandler = () =>
+    {
+        sendWS({ cmd: "getsettings" });
+        sendWS({ cmd: "getsysinfo" });
+    };
+
+    connectWebSocket();
 }

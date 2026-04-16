@@ -19,13 +19,13 @@ class UIMenu : UIBase
 
     typedef struct
     {
-        const char* szName;
+        const char* name;
     } SMenu;
 
     void OnEnter(void) override;
     void OnExit(void) override;
 
-    void OnEncoderMove(BTEvent eBtnEvent, int32_t s32ClickCount) override;
+    void OnEncoderMove(BTEvent btn_event, int32_t click_count) override;
 
     void OnTick(void) override;
 
@@ -33,18 +33,18 @@ class UIMenu : UIBase
 
     private:
 
-    bool m_bIsNeedRefresh = false;
-    int32_t m_s32MenuItemIndex = 0;
+    bool m_isNeedRefresh = false;
+    int32_t m_menuItemIndex = 0;
     const SMenu m_sMenuItems[(int)MenuItem::Count] =
     {
-        [(int)MenuItem::Exit]            = { .szName = "Exit" },
-        [(int)MenuItem::Settings]        = { .szName = "Settings" },
-        [(int)MenuItem::TestConn]        = { .szName = "Test conn." },
-        [(int)MenuItem::LiveCheckContinuity] = { .szName = "Chk. conn." },
-        [(int)MenuItem::Reboot]          = { .szName = "Reboot" },
-        //[(int)MenuItem::About]           = { .szName = "About" },
+        [(int)MenuItem::Exit]            = { .name = "Exit" },
+        [(int)MenuItem::Settings]        = { .name = "Settings" },
+        [(int)MenuItem::TestConn]        = { .name = "Test conn." },
+        [(int)MenuItem::LiveCheckContinuity] = { .name = "Chk. conn." },
+        [(int)MenuItem::Reboot]          = { .name = "Reboot" },
+        //[(int)MenuItem::About]           = { .name = "About" },
     };
-    static_assert((int)MenuItem::Count == ( sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
+    static_assert((int)MenuItem::Count == (sizeof(m_sMenuItems)/sizeof(m_sMenuItems[0])), "Menu items doesn't match");
 
-    int32_t m_s32EncoderTicks = 0;
+    int32_t m_encoderTicks = 0;
 };

@@ -51,7 +51,7 @@ class MainApp
 
     struct SFire
     {
-        uint32_t u32OutputIndex;
+        uint32_t outputIndex;
     };
 
     union UArg
@@ -67,7 +67,7 @@ class MainApp
 
     struct SRelay
     {
-        uint32_t u32Index;
+        uint32_t index;
         // Status
         bool isConnected;
         bool isFired;
@@ -77,13 +77,13 @@ class MainApp
 
     typedef struct
     {
-        bool bIsArmed;
+        bool isArmed;
 
         // TickType_t ttArmedTicks;
-        bool bIsContinuityCheckOK;
+        bool isContinuityCheckOK;
 
-        EGeneralState eGeneralState;
-        double dProgressOfOne;
+        EGeneralState generalState;
+        double progressOfOne;
     } SState;
 
     MainApp() = default;
@@ -92,7 +92,7 @@ class MainApp
 
     void Run();
 
-    void ExecFire(uint32_t u32OutputIndex);
+    void ExecFire(uint32_t output_index);
 
     void ExecCheckConnections();
 
@@ -102,7 +102,7 @@ class MainApp
 
     void ExecCancel();
 
-    SRelay GetRelayState(uint32_t u32OutputIndex);
+    SRelay GetRelayState(uint32_t output_index);
 
     MainApp::EOutputState GetOutputState(const SRelay* pSRelay);
 
@@ -129,13 +129,13 @@ class MainApp
     bool StartLiveCheckContinuity();
     static void LiveCheckContinuityTask(void* pParam);
 
-    void UpdateLED(uint32_t u32OutputIndex, bool bForceRefresh);
+    void UpdateLED(uint32_t output_index, bool force_refresh);
 
     void CheckUserInput();
 
     private:
     SRelay m_sOutputs[HWCONFIG_OUTPUT_COUNT];
-    SState m_sState = { .bIsArmed = false/*, .ttArmedTicks = 0*/, .dProgressOfOne = 0.0d };
+    SState m_sState = { .isArmed = false/*, .ttArmedTicks = 0*/, .progressOfOne = 0.0d };
 
     // Input commands
     SCmd m_sCmd = { .eCmd = ECmd::None };

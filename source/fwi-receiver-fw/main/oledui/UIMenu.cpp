@@ -9,8 +9,8 @@
 
 void UIMenu::OnEnter()
 {
-    m_s32MenuItemIndex = 0;
-    m_bIsNeedRefresh = true;
+    m_menuItemIndex = 0;
+    m_isNeedRefresh = true;
 }
 
 void UIMenu::OnExit()
@@ -20,44 +20,44 @@ void UIMenu::OnExit()
 
 void UIMenu::OnTick()
 {
-    if (m_bIsNeedRefresh)
+    if (m_isNeedRefresh)
     {
-        m_bIsNeedRefresh = false;
+        m_isNeedRefresh = false;
         DrawScreen();
     }
 }
 
-void UIMenu::OnEncoderMove(UIBase::BTEvent eBtnEvent, int32_t s32ClickCount)
+void UIMenu::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
-    switch (eBtnEvent)
+    switch (btn_event)
     {
         case UIBase::BTEvent::EncoderClick:
         {
-            m_s32EncoderTicks += s32ClickCount;
+            m_encoderTicks += click_count;
 
-            if (m_s32EncoderTicks <= -2)
+            if (m_encoderTicks <= -2)
             {
-                if (m_s32MenuItemIndex > 0)
+                if (m_menuItemIndex > 0)
                 {
-                    m_s32MenuItemIndex--;
-                    m_bIsNeedRefresh = true;
+                    m_menuItemIndex--;
+                    m_isNeedRefresh = true;
                 }
-                m_s32EncoderTicks = 0;
+                m_encoderTicks = 0;
             }
-            else if (m_s32EncoderTicks >= 2)
+            else if (m_encoderTicks >= 2)
             {
-                if (m_s32MenuItemIndex + 1 < (int32_t)MenuItem::Count)
+                if (m_menuItemIndex + 1 < (int32_t)MenuItem::Count)
                 {
-                    m_s32MenuItemIndex++;
-                    m_bIsNeedRefresh = true;
+                    m_menuItemIndex++;
+                    m_isNeedRefresh = true;
                 }
-                m_s32EncoderTicks = 0;
+                m_encoderTicks = 0;
             }
             break;
         }
         case UIBase::BTEvent::Click:
         {
-            switch((MenuItem)m_s32MenuItemIndex)
+            switch((MenuItem)m_menuItemIndex)
             {
                 case MenuItem::Exit:
                     g_uiMgr.Goto(UIManager::EMenu::Home);
@@ -95,24 +95,26 @@ void UIMenu::DrawScreen()
     // Cursor
     const int32_t MAX_DISPLAY_ITEM_COUNT = 4;
 
-    int32_t s32StartMenuIndex = 0;
-    if (m_s32MenuItemIndex > MAX_DISPLAY_ITEM_COUNT - 1) {
-        s32StartMenuIndex = ((m_s32MenuItemIndex + 1) - MAX_DISPLAY_ITEM_COUNT);
+    int32_t start_menu_index = 0;
+    if (m_menuItemIndex > MAX_DISPLAY_ITEM_COUNT - 1)
+    {
+        start_menu_index = ((m_menuItemIndex + 1) - MAX_DISPLAY_ITEM_COUNT);
     }
 
-    int32_t s32DrawMenuIndex = 0;
-    for(int32_t i = s32StartMenuIndex; i < (int32_t)MenuItem::Count && s32DrawMenuIndex < MAX_DISPLAY_ITEM_COUNT; i++)
+    int32_t draw_menu_index = 0;
+    for(int32_t i = start_menu_index; i < (int32_t)MenuItem::Count && draw_menu_index < MAX_DISPLAY_ITEM_COUNT; i++)
     {
         const SMenu* psMenuItem = &m_sMenuItems[i];
 
-        const bool isSelected = (i == m_s32MenuItemIndex);
-        if (isSelected) {
-            SSD1306_FillRect(pss1306Handle, 0, s32DrawMenuIndex*15+3, 127, 16, true);
+        const bool isSelected = (i == m_menuItemIndex);
+        if (isSelected)
+        {
+            SSD1306_FillRect(pss1306Handle, 0, draw_menu_index*15+3, 127, 16, true);
         }
         SSD1306_SetTextColor(pss1306Handle, !isSelected);
-        SSD1306_DrawString(pss1306Handle, 15, 15*s32DrawMenuIndex, psMenuItem->szName);
+        SSD1306_DrawString(pss1306Handle, 15, 15*draw_menu_index, psMenuItem->name);
 
-        s32DrawMenuIndex++;
+        draw_menu_index++;
     }
 
     // Restore ...
