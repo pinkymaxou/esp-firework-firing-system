@@ -2,22 +2,22 @@
 #include "UIManager.hpp"
 #include "MainApp.hpp"
 
-void UIAbout::OnEnter()
+void UIAbout::onEnter()
 {
-    DrawScreen();
+    drawScreen();
 }
 
-void UIAbout::OnExit()
-{
-
-}
-
-void UIAbout::OnTick()
+void UIAbout::onExit()
 {
 
 }
 
-void UIAbout::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UIAbout::onTick()
+{
+
+}
+
+void UIAbout::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     if (UIBase::BTEvent::Click == btn_event)
     {
@@ -25,16 +25,16 @@ void UIAbout::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
     }
 }
 
-void UIAbout::DrawScreen()
+void UIAbout::drawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
+    SSD1306* display = HWGPIO::getSSD1306Handle();
     char text[65];
 
-    SSD1306_ClearDisplay(display);
+    display->clearDisplay();
     sprintf(text, "coucou");
-    SSD1306_DrawString(display, 15, 4, text);
+    display->drawString( 15, 4, text);
 
-    SSD1306_UpdateDisplay(display);
+    display->updateDisplay();
     #endif
 }

@@ -4,16 +4,16 @@
 
 class UIArmed : UIBase
 {
-    void OnEnter(void) override;
-    void OnExit(void) override;
+    void onEnter(void) override;
+    void onExit(void) override;
 
-    void OnEncoderMove(BTEvent btn_event, int32_t click_count) override;
+    void onEncoderMove(BTEvent btn_event, int32_t click_count) override;
 
-    void OnTick(void) override;
+    void onTick(void) override;
 
-    void DrawScreen(void) override;
+    void drawScreen(void) override;
 
     private:
     TickType_t m_last_change_ticks = 0;
-    bool m_alternImage = false;
+    bool m_altern_image = false;
 };

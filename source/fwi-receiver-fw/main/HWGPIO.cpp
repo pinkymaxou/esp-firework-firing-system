@@ -5,6 +5,7 @@
 #include "esp_log.h"
 #include "Settings.hpp"
 #include "assets/BitmapPotato.h"
+#include "SSD1306.hpp"
 #include "led_strip.h"
 #include <assert.h>
 
@@ -12,7 +13,7 @@
 
 static led_strip_handle_t m_led_strip;
 #if HWCONFIG_OLED_ISPRESENT != 0
-static SSD1306_handle m_ssd1306;
+static SSD1306 m_ssd1306;
 #endif
 static int32_t m_encoder_ticks = 0;
 
@@ -44,9 +45,32 @@ static gpio_num_t m_bus_area_pins[HWCONFIG_OUTPUTAREA_COUNT] =
     // HWCONFIG_RELAY_MOSA3
 };
 
-static void IRAM_ATTR gpioIsrHandler(void* arg) ;
+static void IRAM_ATTR gpioIsrHandler(void* arg);
 
-void HWGPIO_Init()
+static bool m_last_enc_a = false;
+static void gpioIsrHandler(void* arg)
+{
+    const bool enc_a = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
+    const bool enc_b = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
+
+    if (enc_a != m_last_enc_a)
+    {
+        if (enc_a != enc_b)
+        {
+            m_encoder_ticks--;
+        }
+        else
+        {
+            m_encoder_ticks++;
+        }
+        m_last_enc_a = enc_a;
+    }
+}
+
+namespace HWGPIO
+{
+
+void init()
 {
     // Sanity LEDs
     gpio_reset_pin(HWCONFIG_LEDWS2812B_PIN);
@@ -84,7 +108,7 @@ void HWGPIO_Init()
     gpio_set_direction(HWCONFIG_CONNSENSE_IN, GPIO_MODE_INPUT);
 
     // User input
-    HWGPIO_ClearRelayBus();
+    clearRelayBus();
 
     /* LED strip initialization with the GPIO and pixels number*/
     led_strip_config_t strip_config = {
@@ -118,13 +142,12 @@ void HWGPIO_Init()
     i2c_master_dev_handle_t oled_dev_handle;
     ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c_bus_handle, &oled_dev_config, &oled_dev_handle));
 
-    static SSD1306_config cfg_ssd1306 = SSD1306_CONFIG_DEFAULT_128x64;
-	//cfg_ssd1306.pinReset = (gpio_num_t)CONFIG_I2C_MASTER_RESET;
-    SSD1306_Init(&m_ssd1306, oled_dev_handle, &cfg_ssd1306);
-    SSD1306_ClearDisplay(&m_ssd1306);
-    memcpy(m_ssd1306.buffer, m_u8LogoDatas, m_u32LogoDataLen);
-    assert(m_u32LogoDataLen == m_ssd1306.bufferLen); // , "Bitmap and buffer doesn't match"
-    SSD1306_UpdateDisplay(&m_ssd1306);
+    static constexpr SSD1306::Config cfg_ssd1306 = SSD1306::CONFIG_DEFAULT_128x64;
+    m_ssd1306.init(oled_dev_handle, cfg_ssd1306);
+    m_ssd1306.clearDisplay();
+    assert(g_logo_data_len == m_ssd1306.m_buffer_len);
+    memcpy(m_ssd1306.m_buffer, g_logo_data, g_logo_data_len);
+    m_ssd1306.updateDisplay();
     #endif
 
     // PWM for master power
@@ -183,27 +206,7 @@ void HWGPIO_Init()
     #endif
 }
 
-static bool m_last_enc_a = false;
-static void gpioIsrHandler(void* arg)
-{
-    const bool enc_a = gpio_get_level(HWCONFIG_ENCODERA_IN) == false;
-    const bool enc_b = gpio_get_level(HWCONFIG_ENCODERB_IN) == false;
-
-    if (enc_a != m_last_enc_a)
-    {
-        if (enc_a != enc_b)
-        {
-            m_encoder_ticks--;
-        }
-        else
-        {
-            m_encoder_ticks++;
-        }
-        m_last_enc_a = enc_a;
-    }
-}
-
-void HWGPIO_SetSanityLED(bool is_enabled, bool is_armed)
+void setSanityLED(bool is_enabled, bool is_armed)
 {
     // Ground driven: lower duty = brighter
     const uint32_t value = is_enabled ? (is_armed ? 0 : (4095 - 500)) : 4095;
@@ -216,21 +219,21 @@ void HWGPIO_SetSanityLED(bool is_enabled, bool is_armed)
         led_strip_set_pixel(m_led_strip, 0, is_enabled ? 200 : 0, 0, 0);
     else
         led_strip_set_pixel(m_led_strip, 0, 0, is_enabled ? 200 : 0, 0);
-    HWGPIO_RefreshLEDStrip();
+    refreshLEDStrip();
 }
 
-void HWGPIO_SetOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b)
+void setOutputRelayStatusColor(uint32_t output_index, uint8_t r, uint8_t g, uint8_t b)
 {
     led_strip_set_pixel(m_led_strip, output_index+1, r, g, b);
 }
 
-void HWGPIO_RefreshLEDStrip()
+void refreshLEDStrip()
 {
     /* Refresh the strip to send data */
     led_strip_refresh(m_led_strip);
 }
 
-void HWGPIO_ClearRelayBus()
+void clearRelayBus()
 {
     // Stop all relay boards
     for(int i = 0; i < HWCONFIG_OUTPUTAREA_COUNT; i++)
@@ -248,12 +251,12 @@ void HWGPIO_ClearRelayBus()
     vTaskDelay(pdMS_TO_TICKS(25));
 }
 
-void HWGPIO_WriteSingleRelay(uint32_t output_index, bool value)
+void writeSingleRelay(uint32_t output_index, bool value)
 {
     if (output_index >= HWCONFIG_OUTPUT_COUNT)
         return;
 
-    HWGPIO_ClearRelayBus();
+    clearRelayBus();
 
     // Activate the right area
     const uint32_t area_index = output_index / HWCONFIG_OUTPUTBUS_COUNT;
@@ -275,9 +278,9 @@ void HWGPIO_WriteSingleRelay(uint32_t output_index, bool value)
     }
 }
 
-void HWGPIO_WriteMasterPowerRelay(bool value)
+void writeMasterPowerRelay(bool value)
 {
-    const double percent = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent)/100.0;
+    const double percent = NVSJSON_GetValueInt32(&Settings::g_handle, Settings::FiringPWMPercent)/100.0;
 
     const uint32_t duty = value ? (4095 * percent) : 0;
 
@@ -286,27 +289,27 @@ void HWGPIO_WriteMasterPowerRelay(bool value)
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, HWCONFIG_MASTERPWR_CHANNEL));
 }
 
-bool HWGPIO_ReadMasterPowerSense()
+bool readMasterPowerSense()
 {
     return gpio_get_level(HWCONFIG_MASTERPWRSENSE_IN) == false;
 }
 
-bool HWGPIO_ReadConnectionSense()
+bool readConnectionSense()
 {
     return gpio_get_level(HWCONFIG_CONNSENSE_IN) == false;
 }
 
-bool HWGPIO_IsEncoderSwitchON()
+bool isEncoderSwitchON()
 {
     return gpio_get_level(HWCONFIG_ENCODERSW) == false;
 }
 
-uint32_t HWGPIO_GetRelayArea(uint32_t output_index)
+uint32_t getRelayArea(uint32_t output_index)
 {
     return output_index / HWCONFIG_OUTPUTBUS_COUNT;
 }
 
-int32_t HWGPIO_GetEncoderCount()
+int32_t getEncoderCount()
 {
     const int32_t ticks = m_encoder_ticks;
     m_encoder_ticks = 0;
@@ -314,8 +317,10 @@ int32_t HWGPIO_GetEncoderCount()
 }
 
 #if HWCONFIG_OLED_ISPRESENT != 0
-SSD1306_handle* HWGPIO_GetSSD1306Handle()
+SSD1306* getSSD1306Handle()
 {
     return &m_ssd1306;
 }
 #endif
+
+} // namespace HWGPIO

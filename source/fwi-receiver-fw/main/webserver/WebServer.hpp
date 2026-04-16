@@ -1,16 +1,8 @@
-#ifndef _WEBSERVER_H
-#define _WEBSERVER_H
+#pragma once
 
 #include <esp_http_server.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void webServerInit();
-
-#ifdef __cplusplus
+namespace WebServer
+{
+    void init();
 }
-#endif
-
-#endif

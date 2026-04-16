@@ -29,7 +29,7 @@ static esp_err_t handleCommand(httpd_req_t* req, const cJSON* root);
 static void toHexString(char* dst, const uint8_t* data, uint8_t len);
 static const char* getChipName(esp_chip_model_t model);
 
-esp_err_t wsHandler(httpd_req_t* req)
+esp_err_t WSWebSocket::handler(httpd_req_t* req)
 {
     if (HTTP_GET == req->method)
     {
@@ -155,7 +155,7 @@ static esp_err_t handleCommand(httpd_req_t* req, const cJSON* root)
         if (NULL == json_str)
             return ESP_FAIL;
 
-        bool ok = NVSJSON_ImportJSON(&g_settingHandle, json_str);
+        bool ok = NVSJSON_ImportJSON(&Settings::g_handle, json_str);
         free(json_str);
         return ok ? ESP_OK : ESP_FAIL;
     }
@@ -209,7 +209,7 @@ static char* buildSettingsJSON()
 
     cJSON_AddItemToObject(root, "type", cJSON_CreateString("settings"));
 
-    char* exported = NVSJSON_ExportJSON(&g_settingHandle);
+    char* exported = NVSJSON_ExportJSON(&Settings::g_handle);
     if (NULL != exported)
     {
         cJSON* parsed = cJSON_Parse(exported);
@@ -316,7 +316,7 @@ static char* buildSysInfoJSON()
         cJSON* entry = cJSON_CreateObject();
         cJSON_AddItemToObject(entry, "name", cJSON_CreateString("WiFi (STA)"));
         esp_netif_ip_info_t ip_info;
-        MAIN_GetWiFiSTAIP(&ip_info);
+        Main::getWiFiSTAIP(&ip_info);
         sprintf(buff, IPSTR, IP2STR(&ip_info.ip));
         cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
         cJSON_AddItemToArray(infos, entry);
@@ -326,7 +326,7 @@ static char* buildSysInfoJSON()
         cJSON* entry = cJSON_CreateObject();
         cJSON_AddItemToObject(entry, "name", cJSON_CreateString("WiFi (Soft-AP)"));
         esp_netif_ip_info_t ip_info;
-        MAIN_GetWiFiSoftAPIP(&ip_info);
+        Main::getWiFiSoftAPIP(&ip_info);
         sprintf(buff, IPSTR, IP2STR(&ip_info.ip));
         cJSON_AddItemToObject(entry, "value", cJSON_CreateString(buff));
         cJSON_AddItemToArray(infos, entry);

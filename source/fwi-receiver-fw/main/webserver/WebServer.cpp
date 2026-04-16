@@ -24,7 +24,7 @@ static const httpd_uri_t ROUTE_WS =
 {
     .uri          = "/ws",
     .method       = HTTP_GET,
-    .handler      = wsHandler,
+    .handler      = WSWebSocket::handler,
     .user_ctx     = NULL,
     .is_websocket = true
 };
@@ -45,7 +45,7 @@ static const httpd_uri_t ROUTE_FILES =
     .user_ctx = NULL
 };
 
-void webServerInit()
+void WebServer::init()
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();

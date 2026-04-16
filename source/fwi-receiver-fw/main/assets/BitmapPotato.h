@@ -1,15 +1,12 @@
-#ifndef _BITMAPPOTATO_H_
-#define _BITMAPPOTATO_H_
+#pragma once
 
 #include <stdint.h>
 
-extern const uint8_t m_u8LogoDatas[];
-extern const uint32_t m_u32LogoDataLen;
+extern const uint8_t g_logo_data[];
+extern const uint32_t g_logo_data_len;
 
-extern const uint8_t m_u8FireworkDatas[];
-extern const uint32_t m_u32FireworkDataLen;
+extern const uint8_t g_firework_data[];
+extern const uint32_t g_firework_data_len;
 
-extern const uint8_t m_u8AlertDatas[];
-extern const uint32_t m_u32AlertDataLen;
-
-#endif
+extern const uint8_t g_alert_data[];
+extern const uint32_t g_alert_data_len;

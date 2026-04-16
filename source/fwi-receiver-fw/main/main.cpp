@@ -84,7 +84,7 @@ static void wifiInit()
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    const bool is_wifi_sta = (1 == NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive));
+    const bool is_wifi_sta = (1 == NVSJSON_GetValueInt32(&Settings::g_handle, Settings::WSTAIsActive));
     if (is_wifi_sta)
     {
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA) );
@@ -124,7 +124,7 @@ static void wifiInit()
     m_wifi_config_ap.ap.ssid_len = n;
 
     size_t sta_pass_length = 64;
-    NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WAPPass, (char*)m_wifi_config_ap.ap.password, &sta_pass_length);
+    NVSJSON_GetValueString(&Settings::g_handle, Settings::WAPPass, (char*)m_wifi_config_ap.ap.password, &sta_pass_length);
 
     if (0 == strlen((const char*)m_wifi_config_ap.ap.password))
     {
@@ -167,10 +167,10 @@ static void wifiInit()
         wifi_config_sta.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
         size_t sta_ssid_length = 32;
-        NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WSTASSID, (char*)wifi_config_sta.sta.ssid, &sta_ssid_length);
+        NVSJSON_GetValueString(&Settings::g_handle, Settings::WSTASSID, (char*)wifi_config_sta.sta.ssid, &sta_ssid_length);
 
         size_t sta_pass_length2 = 64;
-        NVSJSON_GetValueString(&g_settingHandle, SETTINGS_EENTRY_WSTAPass, (char*)wifi_config_sta.sta.password, &sta_pass_length2);
+        NVSJSON_GetValueString(&Settings::g_handle, Settings::WSTAPass, (char*)wifi_config_sta.sta.password, &sta_pass_length2);
 
         ESP_LOGI(TAG, "STA mode is active, attempt to connect to ssid: %s", wifi_config_sta.sta.ssid);
 
@@ -180,22 +180,22 @@ static void wifiInit()
     ESP_ERROR_CHECK( esp_wifi_start());
 }
 
-void MAIN_GetWiFiSTAIP(esp_netif_ip_info_t* ip)
+void Main::getWiFiSTAIP(esp_netif_ip_info_t* ip)
 {
     esp_netif_get_ip_info(m_wifi_sta, ip);
 }
 
-void MAIN_GetWiFiSoftAPIP(esp_netif_ip_info_t* ip)
+void Main::getWiFiSoftAPIP(esp_netif_ip_info_t* ip)
 {
     esp_netif_get_ip_info(m_wifi_soft_ap, ip);
 }
 
-int32_t MAIN_GetSAPUserCount()
+int32_t Main::getSAPUserCount()
 {
     return m_user_count;
 }
 
-void MAIN_GetWifiAPSSID(char ssid[32])
+void Main::getWifiAPSSID(char ssid[32])
 {
     strncpy(ssid, (char*)m_wifi_config_ap.ap.ssid, 32);
 }
@@ -210,20 +210,20 @@ void app_main(void)
         ret = nvs_flash_init();
     }
 
-    ESP_LOGI(TAG, "HWGPIO_Init");
-    HWGPIO_Init();
+    ESP_LOGI(TAG, "HWGPIO::init");
+    HWGPIO::init();
 
     ESP_ERROR_CHECK( ret );
-    ESP_LOGI(TAG, "SETTINGS_Init");
-    SETTINGS_Init();
+    ESP_LOGI(TAG, "Settings::init");
+    Settings::init();
 
-    m_wifi_channel = (uint8_t)NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WiFiChannel);
+    m_wifi_channel = (uint8_t)NVSJSON_GetValueInt32(&Settings::g_handle, Settings::WiFiChannel);
 
     ESP_LOGI(TAG, "wifi_init");
     wifiInit();
 
-    ESP_LOGI(TAG, "WEBSERVER_Init");
-    webServerInit();
+    ESP_LOGI(TAG, "WebServer::init");
+    WebServer::init();
 
     g_app.Init();
 

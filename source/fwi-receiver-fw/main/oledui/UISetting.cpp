@@ -3,31 +3,31 @@
 #include "UIManager.hpp"
 #include "../Settings.hpp"
 
-void UISetting::OnEnter()
+void UISetting::onEnter()
 {
-    m_firing_pwm_perc_value = (int32_t)NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent);
-    m_firing_hold_time_ms = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringHoldTimeMS);
-    m_is_wifi_station_activated = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive);
+    m_firing_pwm_perc_value = (int32_t)NVSJSON_GetValueInt32(&Settings::g_handle, Settings::FiringPWMPercent);
+    m_firing_hold_time_ms = NVSJSON_GetValueInt32(&Settings::g_handle, Settings::FiringHoldTimeMS);
+    m_is_wifi_station_activated = NVSJSON_GetValueInt32(&Settings::g_handle, Settings::WSTAIsActive);
 
     m_setting_item = Item::PWM;
 
-    DrawScreen();
+    drawScreen();
 }
 
-void UISetting::OnExit()
+void UISetting::onExit()
 {
-    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringPWMPercent, false, m_firing_pwm_perc_value);
-    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_FiringHoldTimeMS, false, m_firing_hold_time_ms);
-    NVSJSON_SetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive, false, m_is_wifi_station_activated);
-    NVSJSON_Save(&g_settingHandle);
+    NVSJSON_SetValueInt32(&Settings::g_handle, Settings::FiringPWMPercent, false, m_firing_pwm_perc_value);
+    NVSJSON_SetValueInt32(&Settings::g_handle, Settings::FiringHoldTimeMS, false, m_firing_hold_time_ms);
+    NVSJSON_SetValueInt32(&Settings::g_handle, Settings::WSTAIsActive, false, m_is_wifi_station_activated);
+    NVSJSON_Save(&Settings::g_handle);
 }
 
-void UISetting::OnTick()
+void UISetting::onTick()
 {
 
 }
 
-void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UISetting::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     switch(m_setting_item)
     {
@@ -36,15 +36,15 @@ void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
             if (UIBase::BTEvent::Click == btn_event)
             {
                 m_setting_item = Item::HoldTimeMS;
-                DrawScreen();
+                drawScreen();
             }
             else if (UIBase::BTEvent::EncoderClick == btn_event)
             {
                 const int32_t value = m_firing_pwm_perc_value + click_count;
-                if (value >= SETTINGS_FIRINGPWMPERCENT_MIN && value <= SETTINGS_FIRINGPWMPERCENT_MAX)
+                if (value >= Settings::FIRINGPWMPERCENT_MIN && value <= Settings::FIRINGPWMPERCENT_MAX)
                 {
                     m_firing_pwm_perc_value = value;
-                    DrawScreen();
+                    drawScreen();
                 }
             }
             break;
@@ -54,15 +54,15 @@ void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
             if (UIBase::BTEvent::Click == btn_event)
             {
                 m_setting_item = Item::WiFiStation;
-                DrawScreen();
+                drawScreen();
             }
             else if (UIBase::BTEvent::EncoderClick == btn_event)
             {
                 const int32_t value = m_firing_hold_time_ms + click_count*50;
-                if (value >= SETTINGS_FIRINGHOLDTIMEMS_MIN && value <= SETTINGS_FIRINGHOLDTIMEMS_MAX)
+                if (value >= Settings::FIRINGHOLDTIMEMS_MIN && value <= Settings::FIRINGHOLDTIMEMS_MAX)
                 {
                     m_firing_hold_time_ms = value;
-                    DrawScreen();
+                    drawScreen();
                 }
             }
             break;
@@ -91,7 +91,7 @@ void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
                 {
                     m_bool_counter = 0;
                     m_is_wifi_station_activated = new_value;
-                    DrawScreen();
+                    drawScreen();
                 }
             }
             break;
@@ -104,10 +104,10 @@ void UISetting::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
     }
 }
 
-void UISetting::DrawScreen()
+void UISetting::drawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
+    SSD1306* display = HWGPIO::getSSD1306Handle();
     char text[129] = {0,};
 
     if (Item::PWM == m_setting_item)
@@ -125,8 +125,8 @@ void UISetting::DrawScreen()
         sprintf(text, "SETTINGS\nWi-Fi STA\n%s",
             (m_is_wifi_station_activated ? "YES" : "NO"));
     }
-    SSD1306_ClearDisplay(display);
-    SSD1306_DrawString(display, 0, 0, text);
-    SSD1306_UpdateDisplay(display);
+    display->clearDisplay();
+    display->drawString( 0, 0, text);
+    display->updateDisplay();
     #endif
 }

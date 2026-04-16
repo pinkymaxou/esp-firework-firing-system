@@ -8,30 +8,30 @@
 
 #define TAG "UIHOME"
 
-void UIHome::OnEnter()
+void UIHome::onEnter()
 {
-    m_isPublicIP = false;
+    m_is_public_ip = false;
     m_last_change_ticks = 0;
-    m_isWifiStationActivated = NVSJSON_GetValueInt32(&g_settingHandle, SETTINGS_EENTRY_WSTAIsActive);
-    DrawScreen();
+    m_is_wifi_station_activated = NVSJSON_GetValueInt32(&Settings::g_handle, Settings::WSTAIsActive);
+    drawScreen();
 }
 
-void UIHome::OnExit()
+void UIHome::onExit()
 {
 
 }
 
-void UIHome::OnTick()
+void UIHome::onTick()
 {
     if ( (xTaskGetTickCount() - m_last_change_ticks) > pdMS_TO_TICKS(1000) )
     {
         m_last_change_ticks = xTaskGetTickCount();
-        DrawScreen();
-        m_isPublicIP = !m_isPublicIP;
+        drawScreen();
+        m_is_public_ip = !m_is_public_ip;
     }
 }
 
-void UIHome::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UIHome::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     if (UIBase::BTEvent::Click == btn_event)
     {
@@ -39,18 +39,18 @@ void UIHome::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
     }
 }
 
-void UIHome::DrawScreen()
+void UIHome::drawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
     char text[129] = {0,};
     char ssid[32] = {0,};
 
-    MAIN_GetWifiAPSSID(ssid);
+    Main::getWifiAPSSID(ssid);
 
-    if (m_isPublicIP && m_isWifiStationActivated)
+    if (m_is_public_ip && m_is_wifi_station_activated)
     {
         esp_netif_ip_info_t wifi_ip_sta = {0};
-        MAIN_GetWiFiSTAIP(&wifi_ip_sta);
+        Main::getWiFiSTAIP(&wifi_ip_sta);
         sprintf(text, "%s\n" IPSTR,
             ssid,
             IP2STR(&wifi_ip_sta.ip));
@@ -58,16 +58,16 @@ void UIHome::DrawScreen()
     else
     {
         esp_netif_ip_info_t wifi_ip_ap = {0};
-        MAIN_GetWiFiSoftAPIP(&wifi_ip_ap);
+        Main::getWiFiSoftAPIP(&wifi_ip_ap);
         sprintf(text, "%s\n" IPSTR "\nUser: %" PRId32,
             ssid,
             IP2STR(&wifi_ip_ap.ip),
-            MAIN_GetSAPUserCount());
+            Main::getSAPUserCount());
     }
 
-    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
-    SSD1306_ClearDisplay(display);
-    SSD1306_DrawString(display, 0, 0, text);
-    SSD1306_UpdateDisplay(display);
+    SSD1306* display = HWGPIO::getSSD1306Handle();
+    display->clearDisplay();
+    display->drawString( 0, 0, text);
+    display->updateDisplay();
     #endif
 }

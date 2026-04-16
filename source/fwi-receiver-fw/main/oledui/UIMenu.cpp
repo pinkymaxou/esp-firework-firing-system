@@ -7,27 +7,27 @@
 
 #define TAG "UIMenu"
 
-void UIMenu::OnEnter()
+void UIMenu::onEnter()
 {
     m_menu_item_index = 0;
     m_is_need_refresh = true;
 }
 
-void UIMenu::OnExit()
+void UIMenu::onExit()
 {
 
 }
 
-void UIMenu::OnTick()
+void UIMenu::onTick()
 {
     if (m_is_need_refresh)
     {
         m_is_need_refresh = false;
-        DrawScreen();
+        drawScreen();
     }
 }
 
-void UIMenu::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
+void UIMenu::onEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
 {
     switch (btn_event)
     {
@@ -86,11 +86,11 @@ void UIMenu::OnEncoderMove(UIBase::BTEvent btn_event, int32_t click_count)
     }
 }
 
-void UIMenu::DrawScreen()
+void UIMenu::drawScreen()
 {
     #if HWCONFIG_OLED_ISPRESENT != 0
-    SSD1306_handle* display = HWGPIO_GetSSD1306Handle();
-    SSD1306_ClearDisplay(display);
+    SSD1306* display = HWGPIO::getSSD1306Handle();
+    display->clearDisplay();
 
     // Cursor
     const int32_t MAX_DISPLAY_ITEM_COUNT = 4;
@@ -109,16 +109,16 @@ void UIMenu::DrawScreen()
         const bool is_selected = (i == m_menu_item_index);
         if (is_selected)
         {
-            SSD1306_FillRect(display, 0, draw_menu_index*15+3, 127, 16, true);
+            display->fillRect( 0, draw_menu_index*15+3, 127, 16, true);
         }
-        SSD1306_SetTextColor(display, !is_selected);
-        SSD1306_DrawString(display, 15, 15*draw_menu_index, menu_item->name);
+        display->setTextColor( !is_selected);
+        display->drawString( 15, 15*draw_menu_index, menu_item->name);
 
         draw_menu_index++;
     }
 
     // Restore ...
-    SSD1306_SetTextColor(display, true);
-    SSD1306_UpdateDisplay(display);
+    display->setTextColor( true);
+    display->updateDisplay();
     #endif
 }
